@@ -1,6 +1,7 @@
 package com.kuba.calendarium.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,7 +16,7 @@ fun AppNavHost() {
         startDestination = ScreenRoute.Calendar.route
     ) {
         composable(route = ScreenRoute.Calendar.route) {
-            CalendarScreen()
+            CalendarScreen(viewModel = hiltViewModel())
         }
     }
 }
