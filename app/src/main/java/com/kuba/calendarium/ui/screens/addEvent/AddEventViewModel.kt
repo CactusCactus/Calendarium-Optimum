@@ -43,13 +43,22 @@ class AddEventViewModel @Inject constructor(
                     )
                 )
             }
+            // Date picker events
+            UIEvent.DatePickerOpened -> _uiState.value = _uiState.value.copy(
+                datePickerOpen = true
+            )
+
+            UIEvent.DatePickerDismissed -> _uiState.value = _uiState.value.copy(
+                datePickerOpen = false
+            )
         }
     }
 
     data class UIState(
         val title: String = "",
         val description: String = "",
-        val selectedDate: Long = Date().getDayStartMillis()
+        val selectedDate: Long = Date().getDayStartMillis(),
+        val datePickerOpen: Boolean = false
     )
 
     sealed class UIEvent {
@@ -57,5 +66,7 @@ class AddEventViewModel @Inject constructor(
         data class DescriptionChanged(val description: String) : UIEvent()
         data class DateSelected(val date: Date) : UIEvent()
         object DoneClicked : UIEvent()
+        object DatePickerOpened : UIEvent()
+        object DatePickerDismissed : UIEvent()
     }
 }
