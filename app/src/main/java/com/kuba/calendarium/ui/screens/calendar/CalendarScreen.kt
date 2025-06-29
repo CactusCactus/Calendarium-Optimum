@@ -25,11 +25,13 @@ import java.util.Date
 @Composable
 fun CalendarScreen(
     viewModel: CalendarViewModel,
-    onNavigateToAddEvent: () -> Unit
+    onNavigateToAddEvent: (selectedDate: Long) -> Unit
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToAddEvent) {
+            FloatingActionButton(onClick = {
+                onNavigateToAddEvent(viewModel.uiState.value.selectedDate.time)
+            }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add new event")
             }
         }
