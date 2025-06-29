@@ -1,4 +1,4 @@
-package com.kuba.calendarium.ui.screens
+package com.kuba.calendarium.ui.screens.calendar
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel

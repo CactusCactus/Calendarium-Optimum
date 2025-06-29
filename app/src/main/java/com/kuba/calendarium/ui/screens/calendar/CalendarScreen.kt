@@ -1,9 +1,15 @@
-package com.kuba.calendarium.ui.screens
+package com.kuba.calendarium.ui.screens.calendar
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,12 +23,28 @@ import kotlinx.coroutines.flow.map
 import java.util.Date
 
 @Composable
-fun CalendarScreen(viewModel: CalendarViewModel) {
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Calendar(
-            date = viewModel.uiState.collectAsState().value.selectedDate,
-            onDateSelected = { viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(it)) }
-        )
+fun CalendarScreen(
+    viewModel: CalendarViewModel,
+    onNavigateToAddEvent: () -> Unit
+) {
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = onNavigateToAddEvent) {
+                Icon(Icons.Filled.Add, contentDescription = "Add new event")
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Calendar(
+                date = viewModel.uiState.collectAsState().value.selectedDate,
+                onDateSelected = { viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(it)) }
+            )
+        }
     }
 }
 
@@ -48,6 +70,6 @@ private fun Calendar(
     DatePicker(
         state = datePickerState,
         modifier = modifier,
-        title = { }
+        title = null
     )
 }
