@@ -1,6 +1,7 @@
 package com.kuba.calendarium.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -9,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.kuba.calendarium.ui.screens.addEvent.AddEventScreen
 import com.kuba.calendarium.ui.screens.calendar.CalendarScreen
+import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel
 
 @Composable
 fun AppNavHost() {
@@ -18,12 +20,25 @@ fun AppNavHost() {
         navController = navController,
         startDestination = ScreenRoute.Calendar.route
     ) {
-        composable(route = ScreenRoute.Calendar.route) {
+        composable(route = ScreenRoute.Calendar.route) { backStackEntry ->
+            val viewModel = hiltViewModel<CalendarViewModel>()
+
+            val newEventDateMillis =
+                backStackEntry.savedStateHandle.get<Long>(KEY_RESULT_EVENT_DATE_MS)
+
+            LaunchedEffect(newEventDateMillis) {
+                if (newEventDateMillis != null) {
+                    viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(newEventDateMillis))
+                    backStackEntry.savedStateHandle.remove<Long>(KEY_RESULT_EVENT_DATE_MS)
+                }
+            }
+
             CalendarScreen(
-                viewModel = hiltViewModel(),
+                viewModel = viewModel,
                 onNavigateToAddEvent = {
                     navController.navigate(ScreenRoute.AddEvent.createRoute(it))
                 })
+
         }
 
         composable(
@@ -31,7 +46,14 @@ fun AppNavHost() {
             arguments = listOf(navArgument(ARG_SELECTED_DATE_MS) { type = NavType.LongType })
         ) {
             AddEventScreen(
-                viewModel = hiltViewModel()
+                viewModel = hiltViewModel(),
+                onNavigateUp = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        KEY_RESULT_EVENT_DATE_MS,
+                        it
+                    )
+                    navController.popBackStack()
+                }
             )
         }
     }

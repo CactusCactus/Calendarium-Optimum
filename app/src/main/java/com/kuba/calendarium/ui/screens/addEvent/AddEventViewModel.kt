@@ -8,8 +8,10 @@ import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_MS
 import com.kuba.calendarium.util.getDayStartMillis
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -23,7 +25,11 @@ class AddEventViewModel @Inject constructor(
         UIState(selectedDate = savedStateHandle.get<Long>(ARG_SELECTED_DATE_MS) ?: Date().time)
     )
 
+    private val _navEvent = Channel<NavEvent>()
+
     val uiState = _uiState.asStateFlow()
+
+    val navEvent = _navEvent.receiveAsFlow()
 
     fun onEvent(event: UIEvent) {
         when (event) {
@@ -42,6 +48,8 @@ class AddEventViewModel @Inject constructor(
                         date = _uiState.value.selectedDate
                     )
                 )
+
+                _navEvent.send(NavEvent.Finish(_uiState.value.selectedDate))
             }
             // Date picker events
             UIEvent.DatePickerOpened -> _uiState.value = _uiState.value.copy(
@@ -68,5 +76,9 @@ class AddEventViewModel @Inject constructor(
         object DoneClicked : UIEvent()
         object DatePickerOpened : UIEvent()
         object DatePickerDismissed : UIEvent()
+    }
+
+    sealed class NavEvent {
+        data class Finish(val eventDate: Long) : NavEvent()
     }
 }

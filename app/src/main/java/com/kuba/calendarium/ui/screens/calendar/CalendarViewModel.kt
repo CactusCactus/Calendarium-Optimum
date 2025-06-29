@@ -24,7 +24,9 @@ class CalendarViewModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()
 
-    private val _selectedDate = MutableStateFlow(Date().getDayStartMillis())
+    val _selectedDate = MutableStateFlow(Date().getDayStartMillis())
+
+    val selectedDate = _selectedDate.asStateFlow()
 
     val eventList = _selectedDate.flatMapLatest {
         eventsRepository.getEventsForDate(it).catch { emit(emptyList()) }

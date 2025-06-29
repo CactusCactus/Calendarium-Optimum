@@ -20,7 +20,6 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,11 +27,6 @@ import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.standardPadding
-import com.kuba.calendarium.util.getDayStartMillis
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.map
-import java.util.Date
 
 @Composable
 fun CalendarScreen(
@@ -42,7 +36,7 @@ fun CalendarScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                onNavigateToAddEvent(viewModel.uiState.value.selectedDate)
+                onNavigateToAddEvent(viewModel.selectedDate.value)
             }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add new event")
             }
@@ -54,8 +48,10 @@ fun CalendarScreen(
                 .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val selectedDate = viewModel.selectedDate.collectAsState().value
+
             Calendar(
-                date = viewModel.uiState.collectAsState().value.selectedDate,
+                date = selectedDate,
                 onDateSelected = { viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(it)) }
             )
 
@@ -93,15 +89,16 @@ private fun Calendar(
     modifier: Modifier = Modifier
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = date
+        initialSelectedDateMillis = date,
+        initialDisplayedMonthMillis = date
     )
 
     LaunchedEffect(datePickerState.selectedDateMillis) {
-        snapshotFlow { datePickerState.selectedDateMillis }
-            .filterNotNull()
-            .distinctUntilChanged()
-            .map { Date(it).getDayStartMillis() }
-            .collect(onDateSelected)
+        datePickerState.selectedDateMillis?.let { newSelectedMillis ->
+            if (newSelectedMillis != date) {
+                onDateSelected(newSelectedMillis)
+            }
+        }
     }
 
     DatePicker(

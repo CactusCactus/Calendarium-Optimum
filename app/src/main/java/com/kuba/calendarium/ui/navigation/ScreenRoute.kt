@@ -11,3 +11,5 @@ sealed class ScreenRoute(val route: String) {
 }
 
 const val ARG_SELECTED_DATE_MS = "selectedDate"
+
+const val KEY_RESULT_EVENT_DATE_MS = "EVENT_DATE_MS"
