@@ -11,5 +11,3 @@ sealed class ScreenRoute(val route: String) {
 }
 
 const val ARG_SELECTED_DATE_MS = "selectedDate"
-
-
