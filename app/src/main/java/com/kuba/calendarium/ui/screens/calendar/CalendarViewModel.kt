@@ -3,6 +3,7 @@ package com.kuba.calendarium.ui.screens.calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.repo.EventsRepository
+import com.kuba.calendarium.util.getDayStartMillis
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +20,7 @@ class CalendarViewModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()
 
-    val eventList = eventsRepository.getEventsForDate(_uiState.value.selectedDate.time)
+    val eventList = eventsRepository.getEventsForDate(_uiState.value.selectedDate)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun onEvent(event: UIEvent) {
@@ -31,10 +32,10 @@ class CalendarViewModel @Inject constructor(
     }
 
     data class UIState(
-        val selectedDate: Date = Date()
+        val selectedDate: Long = Date().getDayStartMillis()
     )
 
     sealed class UIEvent {
-        data class DateSelected(val date: Date) : UIEvent()
+        data class DateSelected(val date: Long) : UIEvent()
     }
 }

@@ -1,8 +1,10 @@
 package com.kuba.calendarium.util
 
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 const val STANDARD_DATE_FORMAT = "dd/MM/yyyy"
 
@@ -11,3 +13,13 @@ fun Long.standardDateFormat(): String =
 
 fun Date.standardDateFormat(): String =
     SimpleDateFormat(STANDARD_DATE_FORMAT, Locale.getDefault()).format(this)
+
+
+fun Date.getDayStartMillis(timeZone: TimeZone = TimeZone.getDefault()) =
+    Calendar.getInstance(timeZone).apply {
+        time = this@getDayStartMillis
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis

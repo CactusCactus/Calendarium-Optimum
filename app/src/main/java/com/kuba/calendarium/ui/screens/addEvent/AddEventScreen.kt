@@ -33,7 +33,7 @@ fun AddEventScreen(viewModel: AddEventViewModel) {
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                // Done save to db and finish
+                viewModel.onEvent(AddEventViewModel.UIEvent.DoneClicked)
             }) {
                 Icon(Icons.Filled.Done, "Done")
             }

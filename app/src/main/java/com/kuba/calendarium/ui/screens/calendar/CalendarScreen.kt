@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
+import com.kuba.calendarium.ui.common.standardPadding
+import com.kuba.calendarium.util.getDayStartMillis
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
@@ -39,7 +42,7 @@ fun CalendarScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                onNavigateToAddEvent(viewModel.uiState.value.selectedDate.time)
+                onNavigateToAddEvent(viewModel.uiState.value.selectedDate)
             }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add new event")
             }
@@ -59,6 +62,7 @@ fun CalendarScreen(
             StandardSpacer()
 
             val events = viewModel.eventList.collectAsState().value
+
             LazyColumn {
                 items(events) {
                     EventRow(event = it, modifier = Modifier.fillMaxSize())
@@ -70,31 +74,33 @@ fun CalendarScreen(
 
 @Composable
 private fun EventRow(event: Event, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        Text(text = event.title, style = MaterialTheme.typography.titleMedium)
+    Card(modifier = modifier.padding(standardPadding)) {
+        Column(modifier = Modifier.padding(standardPadding)) {
+            Text(text = event.title, style = MaterialTheme.typography.titleMedium)
 
-        StandardHalfSpacer()
+            StandardHalfSpacer()
 
-        Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
+            Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Calendar(
-    date: Date,
-    onDateSelected: (Date) -> Unit,
+    date: Long,
+    onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = date.time
+        initialSelectedDateMillis = date
     )
 
     LaunchedEffect(datePickerState.selectedDateMillis) {
         snapshotFlow { datePickerState.selectedDateMillis }
             .filterNotNull()
             .distinctUntilChanged()
-            .map { Date(it) }
+            .map { Date(it).getDayStartMillis() }
             .collect(onDateSelected)
     }
 
