@@ -5,34 +5,39 @@ import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.util.getDayStartMillis
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import java.util.Date
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-    eventsRepository: EventsRepository
+    private val eventsRepository: EventsRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UIState())
 
     val uiState = _uiState.asStateFlow()
 
-    val eventList = eventsRepository.getEventsForDate(_uiState.value.selectedDate)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    private val _selectedDate = MutableStateFlow(Date().getDayStartMillis())
+
+    val eventList = _selectedDate.flatMapLatest {
+        eventsRepository.getEventsForDate(it).catch { emit(emptyList()) }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun onEvent(event: UIEvent) {
         when (event) {
-            is UIEvent.DateSelected -> {
-                _uiState.value = _uiState.value.copy(selectedDate = event.date)
-            }
+            is UIEvent.DateSelected -> _selectedDate.value = event.date
         }
     }
 
     data class UIState(
-        val selectedDate: Long = Date().getDayStartMillis()
+        val selectedDate: Long = Date().getDayStartMillis() // Unused
     )
 
     sealed class UIEvent {
