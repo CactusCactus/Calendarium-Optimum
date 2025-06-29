@@ -1,0 +1,23 @@
+package com.kuba.calendarium.data.dao
+
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.Query
+import com.kuba.calendarium.data.model.Event
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface EventDao {
+    @Insert
+    suspend fun insert(event: Event): Long
+
+    @Delete
+    suspend fun delete(event: Event)
+
+    @Query("SELECT * FROM event WHERE date = :date")
+    fun getEventsForDate(date: Long): Flow<List<Event>>
+
+    @Query("SELECT * FROM event WHERE id = :id")
+    fun getEventById(id: Int): Flow<Event>
+}
