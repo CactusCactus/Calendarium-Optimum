@@ -20,5 +20,4 @@ object AppModule {
     @Provides
     @Singleton
     fun provideEventDao(appDatabase: AppDatabase) = appDatabase.eventDao()
-
 }

@@ -22,8 +22,7 @@ import com.kuba.calendarium.R
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.descriptionMinHeight
 import com.kuba.calendarium.ui.common.standardPadding
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.kuba.calendarium.util.standardDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,8 +68,7 @@ fun AddEventScreen(viewModel: AddEventViewModel) {
             StandardSpacer()
 
             val dateString =
-                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    .format(viewModel.uiState.collectAsState().value.selectedDate)
+                viewModel.uiState.collectAsState().value.selectedDate.standardDateFormat()
 
             OutlinedTextField(
                 value = dateString,
