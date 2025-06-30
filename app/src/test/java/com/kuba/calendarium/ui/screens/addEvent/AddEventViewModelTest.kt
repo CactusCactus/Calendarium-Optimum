@@ -8,25 +8,13 @@ import com.kuba.calendarium.ui.screens.addEvent.AddEventViewModel.ValidationErro
 import com.kuba.calendarium.util.resetToMidnight
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
 import java.util.Calendar
 import java.util.Date
 
 class AddEventViewModelTest {
-    @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()
-
     private lateinit var mockEventsRepository: EventsRepository
     private lateinit var mockSavedStateHandle: SavedStateHandle
     private lateinit var viewModel: AddEventViewModel
@@ -208,22 +196,5 @@ class AddEventViewModelTest {
         // Date is reset to midnight before being saved
         assert(viewModel.uiState.value.selectedDate == Date().time.resetToMidnight())
         assert(viewModel.uiState.value.datePickerOpen.not())
-    }
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-class MainCoroutineRule(
-    private val testDispatcher: TestDispatcher = UnconfinedTestDispatcher()
-) : TestWatcher() {
-    override fun starting(description: Description?) {
-        super.starting(description)
-
-        Dispatchers.setMain(testDispatcher)
-    }
-
-    override fun finished(description: Description?) {
-        super.finished(description)
-
-        Dispatchers.resetMain()
     }
 }
