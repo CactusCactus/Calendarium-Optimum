@@ -3,13 +3,14 @@ package com.kuba.calendarium.data.dao
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.kuba.calendarium.data.model.Event
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EventDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(event: Event): Long
 
     @Delete
@@ -19,5 +20,5 @@ interface EventDao {
     fun getEventsForDate(date: Long): Flow<List<Event>>
 
     @Query("SELECT * FROM event WHERE id = :id")
-    fun getEventById(id: Int): Flow<Event>
+    fun getEventById(id: Long): Flow<Event?>
 }
