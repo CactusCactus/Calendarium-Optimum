@@ -13,6 +13,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,14 +34,31 @@ class AddEventViewModel @Inject constructor(
 
     val navEvent = _navEvent.receiveAsFlow()
 
+    companion object {
+        const val MAX_TITLE_LENGTH = 100
+
+        const val MAX_DESCRIPTION_LENGTH = 2000
+    }
+
     fun onEvent(event: UIEvent) {
         when (event) {
-            is UIEvent.DescriptionChanged -> _uiState.value =
-                _uiState.value.copy(description = event.description)
+            is UIEvent.DescriptionChanged -> {
+                _uiState.update { _uiState.value.copy(description = event.description) }
+                _uiState.update {
+                    _uiState.value.copy(descriptionError = validateDescription(event.description))
+                }
+                updateValidity()
+            }
 
-            is UIEvent.TitleChanged -> _uiState.value = _uiState.value.copy(title = event.title)
-            is UIEvent.DateSelected -> _uiState.value =
+            is UIEvent.TitleChanged -> {
+                _uiState.update { _uiState.value.copy(title = event.title) }
+                _uiState.update { _uiState.value.copy(titleError = validateTitle(event.title)) }
+                updateValidity()
+            }
+
+            is UIEvent.DateSelected -> _uiState.update {
                 _uiState.value.copy(selectedDate = event.date.resetToMidnight())
+            }
 
             UIEvent.DoneClicked -> viewModelScope.launch {
                 eventsRepository.insertEvent(
@@ -54,12 +72,36 @@ class AddEventViewModel @Inject constructor(
                 _navEvent.send(NavEvent.Finish(_uiState.value.selectedDate))
             }
             // Date picker events
-            UIEvent.DatePickerOpened -> _uiState.value = _uiState.value.copy(
-                datePickerOpen = true
-            )
+            UIEvent.DatePickerOpened -> _uiState.update {
+                _uiState.value.copy(datePickerOpen = true)
+            }
 
-            UIEvent.DatePickerDismissed -> _uiState.value = _uiState.value.copy(
-                datePickerOpen = false
+            UIEvent.DatePickerDismissed -> _uiState.update {
+                _uiState.value.copy(datePickerOpen = false)
+            }
+        }
+    }
+
+    private fun validateTitle(title: String): ValidationError? {
+        return when {
+            title.isBlank() -> ValidationError.TITLE_EMPTY
+            title.length > MAX_TITLE_LENGTH -> ValidationError.TITLE_TOO_LONG
+            else -> null
+        }
+    }
+
+    private fun validateDescription(description: String): ValidationError? {
+        return when {
+            description.length > MAX_DESCRIPTION_LENGTH -> ValidationError.DESCRIPTION_TOO_LONG
+            else -> null
+        }
+    }
+
+    private fun updateValidity() {
+        _uiState.update {
+            _uiState.value.copy(
+                isValid = _uiState.value.titleError == null &&
+                        _uiState.value.descriptionError == null
             )
         }
     }
@@ -68,7 +110,12 @@ class AddEventViewModel @Inject constructor(
         val title: String = "",
         val description: String = "",
         val selectedDate: Long = getTodayMidnight(),
-        val datePickerOpen: Boolean = false
+        val datePickerOpen: Boolean = false,
+
+        // Validation
+        val titleError: ValidationError? = null,
+        val descriptionError: ValidationError? = null,
+        val isValid: Boolean = false
     )
 
     sealed class UIEvent {
@@ -82,5 +129,9 @@ class AddEventViewModel @Inject constructor(
 
     sealed class NavEvent {
         data class Finish(val eventDate: Long) : NavEvent()
+    }
+
+    enum class ValidationError {
+        TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG
     }
 }

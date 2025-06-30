@@ -5,4 +5,9 @@
     <string name="input_description_placeholder">Description</string>
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
+    <string name="add_event_information_label">Event Information</string>
+    <string name="add_event_date_label">Date</string>
+    <string name="error_event_title_empty">Title cannot be empty</string>
+    <string name="error_event_title_too_long">Title cannot be longer than %1$d characters</string>
+    <string name="error_event_description_too_long">Description cannot be longer than %1$d characters</string>
 </resources>
