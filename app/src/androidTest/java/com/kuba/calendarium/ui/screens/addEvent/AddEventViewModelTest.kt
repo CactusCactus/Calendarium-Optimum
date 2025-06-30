@@ -19,9 +19,6 @@ class AddEventViewModelTest {
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
-    private lateinit var viewModel: AddEventViewModel
-
-
     @Before
     fun setUp() {
         hiltRule.inject()

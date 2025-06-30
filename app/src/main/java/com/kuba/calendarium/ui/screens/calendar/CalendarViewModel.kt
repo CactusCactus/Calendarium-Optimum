@@ -17,13 +17,13 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-    private val eventsRepository: EventsRepository
+    internal val eventsRepository: EventsRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UIState())
 
     val uiState = _uiState.asStateFlow()
 
-    val _selectedDate = MutableStateFlow(getTodayMidnight())
+    internal val _selectedDate = MutableStateFlow(getTodayMidnight())
 
     val selectedDate = _selectedDate.asStateFlow()
 
