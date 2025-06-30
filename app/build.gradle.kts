@@ -70,6 +70,7 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    testImplementation(libs.junit.jupiter)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
@@ -91,4 +92,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation(libs.androidx.navigation.testing)
     testImplementation(libs.androidx.room.testing)
+    testImplementation(libs.truth)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+
+    // Mocking
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockk.agent.jvm)
+
 }
