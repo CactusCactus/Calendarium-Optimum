@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- This is a Manifest for androidTest, for some reason it doesn't get detected in a correct folder -->
 
     <application>
         <activity
