@@ -44,16 +44,12 @@ class AddEventViewModel @Inject constructor(
         when (event) {
             is UIEvent.DescriptionChanged -> {
                 _uiState.update { _uiState.value.copy(description = event.description) }
-                _uiState.update {
-                    _uiState.value.copy(descriptionError = validateDescription(event.description))
-                }
-                updateValidity()
+                checkAndUpdateValidity()
             }
 
             is UIEvent.TitleChanged -> {
                 _uiState.update { _uiState.value.copy(title = event.title) }
-                _uiState.update { _uiState.value.copy(titleError = validateTitle(event.title)) }
-                updateValidity()
+                checkAndUpdateValidity()
             }
 
             is UIEvent.DateSelected -> _uiState.update {
@@ -97,7 +93,14 @@ class AddEventViewModel @Inject constructor(
         }
     }
 
-    private fun updateValidity() {
+    private fun checkAndUpdateValidity() {
+        _uiState.update {
+            _uiState.value.copy(
+                titleError = validateTitle(_uiState.value.title),
+                descriptionError = validateDescription(_uiState.value.description)
+            )
+        }
+
         _uiState.update {
             _uiState.value.copy(
                 isValid = _uiState.value.titleError == null &&
