@@ -93,6 +93,11 @@ private fun Calendar(
         initialDisplayedMonthMillis = date
     )
 
+    LaunchedEffect(date) {
+        datePickerState.selectedDateMillis = date
+        datePickerState.displayedMonthMillis = date
+    }
+
     LaunchedEffect(datePickerState.selectedDateMillis) {
         datePickerState.selectedDateMillis?.let { newSelectedMillis ->
             if (newSelectedMillis != date) {
