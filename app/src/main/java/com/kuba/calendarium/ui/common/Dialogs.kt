@@ -21,7 +21,8 @@ fun DatePickerModal(
     modifier: Modifier = Modifier
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate
+        initialSelectedDateMillis = initialDate,
+        initialDisplayedMonthMillis = initialDate
     )
 
     DatePickerDialog(

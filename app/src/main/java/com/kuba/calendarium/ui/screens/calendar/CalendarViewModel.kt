@@ -3,7 +3,7 @@ package com.kuba.calendarium.ui.screens.calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.repo.EventsRepository
-import com.kuba.calendarium.util.getDayStartMillis
+import com.kuba.calendarium.util.getTodayMidnight
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import java.util.Date
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -24,7 +23,7 @@ class CalendarViewModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()
 
-    val _selectedDate = MutableStateFlow(Date().getDayStartMillis())
+    val _selectedDate = MutableStateFlow(getTodayMidnight())
 
     val selectedDate = _selectedDate.asStateFlow()
 
@@ -39,7 +38,7 @@ class CalendarViewModel @Inject constructor(
     }
 
     data class UIState(
-        val selectedDate: Long = Date().getDayStartMillis() // Unused
+        val selectedDate: Long = getTodayMidnight() // Unused
     )
 
     sealed class UIEvent {

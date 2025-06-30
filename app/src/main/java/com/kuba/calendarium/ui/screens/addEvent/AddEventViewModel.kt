@@ -6,14 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_MS
-import com.kuba.calendarium.util.getDayStartMillis
+import com.kuba.calendarium.util.getTodayMidnight
+import com.kuba.calendarium.util.resetToMidnight
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,7 +22,9 @@ class AddEventViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
-        UIState(selectedDate = savedStateHandle.get<Long>(ARG_SELECTED_DATE_MS) ?: Date().time)
+        UIState(
+            selectedDate = savedStateHandle.get<Long>(ARG_SELECTED_DATE_MS) ?: getTodayMidnight()
+        )
     )
 
     private val _navEvent = Channel<NavEvent>()
@@ -38,7 +40,7 @@ class AddEventViewModel @Inject constructor(
 
             is UIEvent.TitleChanged -> _uiState.value = _uiState.value.copy(title = event.title)
             is UIEvent.DateSelected -> _uiState.value =
-                _uiState.value.copy(selectedDate = event.date.getDayStartMillis())
+                _uiState.value.copy(selectedDate = event.date.resetToMidnight())
 
             UIEvent.DoneClicked -> viewModelScope.launch {
                 eventsRepository.insertEvent(
@@ -65,14 +67,14 @@ class AddEventViewModel @Inject constructor(
     data class UIState(
         val title: String = "",
         val description: String = "",
-        val selectedDate: Long = Date().getDayStartMillis(),
+        val selectedDate: Long = getTodayMidnight(),
         val datePickerOpen: Boolean = false
     )
 
     sealed class UIEvent {
         data class TitleChanged(val title: String) : UIEvent()
         data class DescriptionChanged(val description: String) : UIEvent()
-        data class DateSelected(val date: Date) : UIEvent()
+        data class DateSelected(val date: Long) : UIEvent()
         object DoneClicked : UIEvent()
         object DatePickerOpened : UIEvent()
         object DatePickerDismissed : UIEvent()

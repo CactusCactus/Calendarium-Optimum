@@ -28,7 +28,6 @@ import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.common.textFieldClickable
 import com.kuba.calendarium.util.standardDateFormat
 import kotlinx.coroutines.flow.collectLatest
-import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,7 +66,7 @@ fun AddEventScreen(
             DatePickerModal(
                 initialDate = viewModel.uiState.collectAsState().value.selectedDate,
                 onDatePicked = {
-                    viewModel.onEvent(AddEventViewModel.UIEvent.DateSelected(Date(it)))
+                    viewModel.onEvent(AddEventViewModel.UIEvent.DateSelected(it))
                 },
                 onDismissRequest = {
                     viewModel.onEvent(AddEventViewModel.UIEvent.DatePickerDismissed)
