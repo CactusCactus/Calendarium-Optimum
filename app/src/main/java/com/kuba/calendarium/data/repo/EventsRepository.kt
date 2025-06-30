@@ -11,7 +11,15 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
         Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
     }
 
+    fun getEventById(id: Long) = dao.getEventById(id).also {
+        Timber.d("Fetched Event flow for id: $id")
+    }
+
     suspend fun insertEvent(event: Event) = dao.insert(event).also {
         Timber.d("Inserted event: ${event.title}")
+    }
+
+    suspend fun deleteEvent(event: Event) = dao.delete(event).also {
+        Timber.d("Deleted event: ${event.title}")
     }
 }
