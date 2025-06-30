@@ -1,5 +1,7 @@
 package com.kuba.calendarium.ui.screens.calendar
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -24,6 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.internal.ContextMenuOption
+import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.standardPadding
@@ -61,16 +65,47 @@ fun CalendarScreen(
 
             LazyColumn {
                 items(events) {
-                    EventRow(event = it, modifier = Modifier.fillMaxSize())
+                    EventRow(
+                        event = it,
+                        onLongClick = {
+                            viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOpen(it))
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
+        }
+
+        val uiState = viewModel.uiState.collectAsState().value
+
+        if (uiState.contextMenuOpen) {
+            ContextMenuBottomSheet(
+                title = uiState.contextMenuName,
+                onDismissRequest = {
+                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuDismiss)
+                },
+                onOptionClick = {
+                    when (it) {
+                        ContextMenuOption.DELETE ->
+                            viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete)
+                    }
+                }
+            )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun EventRow(event: Event, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.padding(standardPadding)) {
+private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .padding(standardPadding)
+            .combinedClickable(
+                onClick = { /* NO-OP */ },
+                onLongClick = onLongClick
+            )
+    ) {
         Column(modifier = Modifier.padding(standardPadding)) {
             Text(text = event.title, style = MaterialTheme.typography.titleMedium)
 

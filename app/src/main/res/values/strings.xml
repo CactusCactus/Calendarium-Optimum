@@ -10,4 +10,5 @@
     <string name="error_event_title_empty">Title cannot be empty</string>
     <string name="error_event_title_too_long">Title cannot be longer than %1$d characters</string>
     <string name="error_event_description_too_long">Description cannot be longer than %1$d characters</string>
+    <string name="delete">Delete</string>
 </resources>
