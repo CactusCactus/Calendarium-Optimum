@@ -1,13 +1,17 @@
 package com.kuba.calendarium.ui.common
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -15,6 +19,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.kuba.calendarium.R
@@ -97,5 +103,44 @@ fun JourneyContextMenuRow(option: ContextMenuOption, modifier: Modifier = Modifi
         icon = option.icon,
         iconTint = option.overrideTint,
         modifier = modifier,
+    )
+}
+
+@Composable
+fun ConfirmDialog(
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    text: String? = null,
+    @DrawableRes icon: Int? = null,
+    iconTint: Color = LocalContentColor.current,
+    confirmButtonLabel: String = stringResource(R.string.confirm),
+    cancelButtonLabel: String = stringResource(R.string.cancel),
+    onDismiss: () -> Unit = {}
+) {
+    AlertDialog(
+        icon = {
+            icon?.let {
+                Icon(
+                    painter = painterResource(it),
+                    contentDescription = "$title + dialog icon",
+                    tint = iconTint
+                )
+            }
+        },
+        title = { title?.let { Text(it) } },
+        text = { text?.let { Text(it) } },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onConfirm) {
+                Text(confirmButtonLabel)
+            }
+        },
+        dismissButton = {
+            TextButton(onDismiss) {
+                Text(cancelButtonLabel)
+            }
+        },
+        modifier = modifier
     )
 }

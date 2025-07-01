@@ -3,6 +3,7 @@ package com.kuba.calendarium.ui.screens.calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.util.getTodayMidnight
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,8 +52,20 @@ class CalendarViewModel @Inject constructor(
                 _uiState.value.copy(contextMenuOpen = false)
             }
 
+            is UIEvent.ContextMenuOptionSelected -> when (event.option) {
+                ContextMenuOption.DELETE -> _uiState.update {
+                    _uiState.value.copy(deleteDialogShowing = true)
+                }
+            }
+
+            UIEvent.DeleteDialogDismiss -> _uiState.update {
+                _uiState.value.copy(deleteDialogShowing = false)
+            }
+
             UIEvent.ContextEventDelete -> viewModelScope.launch {
-                _uiState.update { _uiState.value.copy(contextMenuOpen = false) }
+                _uiState.update {
+                    _uiState.value.copy(contextMenuOpen = false, deleteDialogShowing = false)
+                }
 
                 contextMenuEvent?.let {
                     eventsRepository.deleteEvent(it)
@@ -61,12 +74,14 @@ class CalendarViewModel @Inject constructor(
                     Timber.e("ContextMenuEvent is null and cannot be deleted")
                 }
             }
+
         }
     }
 
     data class UIState(
         var contextMenuOpen: Boolean = false,
-        var contextMenuName: String = ""
+        var contextMenuName: String = "",
+        var deleteDialogShowing: Boolean = false
     )
 
     sealed class UIEvent {
@@ -74,6 +89,7 @@ class CalendarViewModel @Inject constructor(
         data class ContextMenuOpen(val event: Event) : UIEvent()
         object ContextMenuDismiss : UIEvent()
         object ContextEventDelete : UIEvent()
-
+        data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
+        object DeleteDialogDismiss : UIEvent()
     }
 }

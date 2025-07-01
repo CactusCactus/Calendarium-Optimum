@@ -25,8 +25,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Event
-import com.kuba.calendarium.data.model.internal.ContextMenuOption
+import com.kuba.calendarium.ui.common.ConfirmDialog
 import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
@@ -76,23 +78,43 @@ fun CalendarScreen(
             }
         }
 
-        val uiState = viewModel.uiState.collectAsState().value
-
-        if (uiState.contextMenuOpen) {
-            ContextMenuBottomSheet(
-                title = uiState.contextMenuName,
-                onDismissRequest = {
-                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuDismiss)
-                },
-                onOptionClick = {
-                    when (it) {
-                        ContextMenuOption.DELETE ->
-                            viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete)
-                    }
-                }
-            )
-        }
+        ShowDialogsAndBottomSheets(viewModel)
     }
+}
+
+@Composable
+private fun ShowDialogsAndBottomSheets(viewModel: CalendarViewModel) {
+    val uiState = viewModel.uiState.collectAsState().value
+
+    if (uiState.contextMenuOpen) {
+        ContextMenuBottomSheet(
+            title = uiState.contextMenuName,
+            onDismissRequest = {
+                viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuDismiss)
+            },
+            onOptionClick = {
+                viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOptionSelected(it))
+            }
+        )
+    }
+
+    if (uiState.deleteDialogShowing) {
+        ShowDeleteDialog(
+            onConfirm = { viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete) },
+            onDismiss = { viewModel.onEvent(CalendarViewModel.UIEvent.DeleteDialogDismiss) }
+        )
+    }
+}
+
+@Composable
+private fun ShowDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    ConfirmDialog(
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        title = stringResource(R.string.delete_dialog_title),
+        text = stringResource(R.string.delete_dialog_text),
+        icon = R.drawable.ic_delete_24
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
