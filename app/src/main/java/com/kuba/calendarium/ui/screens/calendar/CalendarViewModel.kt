@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -31,10 +32,6 @@ class CalendarViewModel @Inject constructor(
     val selectedDate = _selectedDate.asStateFlow()
 
     private var contextMenuEvent: Event? = null
-
-//    val eventList = _selectedDate.flatMapLatest {
-//        eventsRepository.getEventsForDate(it).catch { emit(emptyList()) }
-//    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     companion object {
         const val PAGER_VIRTUAL_PAGE_COUNT = 365 * 10 // ~10 years
@@ -83,32 +80,16 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun pageIndexToDateMillis(pageIndex: Int): Long {
-        val calendar = Calendar.getInstance()
-        // Assume selectedDate is the date for the initial "center" page
-        // Or pick a fixed epoch/start date for page 0 if preferred.
-        // For this example, let's use the current selectedDate as the reference for PAGER_INITIAL_OFFSET_DAYS
-        calendar.timeInMillis = getTodayMidnight()
-        calendar.add(Calendar.DAY_OF_YEAR, pageIndex - PAGER_INITIAL_OFFSET_DAYS)
-        return calendar.timeInMillis
-    }
+    fun pageIndexToDateMillis(pageIndex: Int): Long = Calendar.getInstance().apply {
+        timeInMillis = getTodayMidnight()
+        add(Calendar.DAY_OF_YEAR, pageIndex - PAGER_INITIAL_OFFSET_DAYS)
+    }.timeInMillis
 
     fun dateMillisToPageIndex(dateMillis: Long): Int {
-        // This is a simplified example. You'll need to adjust it based on
-        // how your PAGER_INITIAL_OFFSET_DAYS and date calculations are set up.
-        // Essentially, you need to calculate the difference in days (or whatever unit
-        // your pager pages represent) between the given dateMillis and your
-        // pager's reference start date, then add PAGER_INITIAL_OFFSET_DAYS.
+        val startDateOfPager = getTodayMidnight()
 
-        val startDateOfPagerEpoch = getTodayMidnight()
-
-        val daysDifference =
-            java.util.concurrent.TimeUnit.MILLISECONDS.toDays(dateMillis - startDateOfPagerEpoch)
-        return PAGER_INITIAL_OFFSET_DAYS + daysDifference.toInt() // Or PAGER_INITIAL_OFFSET_DAYS + daysDifference.toInt()
-        // depending on how PAGER_INITIAL_OFFSET_DAYS is defined
-        // and if pageIndexToDateMillis already incorporates it.
-        // The goal is for:
-        // dateMillisToPageIndex(pageIndexToDateMillis(X)) == X
+        val daysDifference = TimeUnit.MILLISECONDS.toDays(dateMillis - startDateOfPager)
+        return PAGER_INITIAL_OFFSET_DAYS + daysDifference.toInt()
     }
 
     data class UIState(

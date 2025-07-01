@@ -74,7 +74,7 @@ class CalendarViewModelTest {
                     viewModel.eventsRepository.insertEvent(event2)
                     viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(date1))
 
-                    viewModel._selectedDate.flatMapLatest {
+                    viewModel.selectedDate.flatMapLatest {
                         viewModel.eventsRepository.getEventsForDate(it).catch { emit(emptyList()) }
                     }.test {
                         val events = awaitItem()
