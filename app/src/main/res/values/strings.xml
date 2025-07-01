@@ -13,4 +13,5 @@
     <string name="delete">Delete</string>
     <string name="delete_dialog_title">Delete Event</string>
     <string name="delete_dialog_text">Are you sure you want to delete this event?</string>
+    <string name="event_list_empty_label">No events</string>
 </resources>

@@ -93,6 +93,24 @@ class CalendarViewModel @Inject constructor(
         return calendar.timeInMillis
     }
 
+    fun dateMillisToPageIndex(dateMillis: Long): Int {
+        // This is a simplified example. You'll need to adjust it based on
+        // how your PAGER_INITIAL_OFFSET_DAYS and date calculations are set up.
+        // Essentially, you need to calculate the difference in days (or whatever unit
+        // your pager pages represent) between the given dateMillis and your
+        // pager's reference start date, then add PAGER_INITIAL_OFFSET_DAYS.
+
+        val startDateOfPagerEpoch = getTodayMidnight()
+
+        val daysDifference =
+            java.util.concurrent.TimeUnit.MILLISECONDS.toDays(dateMillis - startDateOfPagerEpoch)
+        return PAGER_INITIAL_OFFSET_DAYS + daysDifference.toInt() // Or PAGER_INITIAL_OFFSET_DAYS + daysDifference.toInt()
+        // depending on how PAGER_INITIAL_OFFSET_DAYS is defined
+        // and if pageIndexToDateMillis already incorporates it.
+        // The goal is for:
+        // dateMillisToPageIndex(pageIndexToDateMillis(X)) == X
+    }
+
     data class UIState(
         var contextMenuOpen: Boolean = false,
         var contextMenuName: String = "",

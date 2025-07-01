@@ -75,6 +75,7 @@ fun CalendarScreen(
             )
 
             LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
+                Timber.d("Page changed: ${pagerState.currentPage}")
                 if (!pagerState.isScrollInProgress) {
                     val newDateFromPager = viewModel.pageIndexToDateMillis(pagerState.currentPage)
 
@@ -82,6 +83,13 @@ fun CalendarScreen(
                         viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(newDateFromPager))
                     }
                 }
+            }
+
+            LaunchedEffect(selectedDate) {
+                Timber.d("Selected date changed: ${selectedDate.standardDateFormat()}")
+                Timber.d("Predicted page: ${viewModel.dateMillisToPageIndex(selectedDate)}")
+
+                pagerState.animateScrollToPage(viewModel.dateMillisToPageIndex(selectedDate))
             }
 
             HorizontalPager(
@@ -101,8 +109,6 @@ fun CalendarScreen(
 
 @Composable
 private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modifier = Modifier) {
-    Timber.d("Showing events for a date: ${date.standardDateFormat()}")
-
     val events by remember(date) {
         viewModel.getEventsForDate(date)
     }.collectAsState(initial = emptyList())
@@ -127,7 +133,7 @@ private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modif
         } else {
             item {
                 Text(
-                    text = "No events",
+                    text = stringResource(R.string.event_list_empty_label),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
