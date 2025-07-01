@@ -92,4 +92,37 @@ class CalendarViewModelTest {
             }
         }
     }
+
+    @Test
+    fun testContextMenuDeletion() {
+        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
+            scenario.onActivity {
+                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
+
+                val event = Event(
+                    id = 1,
+                    title = "Test Event",
+                    description = "Test Description",
+                    date = Calendar.getInstance().time.time.resetToMidnight()
+                )
+
+                runTest {
+                    viewModel.eventsRepository.insertEvent(event)
+                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOpen(event))
+
+                    assertThat(viewModel.uiState.value.contextMenuOpen).isTrue()
+
+                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete)
+
+                    viewModel.eventsRepository.getEventById(event.id).test {
+                        val events = awaitItem()
+                        assertThat(events).isNull()
+                        cancelAndConsumeRemainingEvents()
+                    }
+
+                    assertThat(viewModel.uiState.value.contextMenuOpen).isFalse()
+                }
+            }
+        }
+    }
 }
