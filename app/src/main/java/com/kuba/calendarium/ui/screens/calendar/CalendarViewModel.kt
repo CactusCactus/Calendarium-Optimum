@@ -59,7 +59,7 @@ class CalendarViewModel @Inject constructor(
             }
 
             UIEvent.DeleteDialogDismiss -> _uiState.update {
-                _uiState.value.copy(deleteDialogShowing = false)
+                _uiState.value.copy(contextMenuOpen = false, deleteDialogShowing = false)
             }
 
             UIEvent.ContextEventDelete -> viewModelScope.launch {

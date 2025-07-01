@@ -6,6 +6,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.DummyHiltActivity
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.util.resetToMidnight
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -112,6 +113,12 @@ class CalendarViewModelTest {
 
                     assertThat(viewModel.uiState.value.contextMenuOpen).isTrue()
 
+                    viewModel.onEvent(
+                        CalendarViewModel.UIEvent.ContextMenuOptionSelected(ContextMenuOption.DELETE)
+                    )
+
+                    assertThat(viewModel.uiState.value.deleteDialogShowing).isTrue()
+
                     viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete)
 
                     viewModel.eventsRepository.getEventById(event.id).test {
@@ -121,6 +128,47 @@ class CalendarViewModelTest {
                     }
 
                     assertThat(viewModel.uiState.value.contextMenuOpen).isFalse()
+                    assertThat(viewModel.uiState.value.deleteDialogShowing).isFalse()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testContextMenuDeleteAndCancelDialog() {
+        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
+            scenario.onActivity {
+                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
+
+                val event = Event(
+                    id = 1,
+                    title = "Test Event",
+                    description = "Test Description",
+                    date = Calendar.getInstance().time.time.resetToMidnight()
+                )
+
+                runTest {
+                    viewModel.eventsRepository.insertEvent(event)
+                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOpen(event))
+
+                    assertThat(viewModel.uiState.value.contextMenuOpen).isTrue()
+
+                    viewModel.onEvent(
+                        CalendarViewModel.UIEvent.ContextMenuOptionSelected(ContextMenuOption.DELETE)
+                    )
+
+                    assertThat(viewModel.uiState.value.deleteDialogShowing).isTrue()
+
+                    viewModel.onEvent(CalendarViewModel.UIEvent.DeleteDialogDismiss)
+
+                    viewModel.eventsRepository.getEventById(event.id).test {
+                        val events = awaitItem()
+                        assertThat(events).isNotNull()
+                        cancelAndConsumeRemainingEvents()
+                    }
+
+                    assertThat(viewModel.uiState.value.contextMenuOpen).isFalse()
+                    assertThat(viewModel.uiState.value.deleteDialogShowing).isFalse()
                 }
             }
         }
