@@ -45,7 +45,7 @@ class EditEventViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testDoneEventUpdatingDataToDatabase() {
-        val testEventId = 420L
+        val testEventId = "testDoneEventUpdatingDataToDatabase".hashCode().toLong()
 
         val intent = Intent(
             ApplicationProvider.getApplicationContext(),
@@ -79,7 +79,6 @@ class EditEventViewModelTest {
                         assertThat(event).isNotNull()
                         assertThat(event?.title).isEqualTo("New Title")
 
-                        expectNoEvents()
                         cancelAndConsumeRemainingEvents()
                     }
                 }

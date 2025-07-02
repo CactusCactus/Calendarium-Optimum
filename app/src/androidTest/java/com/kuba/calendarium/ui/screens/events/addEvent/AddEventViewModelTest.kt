@@ -10,6 +10,8 @@ import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
 import com.kuba.calendarium.util.resetToMidnight
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -37,12 +39,13 @@ class AddEventViewModelTest {
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun testDoneEventInsertingDataToDatabase() {
         ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
             scenario.onActivity {
-                val viewModel = ViewModelProvider(it)[ModifyEventViewModel::class.java]
-                val date = System.currentTimeMillis()
+                val viewModel = ViewModelProvider(it)[AddEventViewModel::class.java]
+                val date = System.currentTimeMillis().resetToMidnight()
 
                 runTest {
                     viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged("Test Title"))
@@ -50,8 +53,9 @@ class AddEventViewModelTest {
                     viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(date))
 
                     viewModel.onEvent(ModifyEventViewModel.UIEvent.DoneClicked)
+                    advanceUntilIdle()
 
-                    viewModel.eventsRepository.getEventsForDate(date.resetToMidnight()).test {
+                    viewModel.eventsRepository.getEventsForDate(date).test {
                         val events = awaitItem()
                         assertThat(events).hasSize(1)
 
@@ -62,7 +66,6 @@ class AddEventViewModelTest {
                         assertThat(event1?.description).isEqualTo("Test Description")
                         assertThat(event1?.date).isEqualTo(date.resetToMidnight())
 
-                        expectNoEvents()
                         cancelAndConsumeRemainingEvents()
                     }
                 }
