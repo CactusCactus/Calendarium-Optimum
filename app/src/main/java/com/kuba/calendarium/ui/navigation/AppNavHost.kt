@@ -63,7 +63,7 @@ fun AppNavHost() {
 
         composable(
             route = ScreenRoute.EditEvent.route,
-            arguments = listOf(navArgument(ARG_EVENT_ID_MS) { type = NavType.LongType })
+            arguments = listOf(navArgument(ARG_EVENT_ID) { type = NavType.LongType })
         ) {
             EditEvenScreen(
                 viewModel = hiltViewModel(),

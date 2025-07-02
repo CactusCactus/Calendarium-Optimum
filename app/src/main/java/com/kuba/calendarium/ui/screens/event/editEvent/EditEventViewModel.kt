@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.repo.EventsRepository
-import com.kuba.calendarium.ui.navigation.ARG_EVENT_ID_MS
+import com.kuba.calendarium.ui.navigation.ARG_EVENT_ID
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
 import com.kuba.calendarium.util.getTodayMidnight
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +21,7 @@ class EditEventViewModel @Inject constructor(
     eventsRepository: EventsRepository,
     savedStateHandle: SavedStateHandle
 ) : ModifyEventViewModel(eventsRepository, savedStateHandle) {
-    private val eventId: Long = savedStateHandle.get<Long>(ARG_EVENT_ID_MS) ?: -1
+    private val eventId: Long = savedStateHandle.get<Long>(ARG_EVENT_ID) ?: -1
 
     init {
         if (eventId == -1L) {

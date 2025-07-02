@@ -1,4 +1,4 @@
-package com.kuba.calendarium.ui.screens.addEvent
+package com.kuba.calendarium.ui.screens.events.addEvent
 
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ActivityScenario

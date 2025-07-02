@@ -1,11 +1,8 @@
-package com.kuba.calendarium.ui.screens.addEvent
+package com.kuba.calendarium.ui.screens.event
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.kuba.calendarium.data.repo.EventsRepository
-import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_MS
-import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
-import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.ValidationError
 import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
 import com.kuba.calendarium.util.resetToMidnight
 import io.mockk.coEvery
@@ -16,7 +13,7 @@ import org.junit.Test
 import java.util.Calendar
 import java.util.Date
 
-class AddEventViewModelTest {
+class ModifyEventViewModelTest {
     private lateinit var mockEventsRepository: EventsRepository
     private lateinit var mockSavedStateHandle: SavedStateHandle
     private lateinit var viewModel: AddEventViewModel
@@ -28,22 +25,8 @@ class AddEventViewModelTest {
             // You can set any necessary data here
         }
 
+        // AddEventViewModel is picked for implementation of the abstract class ModifyEventViewModel
         viewModel = AddEventViewModel(mockEventsRepository, mockSavedStateHandle)
-    }
-
-    @Test
-    fun `Date is passed in the SavedStateHandle - state is updated`() {
-        val date = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 21)
-            set(Calendar.MINUTE, 37)
-        }.time
-
-        val mockSavedStateHandle = SavedStateHandle().apply {
-            set(ARG_SELECTED_DATE_MS, date.time)
-        }
-
-        val viewModel = AddEventViewModel(mockEventsRepository, mockSavedStateHandle)
-        assert(viewModel.uiState.value.selectedDate == date.time)
     }
 
     @Test
@@ -115,7 +98,7 @@ class AddEventViewModelTest {
         assert(viewModel.uiState.value.title.isEmpty())
         assert(viewModel.uiState.value.description == "Test Description")
         // Error will be only set after user interacts with title TextField
-        assert(viewModel.uiState.value.titleError == ValidationError.TITLE_EMPTY)
+        assert(viewModel.uiState.value.titleError == ModifyEventViewModel.ValidationError.TITLE_EMPTY)
         assert(viewModel.uiState.value.descriptionError == null)
         assert(viewModel.uiState.value.isValid.not())
     }
@@ -148,7 +131,7 @@ class AddEventViewModelTest {
         viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged(longTitle))
 
         assert(viewModel.uiState.value.title == longTitle)
-        assert(viewModel.uiState.value.titleError == ValidationError.TITLE_TOO_LONG)
+        assert(viewModel.uiState.value.titleError == ModifyEventViewModel.ValidationError.TITLE_TOO_LONG)
         assert(viewModel.uiState.value.isValid.not())
     }
 
@@ -167,7 +150,7 @@ class AddEventViewModelTest {
         assert(viewModel.uiState.value.title == "Test Title")
         assert(viewModel.uiState.value.description == longDescription)
         assert(viewModel.uiState.value.titleError == null)
-        assert(viewModel.uiState.value.descriptionError == ValidationError.DESCRIPTION_TOO_LONG)
+        assert(viewModel.uiState.value.descriptionError == ModifyEventViewModel.ValidationError.DESCRIPTION_TOO_LONG)
         assert(viewModel.uiState.value.isValid.not())
     }
 
