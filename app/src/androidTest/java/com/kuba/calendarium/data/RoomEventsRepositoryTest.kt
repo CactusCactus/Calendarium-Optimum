@@ -9,6 +9,7 @@ import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.repo.EventsRepository
+import com.kuba.calendarium.util.resetToMidnight
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -126,7 +127,7 @@ class RoomEventsRepositoryTest {
     fun addEventsAndCheckFlowByDate() = runTest {
         val eventId1 = "addEventsAndCheckFlow1".hashCode().toLong()
         val eventId2 = "addEventsAndCheckFlow2".hashCode().toLong()
-        val date = System.currentTimeMillis()
+        val date = System.currentTimeMillis().resetToMidnight()
 
         val event1 = Event(
             id = eventId1,
@@ -148,6 +149,57 @@ class RoomEventsRepositoryTest {
         repository.getEventsForDate(date).test {
             val emittedEvents = awaitItem()
             assertThat(emittedEvents).containsExactly(event1, event2)
+
+            expectNoEvents()
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updateExistingEvent() = runTest {
+        val eventId = "updateExistingEvent".hashCode().toLong()
+        val originalEvent = Event(
+            id = eventId,
+            title = "Original Test Event",
+            description = "This is a test event",
+            date = System.currentTimeMillis()
+        )
+
+        val updatedEvent = Event(
+            id = eventId,
+            title = "Updated Test Event",
+            description = "This is an updated test event",
+            date = System.currentTimeMillis()
+        )
+
+        repository.insertEvent(originalEvent)
+        repository.updateEvent(updatedEvent)
+
+        repository.getEventById(eventId).test {
+            val emittedEvent = awaitItem()
+            assertThat(emittedEvent).isEqualTo(updatedEvent)
+            assertThat(emittedEvent?.id).isEqualTo(originalEvent.id)
+
+            expectNoEvents()
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updateNonExistingEvent() = runTest {
+        val eventId = "updateNonExistingEvent".hashCode().toLong()
+        val updatedEvent = Event(
+            id = eventId,
+            title = "Updated Test Event",
+            description = "This is an updated test event",
+            date = System.currentTimeMillis()
+        )
+
+        repository.updateEvent(updatedEvent)
+
+        repository.getEventById(eventId).test {
+            val emittedEvent = awaitItem()
+            assertThat(emittedEvent).isNull()
 
             expectNoEvents()
             cancelAndConsumeRemainingEvents()
