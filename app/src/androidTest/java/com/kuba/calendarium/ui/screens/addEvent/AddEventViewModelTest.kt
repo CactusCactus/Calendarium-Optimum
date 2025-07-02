@@ -5,6 +5,8 @@ import androidx.test.core.app.ActivityScenario
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.DummyHiltActivity
+import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
+import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
 import com.kuba.calendarium.util.resetToMidnight
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -39,15 +41,15 @@ class AddEventViewModelTest {
     fun testDoneEventInsertingDataToDatabase() {
         ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
             scenario.onActivity {
-                val viewModel = ViewModelProvider(it)[AddEventViewModel::class.java]
+                val viewModel = ViewModelProvider(it)[ModifyEventViewModel::class.java]
                 val date = System.currentTimeMillis()
 
                 runTest {
-                    viewModel.onEvent(AddEventViewModel.UIEvent.TitleChanged("Test Title"))
-                    viewModel.onEvent(AddEventViewModel.UIEvent.DescriptionChanged("Test Description"))
-                    viewModel.onEvent(AddEventViewModel.UIEvent.DateSelected(date))
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged("Test Title"))
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DescriptionChanged("Test Description"))
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(date))
 
-                    viewModel.onEvent(AddEventViewModel.UIEvent.DoneClicked)
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DoneClicked)
 
                     viewModel.eventsRepository.getEventsForDate(date.resetToMidnight()).test {
                         val events = awaitItem()

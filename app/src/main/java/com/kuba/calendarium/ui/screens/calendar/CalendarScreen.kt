@@ -39,14 +39,22 @@ import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardPadding
-import com.kuba.calendarium.util.standardDateFormat
-import timber.log.Timber
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun CalendarScreen(
     viewModel: CalendarViewModel,
-    onNavigateToAddEvent: (selectedDate: Long) -> Unit
+    onNavigateToAddEvent: (selectedDate: Long) -> Unit,
+    onNavigateToEditEvent: (eventId: Long) -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.navEvent.collectLatest {
+            when (it) {
+                is CalendarViewModel.NavEvent.EditEvent -> onNavigateToEditEvent(it.eventId)
+            }
+        }
+    }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
@@ -75,7 +83,6 @@ fun CalendarScreen(
             )
 
             LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
-                Timber.d("Page changed: ${pagerState.currentPage}")
                 if (!pagerState.isScrollInProgress) {
                     val newDateFromPager = viewModel.pageIndexToDateMillis(pagerState.currentPage)
 
@@ -86,9 +93,6 @@ fun CalendarScreen(
             }
 
             LaunchedEffect(selectedDate) {
-                Timber.d("Selected date changed: ${selectedDate.standardDateFormat()}")
-                Timber.d("Predicted page: ${viewModel.dateMillisToPageIndex(selectedDate)}")
-
                 pagerState.animateScrollToPage(viewModel.dateMillisToPageIndex(selectedDate))
             }
 

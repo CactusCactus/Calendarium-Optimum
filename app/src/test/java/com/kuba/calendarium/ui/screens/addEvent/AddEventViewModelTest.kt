@@ -4,7 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_MS
-import com.kuba.calendarium.ui.screens.addEvent.AddEventViewModel.ValidationError
+import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
+import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.ValidationError
+import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
 import com.kuba.calendarium.util.resetToMidnight
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -53,17 +55,17 @@ class AddEventViewModelTest {
 
         coEvery { mockEventsRepository.insertEvent(any()) } returns 1
         // Set date of the Event (other fields are not important in this case)
-        viewModel.onEvent(AddEventViewModel.UIEvent.DateSelected(date.time))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(date.time))
 
         viewModel.navEvent.test {
-            viewModel.onEvent(AddEventViewModel.UIEvent.DoneClicked)
+            viewModel.onEvent(ModifyEventViewModel.UIEvent.DoneClicked)
 
             val finishEvent = awaitItem()
-            assert(finishEvent is AddEventViewModel.NavEvent.Finish)
+            assert(finishEvent is ModifyEventViewModel.NavEvent.Finish)
 
             // Date is reset to midnight before being inserted into repository
             val expectedDate = date.time.resetToMidnight()
-            assert((finishEvent as AddEventViewModel.NavEvent.Finish).eventDate == expectedDate)
+            assert((finishEvent as ModifyEventViewModel.NavEvent.Finish).eventDate == expectedDate)
 
             // Should fire only once
             expectNoEvents()
@@ -93,7 +95,7 @@ class AddEventViewModelTest {
         assert(viewModel.uiState.value.titleError == null)
         assert(viewModel.uiState.value.isValid.not())
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.TitleChanged("Test Title"))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged("Test Title"))
 
         assert(viewModel.uiState.value.title == "Test Title")
         assert(viewModel.uiState.value.titleError == null)
@@ -108,7 +110,7 @@ class AddEventViewModelTest {
         assert(viewModel.uiState.value.descriptionError == null)
         assert(viewModel.uiState.value.isValid.not())
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.DescriptionChanged("Test Description"))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DescriptionChanged("Test Description"))
 
         assert(viewModel.uiState.value.title.isEmpty())
         assert(viewModel.uiState.value.description == "Test Description")
@@ -126,8 +128,8 @@ class AddEventViewModelTest {
         assert(viewModel.uiState.value.descriptionError == null)
         assert(viewModel.uiState.value.isValid.not())
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.TitleChanged("Test Title"))
-        viewModel.onEvent(AddEventViewModel.UIEvent.DescriptionChanged("Test Description"))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged("Test Title"))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DescriptionChanged("Test Description"))
 
         assert(viewModel.uiState.value.title == "Test Title")
         assert(viewModel.uiState.value.description == "Test Description")
@@ -142,8 +144,8 @@ class AddEventViewModelTest {
         assert(viewModel.uiState.value.titleError == null)
         assert(viewModel.uiState.value.isValid.not())
 
-        val longTitle = "a".repeat(AddEventViewModel.MAX_TITLE_LENGTH + 1)
-        viewModel.onEvent(AddEventViewModel.UIEvent.TitleChanged(longTitle))
+        val longTitle = "a".repeat(ModifyEventViewModel.MAX_TITLE_LENGTH + 1)
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged(longTitle))
 
         assert(viewModel.uiState.value.title == longTitle)
         assert(viewModel.uiState.value.titleError == ValidationError.TITLE_TOO_LONG)
@@ -158,9 +160,9 @@ class AddEventViewModelTest {
         assert(viewModel.uiState.value.descriptionError == null)
         assert(viewModel.uiState.value.isValid.not())
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.TitleChanged("Test Title"))
-        val longDescription = "a".repeat(AddEventViewModel.MAX_DESCRIPTION_LENGTH + 1)
-        viewModel.onEvent(AddEventViewModel.UIEvent.DescriptionChanged(longDescription))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged("Test Title"))
+        val longDescription = "a".repeat(ModifyEventViewModel.MAX_DESCRIPTION_LENGTH + 1)
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DescriptionChanged(longDescription))
 
         assert(viewModel.uiState.value.title == "Test Title")
         assert(viewModel.uiState.value.description == longDescription)
@@ -173,11 +175,11 @@ class AddEventViewModelTest {
     fun `User clicks date field - date picker opens, user dismissed it - date picker closes`() {
         assert(viewModel.uiState.value.datePickerOpen.not())
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.DatePickerOpened)
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
 
         assert(viewModel.uiState.value.datePickerOpen)
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.DatePickerDismissed)
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DatePickerDismissed)
 
         assert(viewModel.uiState.value.datePickerOpen.not())
     }
@@ -186,12 +188,12 @@ class AddEventViewModelTest {
     fun `User selects date - date picker closes and changes displayed date`() {
         assert(viewModel.uiState.value.datePickerOpen.not())
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.DatePickerOpened)
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
 
         assert(viewModel.uiState.value.datePickerOpen)
 
-        viewModel.onEvent(AddEventViewModel.UIEvent.DateSelected(Date().time))
-        viewModel.onEvent(AddEventViewModel.UIEvent.DatePickerDismissed)
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(Date().time))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DatePickerDismissed)
 
         // Date is reset to midnight before being saved
         assert(viewModel.uiState.value.selectedDate == Date().time.resetToMidnight())

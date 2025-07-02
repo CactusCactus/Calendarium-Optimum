@@ -8,9 +8,11 @@ import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.util.getTodayMidnight
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -28,6 +30,10 @@ class CalendarViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     private val _selectedDate = MutableStateFlow(getTodayMidnight())
+
+    private val _navEvent = Channel<NavEvent>()
+
+    val navEvent = _navEvent.receiveAsFlow()
 
     val selectedDate = _selectedDate.asStateFlow()
 
@@ -58,6 +64,14 @@ class CalendarViewModel @Inject constructor(
                 ContextMenuOption.DELETE -> _uiState.update {
                     _uiState.value.copy(deleteDialogShowing = true)
                 }
+
+                ContextMenuOption.EDIT -> {
+                    _uiState.update { _uiState.value.copy(contextMenuOpen = false) }
+
+                    contextMenuEvent?.let {
+                        viewModelScope.launch { _navEvent.send(NavEvent.EditEvent(it.id)) }
+                    } ?: Timber.e("ContextMenuEvent is null and cannot be edited")
+                }
             }
 
             UIEvent.DeleteDialogDismiss -> _uiState.update {
@@ -72,9 +86,7 @@ class CalendarViewModel @Inject constructor(
                 contextMenuEvent?.let {
                     eventsRepository.deleteEvent(it)
                     contextMenuEvent = null
-                } ?: run {
-                    Timber.e("ContextMenuEvent is null and cannot be deleted")
-                }
+                } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
             }
 
         }
@@ -105,5 +117,9 @@ class CalendarViewModel @Inject constructor(
         object ContextEventDelete : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         object DeleteDialogDismiss : UIEvent()
+    }
+
+    sealed class NavEvent {
+        data class EditEvent(val eventId: Long) : NavEvent()
     }
 }

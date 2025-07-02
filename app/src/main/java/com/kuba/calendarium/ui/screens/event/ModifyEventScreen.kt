@@ -1,4 +1,4 @@
-package com.kuba.calendarium.ui.screens.addEvent
+package com.kuba.calendarium.ui.screens.event
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -38,14 +38,15 @@ import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddEventScreen(
-    viewModel: AddEventViewModel,
+fun ModifyEventScreen(
+    title: String,
+    viewModel: ModifyEventViewModel,
     onNavigateUp: (Long) -> Unit
 ) {
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(Unit) {
         viewModel.navEvent.collectLatest {
             when (it) {
-                is AddEventViewModel.NavEvent.Finish -> onNavigateUp(it.eventDate)
+                is ModifyEventViewModel.NavEvent.Finish -> onNavigateUp(it.eventDate)
             }
         }
     }
@@ -54,7 +55,7 @@ fun AddEventScreen(
         topBar = {
             TopAppBar(title = {
                 Text(
-                    text = stringResource(R.string.add_event_screen_title),
+                    text = title,
                     style = MaterialTheme.typography.displayMedium
                 )
             })
@@ -62,7 +63,7 @@ fun AddEventScreen(
         floatingActionButton = {
             // FAB doesn't have enable function, so it's replaced by a button styled to look like one
             Button(
-                onClick = { viewModel.onEvent(AddEventViewModel.UIEvent.DoneClicked) },
+                onClick = { viewModel.onEvent(ModifyEventViewModel.UIEvent.DoneClicked) },
                 modifier = Modifier.size(width = fabSize, height = fabSize),
                 contentPadding = PaddingValues(fabContentPadding),
                 enabled = viewModel.uiState.collectAsState().value.isValid,
@@ -82,10 +83,10 @@ fun AddEventScreen(
             DatePickerModal(
                 initialDate = viewModel.uiState.collectAsState().value.selectedDate,
                 onDatePicked = {
-                    viewModel.onEvent(AddEventViewModel.UIEvent.DateSelected(it))
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(it))
                 },
                 onDismissRequest = {
-                    viewModel.onEvent(AddEventViewModel.UIEvent.DatePickerDismissed)
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DatePickerDismissed)
                 }
             )
         }
@@ -94,8 +95,8 @@ fun AddEventScreen(
 
 @Composable
 private fun MainColumn(
-    uiState: AddEventViewModel.UIState,
-    onEvent: (AddEventViewModel.UIEvent) -> Unit,
+    uiState: ModifyEventViewModel.UIState,
+    onEvent: (ModifyEventViewModel.UIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -109,7 +110,7 @@ private fun MainColumn(
 
         OutlinedTextField(
             value = uiState.title,
-            onValueChange = { onEvent(AddEventViewModel.UIEvent.TitleChanged(it)) },
+            onValueChange = { onEvent(ModifyEventViewModel.UIEvent.TitleChanged(it)) },
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(stringResource(R.string.input_title_placeholder)) },
             isError = uiState.titleError != null,
@@ -127,7 +128,7 @@ private fun MainColumn(
 
         OutlinedTextField(
             value = uiState.description,
-            onValueChange = { onEvent(AddEventViewModel.UIEvent.DescriptionChanged(it)) },
+            onValueChange = { onEvent(ModifyEventViewModel.UIEvent.DescriptionChanged(it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = descriptionMinHeight),
@@ -156,7 +157,7 @@ private fun MainColumn(
             modifier = Modifier
                 .fillMaxWidth()
                 .textFieldClickable(uiState.selectedDate) {
-                    onEvent(AddEventViewModel.UIEvent.DatePickerOpened)
+                    onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
                 }
         )
     }

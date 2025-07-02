@@ -17,10 +17,14 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
     }
 
     suspend fun insertEvent(event: Event) = dao.insert(event).also {
-        Timber.d("Inserted event: ${event.title}")
+        Timber.d("Inserted event: ${event.title} with id: $it")
+    }
+
+    suspend fun updateEvent(event: Event) = dao.update(event).also {
+        Timber.d("Updated event: ${event.title} with id: ${event.id}")
     }
 
     suspend fun deleteEvent(event: Event) = dao.delete(event).also {
-        Timber.d("Deleted event: ${event.title}")
+        Timber.d("Deleted event: ${event.title} with id: ${event.id}")
     }
 }

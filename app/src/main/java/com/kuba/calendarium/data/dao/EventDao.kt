@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.kuba.calendarium.data.model.Event
 import kotlinx.coroutines.flow.Flow
 
@@ -12,6 +13,9 @@ import kotlinx.coroutines.flow.Flow
 interface EventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(event: Event): Long
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun update(event: Event)
 
     @Delete
     suspend fun delete(event: Event)

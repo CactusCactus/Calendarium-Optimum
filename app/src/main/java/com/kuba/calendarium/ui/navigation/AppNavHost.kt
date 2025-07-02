@@ -8,9 +8,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.kuba.calendarium.ui.screens.addEvent.AddEventScreen
 import com.kuba.calendarium.ui.screens.calendar.CalendarScreen
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel
+import com.kuba.calendarium.ui.screens.event.addEvent.AddEventScreen
+import com.kuba.calendarium.ui.screens.event.editEvent.EditEvenScreen
 
 @Composable
 fun AppNavHost() {
@@ -37,6 +38,9 @@ fun AppNavHost() {
                 viewModel = viewModel,
                 onNavigateToAddEvent = {
                     navController.navigate(ScreenRoute.AddEvent.createRoute(it))
+                },
+                onNavigateToEditEvent = {
+                    navController.navigate(ScreenRoute.EditEvent.createRoute(it))
                 })
 
         }
@@ -46,6 +50,22 @@ fun AppNavHost() {
             arguments = listOf(navArgument(ARG_SELECTED_DATE_MS) { type = NavType.LongType })
         ) {
             AddEventScreen(
+                viewModel = hiltViewModel(),
+                onNavigateUp = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set(
+                        KEY_RESULT_EVENT_DATE_MS,
+                        it
+                    )
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = ScreenRoute.EditEvent.route,
+            arguments = listOf(navArgument(ARG_EVENT_ID_MS) { type = NavType.LongType })
+        ) {
+            EditEvenScreen(
                 viewModel = hiltViewModel(),
                 onNavigateUp = {
                     navController.previousBackStackEntry?.savedStateHandle?.set(
