@@ -20,9 +20,9 @@ interface EventDao {
     @Delete
     suspend fun delete(event: Event)
 
-    @Query("SELECT * FROM event WHERE date = :date")
+    @Query("SELECT * FROM event WHERE date = :date ORDER BY date")
     fun getEventsForDate(date: Long): Flow<List<Event>>
 
-    @Query("SELECT * FROM event WHERE id = :id")
+    @Query("SELECT * FROM event WHERE id = :id ORDER BY date")
     fun getEventById(id: Long): Flow<Event?>
 }
