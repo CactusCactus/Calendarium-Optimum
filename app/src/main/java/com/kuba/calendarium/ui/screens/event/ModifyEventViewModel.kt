@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.repo.EventsRepository
+import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
 import com.kuba.calendarium.util.getTodayMidnight
 import com.kuba.calendarium.util.resetToMidnight
 import kotlinx.coroutines.channels.Channel
@@ -54,7 +55,7 @@ abstract class ModifyEventViewModel(
 
             UIEvent.DoneClicked -> viewModelScope.launch {
                 databaseWriteOperation()
-                _navEvent.send(NavEvent.Finish(_uiState.value.selectedDate))
+                _navEvent.send(Finish(_uiState.value.selectedDate))
             }
             // Date picker events
             UIEvent.DatePickerOpened -> _uiState.update {
@@ -63,6 +64,18 @@ abstract class ModifyEventViewModel(
 
             UIEvent.DatePickerDismissed -> _uiState.update {
                 _uiState.value.copy(datePickerOpen = false)
+            }
+
+            UIEvent.TimePickerOpened -> _uiState.update {
+                _uiState.value.copy(timePickerOpen = true)
+            }
+
+            UIEvent.TimePickerDismissed -> _uiState.update {
+                _uiState.value.copy(timePickerOpen = false)
+            }
+
+            is UIEvent.TimeSelected -> _uiState.update {
+                _uiState.value.copy(selectedTime = event.date)
             }
         }
     }
@@ -102,7 +115,9 @@ abstract class ModifyEventViewModel(
         val title: String = "",
         val description: String = "",
         val selectedDate: Long = getTodayMidnight(),
+        val selectedTime: Long? = null,
         val datePickerOpen: Boolean = false,
+        val timePickerOpen: Boolean = false,
 
         // Validation
         val titleError: ValidationError? = null,
@@ -114,9 +129,12 @@ abstract class ModifyEventViewModel(
         data class TitleChanged(val title: String) : UIEvent()
         data class DescriptionChanged(val description: String) : UIEvent()
         data class DateSelected(val date: Long) : UIEvent()
+        data class TimeSelected(val date: Long?) : UIEvent()
         object DoneClicked : UIEvent()
         object DatePickerOpened : UIEvent()
+        object TimePickerOpened : UIEvent()
         object DatePickerDismissed : UIEvent()
+        object TimePickerDismissed : UIEvent()
     }
 
     sealed class NavEvent {

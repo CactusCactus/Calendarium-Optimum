@@ -8,11 +8,22 @@ import java.util.TimeZone
 
 const val STANDARD_DATE_FORMAT = "dd/MM/yyyy"
 
+const val STANDARD_TIME_FORMAT = "HH:mm"
+
 fun Long.standardDateFormat(): String =
-    SimpleDateFormat(STANDARD_DATE_FORMAT, Locale.getDefault()).format(Date(this))
+    SimpleDateFormat(STANDARD_DATE_FORMAT, Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }.format(Date(this))
+
+fun Long.standardTimeFormat(): String =
+    SimpleDateFormat(STANDARD_TIME_FORMAT, Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }.format(Date(this))
 
 fun Date.standardDateFormat(): String =
-    SimpleDateFormat(STANDARD_DATE_FORMAT, Locale.getDefault()).format(this)
+    SimpleDateFormat(STANDARD_DATE_FORMAT, Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }.format(this)
 
 fun getTodayMidnight(timeZone: TimeZone = TimeZone.getTimeZone("UTC")) =
     Calendar.getInstance(timeZone).apply {

@@ -4,6 +4,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -40,6 +42,7 @@ import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardPadding
+import com.kuba.calendarium.util.standardTimeFormat
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -156,8 +159,15 @@ private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier =
         )
     ) {
         Column(modifier = Modifier.padding(standardPadding)) {
-            Text(text = event.title, style = MaterialTheme.typography.titleLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = event.title, style = MaterialTheme.typography.titleLarge)
 
+                Spacer(modifier = Modifier.weight(1f))
+
+                event.time?.let {
+                    Text(text = it.standardTimeFormat())
+                }
+            }
             StandardQuarterSpacer()
 
             Text(text = event.description, style = MaterialTheme.typography.bodyMedium)

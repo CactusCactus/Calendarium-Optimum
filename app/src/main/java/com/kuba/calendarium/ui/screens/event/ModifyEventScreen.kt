@@ -1,7 +1,10 @@
 package com.kuba.calendarium.ui.screens.event
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -21,18 +25,24 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.ui.common.DatePickerModal
+import com.kuba.calendarium.ui.common.StandardDoubleSpacer
+import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
+import com.kuba.calendarium.ui.common.TimePickerModal
 import com.kuba.calendarium.ui.common.descriptionMinHeight
 import com.kuba.calendarium.ui.common.fabContentPadding
 import com.kuba.calendarium.ui.common.fabSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.common.textFieldClickable
 import com.kuba.calendarium.util.standardDateFormat
+import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.toLocalizedString
 import kotlinx.coroutines.flow.collectLatest
 
@@ -90,6 +100,21 @@ fun ModifyEventScreen(
                 }
             )
         }
+
+        val time =
+            viewModel.uiState.collectAsState().value.selectedTime ?: System.currentTimeMillis()
+
+        if (viewModel.uiState.collectAsState().value.timePickerOpen) {
+            TimePickerModal(
+                initialTime = time,
+                onTimePicked = {
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.TimeSelected(it))
+                },
+                onDismissRequest = {
+                    viewModel.onEvent(ModifyEventViewModel.UIEvent.TimePickerDismissed)
+                }
+            )
+        }
     }
 }
 
@@ -144,21 +169,58 @@ private fun MainColumn(
             }
         )
 
-        StandardSpacer()
+        StandardHalfSpacer()
 
         Text(stringResource(R.string.add_event_date_label))
 
         StandardSpacer()
 
-        OutlinedTextField(
-            value = uiState.selectedDate.standardDateFormat(),
-            onValueChange = { /* NO-OP */ },
-            readOnly = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .textFieldClickable(uiState.selectedDate) {
-                    onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
-                }
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Date
+            OutlinedTextField(
+                value = uiState.selectedDate.standardDateFormat(),
+                onValueChange = { /* NO-OP */ },
+                readOnly = true,
+                maxLines = 1,
+                modifier = Modifier
+                    .textFieldClickable(uiState.selectedDate) {
+                        onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
+                    }
+                    .defaultMinSize(1.dp)
+            )
+
+            StandardDoubleSpacer()
+
+            // Time
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                uiState.selectedTime?.let {
+                    OutlinedTextField(
+                        value = it.standardTimeFormat(),
+                        onValueChange = { /* NO-OP */ },
+                        readOnly = true,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .textFieldClickable(uiState.selectedDate) {
+                                onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
+                            }
+                            .defaultMinSize(1.dp)
+                    )
+                } ?: Text("Set time")
+
+                Checkbox(
+                    checked = uiState.selectedTime != null,
+                    onCheckedChange = {
+                        if (it) {
+                            onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened)
+                        } else {
+                            onEvent(ModifyEventViewModel.UIEvent.TimeSelected(null))
+                        }
+                    }
+                )
+            }
+        }
     }
 }

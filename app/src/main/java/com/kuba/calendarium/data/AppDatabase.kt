@@ -16,7 +16,7 @@ abstract class AppDatabase : RoomDatabase() {
             context,
             AppDatabase::class.java,
             DATABASE_NAME
-        )
+        ).fallbackToDestructiveMigration(true)
     }
 
     abstract fun eventDao(): EventDao

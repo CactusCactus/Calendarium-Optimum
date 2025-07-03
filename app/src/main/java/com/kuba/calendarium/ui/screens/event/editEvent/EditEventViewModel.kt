@@ -35,7 +35,8 @@ class EditEventViewModel @Inject constructor(
                         _uiState.value.copy(
                             title = event.title,
                             description = event.description,
-                            selectedDate = event.date
+                            selectedDate = event.date,
+                            selectedTime = event.time
                         )
                     }
                     checkAndUpdateValidity()
@@ -50,7 +51,8 @@ class EditEventViewModel @Inject constructor(
                 id = eventId,
                 title = _uiState.value.title,
                 description = _uiState.value.description,
-                date = _uiState.value.selectedDate
+                date = _uiState.value.selectedDate,
+                time = _uiState.value.selectedTime
             )
         )
     }
