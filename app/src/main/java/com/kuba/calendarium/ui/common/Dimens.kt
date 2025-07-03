@@ -8,6 +8,8 @@ val standardHalfPadding = 8.dp
 
 val standardDoublePadding = 32.dp
 
+val standardQuarterPadding = 8.dp
+
 val descriptionMinHeight = 128.dp
 
 val fabSize = 56.dp

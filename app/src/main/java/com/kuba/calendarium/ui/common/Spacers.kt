@@ -13,3 +13,6 @@ fun StandardDoubleSpacer() = Spacer(modifier = Modifier.size(standardDoublePaddi
 
 @Composable
 fun StandardHalfSpacer() = Spacer(modifier = Modifier.size(standardHalfPadding))
+
+@Composable
+fun StandardQuarterSpacer() = Spacer(modifier = Modifier.size(standardQuarterPadding))

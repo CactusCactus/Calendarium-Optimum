@@ -37,6 +37,7 @@ import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.ui.common.ConfirmDialog
 import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
+import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardPadding
 import kotlinx.coroutines.flow.collectLatest
@@ -155,9 +156,9 @@ private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier =
         )
     ) {
         Column(modifier = Modifier.padding(standardPadding)) {
-            Text(text = event.title, style = MaterialTheme.typography.titleMedium)
+            Text(text = event.title, style = MaterialTheme.typography.titleLarge)
 
-            StandardHalfSpacer()
+            StandardQuarterSpacer()
 
             Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
         }
