@@ -2,6 +2,7 @@ package com.kuba.calendarium.ui.screens.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
@@ -23,7 +24,8 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-    internal val eventsRepository: EventsRepository
+    internal val eventsRepository: EventsRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UIState())
 
@@ -44,6 +46,14 @@ class CalendarViewModel @Inject constructor(
         const val PAGER_INITIAL_OFFSET_DAYS = PAGER_VIRTUAL_PAGE_COUNT / 2
     }
 
+    init {
+        viewModelScope.launch {
+            userPreferencesRepository.getShowDialogDeletePreference().collect { value ->
+                _uiState.update { _uiState.value.copy(showDialogDelete = value) }
+            }
+        }
+    }
+
     fun getEventsForDate(date: Long): Flow<List<Event>> = eventsRepository.getEventsForDate(date)
 
     fun onEvent(event: UIEvent) {
@@ -61,8 +71,10 @@ class CalendarViewModel @Inject constructor(
             }
 
             is UIEvent.ContextMenuOptionSelected -> when (event.option) {
-                ContextMenuOption.DELETE -> _uiState.update {
-                    _uiState.value.copy(deleteDialogShowing = true)
+                ContextMenuOption.DELETE -> if (_uiState.value.showDialogDelete) {
+                    _uiState.update { _uiState.value.copy(deleteDialogShowing = true) }
+                } else {
+                    onEvent(UIEvent.ContextEventDelete(!_uiState.value.showDialogDelete))
                 }
 
                 ContextMenuOption.EDIT -> {
@@ -80,13 +92,20 @@ class CalendarViewModel @Inject constructor(
 
             is UIEvent.ContextEventDelete -> viewModelScope.launch {
                 _uiState.update {
-                    _uiState.value.copy(contextMenuOpen = false, deleteDialogShowing = false)
+                    _uiState.value.copy(
+                        contextMenuOpen = false,
+                        deleteDialogShowing = false,
+                        showDialogDelete = !event.dontShowAgain
+                    )
                 }
 
                 contextMenuEvent?.let {
                     eventsRepository.deleteEvent(it)
                     contextMenuEvent = null
                 } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
+
+                userPreferencesRepository
+                    .setShowDialogDeletePreference(_uiState.value.showDialogDelete)
             }
 
         }
@@ -107,7 +126,8 @@ class CalendarViewModel @Inject constructor(
     data class UIState(
         var contextMenuOpen: Boolean = false,
         var contextMenuName: String = "",
-        var deleteDialogShowing: Boolean = false
+        var deleteDialogShowing: Boolean = false,
+        var showDialogDelete: Boolean = UserPreferencesRepository.SHOW_DIALOG_DEFAULT
     )
 
     sealed class UIEvent {
