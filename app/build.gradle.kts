@@ -89,6 +89,9 @@ dependencies {
     // Timber
     implementation(libs.timber)
 
+    // Data Store
+    implementation(libs.androidx.datastore.preferences)
+
     // Tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
