@@ -5,28 +5,53 @@ import androidx.test.core.app.ActivityScenario
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.DummyHiltActivity
+import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
+import com.kuba.calendarium.data.repo.EventsRepository
+import com.kuba.calendarium.di.TEST_PREFS_NAME
 import com.kuba.calendarium.util.resetToMidnight
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.Calendar
+import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltAndroidTest
 class CalendarViewModelTest {
+    private lateinit var testDispatcher: TestDispatcher
+
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 
+    @Inject
+    lateinit var eventsRepository: EventsRepository
+
     @Before
     fun setUp() {
+        testDispatcher = StandardTestDispatcher()
+        Dispatchers.setMain(testDispatcher)
+
         hiltRule.inject()
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -169,6 +194,39 @@ class CalendarViewModelTest {
 
                     assertThat(viewModel.uiState.value.contextMenuOpen).isFalse()
                     assertThat(viewModel.uiState.value.deleteDialogShowing).isFalse()
+                }
+            }
+        }
+    }
+
+    @Test // FIXME: This test is not working
+    fun testUserCheckDontShowAgainDeleteDialogAndDataSaved() {
+        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
+            scenario.onActivity {
+                val testUserPrefs = UserPreferencesRepository(it, TEST_PREFS_NAME)
+                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
+
+                runTest {
+                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(dontShowAgain = true))
+                    advanceUntilIdle()
+
+                    testUserPrefs.getShowDialogDeletePreference().test {
+                        val item = awaitItem()
+
+                        assertThat(item).isFalse()
+                        cancelAndConsumeRemainingEvents()
+                    }
+
+                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(dontShowAgain = false))
+                    advanceUntilIdle()
+
+                    testUserPrefs.getShowDialogDeletePreference().test {
+                        val item = awaitItem()
+
+                        assertThat(item).isTrue()
+                        cancelAndConsumeRemainingEvents()
+                    }
+
                 }
             }
         }

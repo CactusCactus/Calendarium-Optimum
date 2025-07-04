@@ -106,7 +106,7 @@ class CalendarViewModel @Inject constructor(
                     } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
 
                     userPreferencesRepository
-                        .setShowDialogDeletePreference(_uiState.value.showDialogDelete)
+                        .setShowDialogDeletePreference(!event.dontShowAgain)
                 }
             }
 

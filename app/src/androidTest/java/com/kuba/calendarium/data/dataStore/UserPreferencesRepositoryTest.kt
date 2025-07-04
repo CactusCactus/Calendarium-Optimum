@@ -27,12 +27,16 @@ class UserPreferencesRepositoryTest {
         userPreferencesRepository.getShowDialogDeletePreference().test {
             val result = awaitItem()
             assertThat(result).isTrue()
+
+            cancelAndConsumeRemainingEvents()
         }
 
         userPreferencesRepository.setShowDialogDeletePreference(false)
         userPreferencesRepository.getShowDialogDeletePreference().test {
             val result = awaitItem()
             assertThat(result).isFalse()
+
+            cancelAndConsumeRemainingEvents()
         }
     }
 }
