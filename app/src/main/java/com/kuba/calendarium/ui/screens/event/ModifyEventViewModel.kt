@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
 import com.kuba.calendarium.util.getTodayMidnight
-import com.kuba.calendarium.util.resetToMidnight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,7 +49,7 @@ abstract class ModifyEventViewModel(
             }
 
             is UIEvent.DateSelected -> _uiState.update {
-                _uiState.value.copy(selectedDate = event.date.resetToMidnight())
+                _uiState.value.copy(selectedDate = event.date)
             }
 
             UIEvent.DoneClicked -> viewModelScope.launch {

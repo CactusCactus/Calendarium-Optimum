@@ -47,7 +47,7 @@ class ModifyEventViewModelTest {
             assert(finishEvent is ModifyEventViewModel.NavEvent.Finish)
 
             // Date is reset to midnight before being inserted into repository
-            val expectedDate = date.time.resetToMidnight()
+            val expectedDate = date.time
             assert((finishEvent as ModifyEventViewModel.NavEvent.Finish).eventDate == expectedDate)
 
             // Should fire only once
@@ -175,11 +175,44 @@ class ModifyEventViewModelTest {
 
         assert(viewModel.uiState.value.datePickerOpen)
 
-        viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(Date().time))
+        val date = Date().time
+
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(date))
         viewModel.onEvent(ModifyEventViewModel.UIEvent.DatePickerDismissed)
 
         // Date is reset to midnight before being saved
-        assert(viewModel.uiState.value.selectedDate == Date().time.resetToMidnight())
+        assert(viewModel.uiState.value.selectedDate == date)
         assert(viewModel.uiState.value.datePickerOpen.not())
+    }
+
+    @Test
+    fun `User clicks time field - time picker opens, user dismissed it - time picker closes`() {
+        assert(viewModel.uiState.value.timePickerOpen.not())
+
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened)
+
+        assert(viewModel.uiState.value.timePickerOpen)
+
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TimePickerDismissed)
+
+        assert(viewModel.uiState.value.timePickerOpen.not())
+    }
+
+    @Test
+    fun `User selects time - time picker closes and changes displayed time`() {
+        assert(viewModel.uiState.value.timePickerOpen.not())
+
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened)
+
+        assert(viewModel.uiState.value.timePickerOpen)
+
+        val time = Date().time
+
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TimeSelected(time))
+        viewModel.onEvent(ModifyEventViewModel.UIEvent.TimePickerDismissed)
+
+        // Date is reset to midnight before being saved
+        assert(viewModel.uiState.value.selectedTime == time)
+        assert(viewModel.uiState.value.timePickerOpen.not())
     }
 }
