@@ -173,7 +173,7 @@ fun ConfirmDialog(
     onConfirm: () -> Unit,
     modifier: Modifier = Modifier,
     title: String? = null,
-    text: String? = null,
+    content: @Composable () -> Unit,
     @DrawableRes icon: Int? = null,
     iconTint: Color = LocalContentColor.current,
     confirmButtonLabel: String = stringResource(R.string.confirm),
@@ -191,7 +191,7 @@ fun ConfirmDialog(
             }
         },
         title = { title?.let { Text(it) } },
-        text = { text?.let { Text(it) } },
+        text = content,
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onConfirm) {

@@ -16,6 +16,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,7 +30,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -226,19 +229,35 @@ private fun ShowDialogsAndBottomSheets(viewModel: CalendarViewModel) {
 
     if (uiState.deleteDialogShowing) {
         ShowDeleteDialog(
-            onConfirm = { viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete) },
+            onConfirm = { viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(it)) },
             onDismiss = { viewModel.onEvent(CalendarViewModel.UIEvent.DeleteDialogDismiss) }
         )
     }
 }
 
 @Composable
-private fun ShowDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+private fun ShowDeleteDialog(onConfirm: (dontAskAgain: Boolean) -> Unit, onDismiss: () -> Unit) {
+    var dontAskAgainChecked by remember { mutableStateOf(false) }
+
     ConfirmDialog(
-        onConfirm = onConfirm,
+        onConfirm = { onConfirm(dontAskAgainChecked) },
         onDismiss = onDismiss,
         title = stringResource(R.string.delete_dialog_title),
-        text = stringResource(R.string.delete_dialog_text),
+        content = {
+            Column {
+                Text(stringResource(R.string.delete_dialog_text))
+
+                StandardQuarterSpacer()
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = dontAskAgainChecked,
+                        onCheckedChange = { dontAskAgainChecked = it })
+
+                    Text(text = stringResource(R.string.dont_ask_again_label))
+                }
+            }
+        },
         icon = R.drawable.ic_delete_24
     )
 }

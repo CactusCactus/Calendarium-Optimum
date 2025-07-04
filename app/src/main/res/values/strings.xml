@@ -16,4 +16,5 @@
     <string name="event_list_empty_label">No events</string>
     <string name="edit">Edit</string>
     <string name="edit_event_screen_title">Edit Event</string>
+    <string name="dont_ask_again_label">Don\'t ask again</string>
 </resources>

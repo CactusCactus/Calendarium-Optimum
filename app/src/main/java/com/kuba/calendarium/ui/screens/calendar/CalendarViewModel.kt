@@ -78,7 +78,7 @@ class CalendarViewModel @Inject constructor(
                 _uiState.value.copy(contextMenuOpen = false, deleteDialogShowing = false)
             }
 
-            UIEvent.ContextEventDelete -> viewModelScope.launch {
+            is UIEvent.ContextEventDelete -> viewModelScope.launch {
                 _uiState.update {
                     _uiState.value.copy(contextMenuOpen = false, deleteDialogShowing = false)
                 }
@@ -114,7 +114,7 @@ class CalendarViewModel @Inject constructor(
         data class DateSelected(val date: Long) : UIEvent()
         data class ContextMenuOpen(val event: Event) : UIEvent()
         object ContextMenuDismiss : UIEvent()
-        object ContextEventDelete : UIEvent()
+        data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         object DeleteDialogDismiss : UIEvent()
     }
