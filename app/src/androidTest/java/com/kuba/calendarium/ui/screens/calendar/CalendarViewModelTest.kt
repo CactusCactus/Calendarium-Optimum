@@ -119,7 +119,7 @@ class CalendarViewModelTest {
 
                     assertThat(viewModel.uiState.value.deleteDialogShowing).isTrue()
 
-                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete)
+                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(false))
 
                     viewModel.eventsRepository.getEventById(event.id).test {
                         val events = awaitItem()

@@ -90,7 +90,7 @@ class CalendarViewModel @Inject constructor(
                 _uiState.value.copy(contextMenuOpen = false, deleteDialogShowing = false)
             }
 
-            is UIEvent.ContextEventDelete -> viewModelScope.launch {
+            is UIEvent.ContextEventDelete -> {
                 _uiState.update {
                     _uiState.value.copy(
                         contextMenuOpen = false,
@@ -99,13 +99,15 @@ class CalendarViewModel @Inject constructor(
                     )
                 }
 
-                contextMenuEvent?.let {
-                    eventsRepository.deleteEvent(it)
-                    contextMenuEvent = null
-                } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
+                viewModelScope.launch {
+                    contextMenuEvent?.let {
+                        eventsRepository.deleteEvent(it)
+                        contextMenuEvent = null
+                    } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
 
-                userPreferencesRepository
-                    .setShowDialogDeletePreference(_uiState.value.showDialogDelete)
+                    userPreferencesRepository
+                        .setShowDialogDeletePreference(_uiState.value.showDialogDelete)
+                }
             }
 
         }
