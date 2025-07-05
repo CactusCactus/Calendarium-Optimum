@@ -35,7 +35,7 @@ class SettingsViewModel @Inject constructor(
 }
 
 data class UIState(
-    val showDeleteDialog: Boolean = false
+    val showDeleteDialog: Boolean = UserPreferencesRepository.SHOW_DIALOG_DEFAULT
 )
 
 sealed class UIEvent {
