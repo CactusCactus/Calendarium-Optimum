@@ -12,6 +12,9 @@ sealed class ScreenRoute(val route: String) {
     object EditEvent : ScreenRoute("edit_event_screen/{$ARG_EVENT_ID}") {
         fun createRoute(selectedDate: Long) = "edit_event_screen/$selectedDate"
     }
+
+    @Serializable
+    object Settings : ScreenRoute("settings_screen")
 }
 
 const val ARG_SELECTED_DATE_MS = "selectedDate"

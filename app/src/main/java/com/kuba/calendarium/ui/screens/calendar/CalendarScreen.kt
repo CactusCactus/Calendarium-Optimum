@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -22,6 +23,7 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Event
@@ -43,8 +46,11 @@ import com.kuba.calendarium.ui.common.ConfirmDialog
 import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
+import com.kuba.calendarium.ui.common.datePickerHeadlinePadding
 import com.kuba.calendarium.ui.common.standardHalfPadding
+import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
+import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import com.kuba.calendarium.util.standardTimeFormat
 import kotlinx.coroutines.flow.collectLatest
 
@@ -52,12 +58,14 @@ import kotlinx.coroutines.flow.collectLatest
 fun CalendarScreen(
     viewModel: CalendarViewModel,
     onNavigateToAddEvent: (selectedDate: Long) -> Unit,
-    onNavigateToEditEvent: (eventId: Long) -> Unit
+    onNavigateToEditEvent: (eventId: Long) -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.navEvent.collectLatest {
             when (it) {
                 is CalendarViewModel.NavEvent.EditEvent -> onNavigateToEditEvent(it.eventId)
+                CalendarViewModel.NavEvent.Settings -> onNavigateToSettings()
             }
         }
     }
@@ -81,7 +89,8 @@ fun CalendarScreen(
 
             CalendarPicker(
                 date = selectedDate,
-                onDateSelected = { viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(it)) }
+                onDateSelected = { viewModel.onEvent(UIEvent.DateSelected(it)) },
+                onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) }
             )
 
             val pagerState = rememberPagerState(
@@ -94,7 +103,7 @@ fun CalendarScreen(
                     val newDateFromPager = viewModel.pageIndexToDateMillis(pagerState.currentPage)
 
                     if (newDateFromPager != selectedDate) {
-                        viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(newDateFromPager))
+                        viewModel.onEvent(UIEvent.DateSelected(newDateFromPager))
                     }
                 }
             }
@@ -134,7 +143,7 @@ private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modif
                 EventRow(
                     event = it,
                     onLongClick = {
-                        viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOpen(it))
+                        viewModel.onEvent(UIEvent.ContextMenuOpen(it))
                     },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -183,6 +192,7 @@ private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier =
 private fun CalendarPicker(
     date: Long,
     onDateSelected: (Long) -> Unit,
+    onSettingsClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val datePickerState = rememberDatePickerState(
@@ -207,6 +217,28 @@ private fun CalendarPicker(
         state = datePickerState,
         modifier = modifier,
         title = null,
+        headline = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(datePickerHeadlinePadding)
+            ) {
+                IconButton(onClick = onSettingsClicked) {
+                    Icon(
+                        painterResource(R.drawable.ic_settings_24),
+                        "Settings",
+                        modifier = Modifier.size(standardIconSize)
+                    )
+                }
+
+                StandardHalfSpacer()
+
+                DatePickerDefaults.DatePickerHeadline(
+                    selectedDateMillis = datePickerState.selectedDateMillis,
+                    displayMode = datePickerState.displayMode,
+                    dateFormatter = DatePickerDefaults.dateFormatter()
+                )
+            }
+        },
         colors = DatePickerDefaults.colors().copy(containerColor = Color.Transparent)
     )
 }
@@ -219,18 +251,18 @@ private fun ShowDialogsAndBottomSheets(viewModel: CalendarViewModel) {
         ContextMenuBottomSheet(
             title = uiState.contextMenuName,
             onDismissRequest = {
-                viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuDismiss)
+                viewModel.onEvent(UIEvent.ContextMenuDismiss)
             },
             onOptionClick = {
-                viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOptionSelected(it))
+                viewModel.onEvent(UIEvent.ContextMenuOptionSelected(it))
             }
         )
     }
 
     if (uiState.deleteDialogShowing) {
         ShowDeleteDialog(
-            onConfirm = { viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(it)) },
-            onDismiss = { viewModel.onEvent(CalendarViewModel.UIEvent.DeleteDialogDismiss) }
+            onConfirm = { viewModel.onEvent(UIEvent.ContextEventDelete(it)) },
+            onDismiss = { viewModel.onEvent(UIEvent.DeleteDialogDismiss) }
         )
     }
 }

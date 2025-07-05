@@ -12,6 +12,7 @@ import com.kuba.calendarium.ui.screens.calendar.CalendarScreen
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel
 import com.kuba.calendarium.ui.screens.event.addEvent.AddEventScreen
 import com.kuba.calendarium.ui.screens.event.editEvent.EditEvenScreen
+import com.kuba.calendarium.ui.screens.settings.SettingsScreen
 
 @Composable
 fun AppNavHost() {
@@ -41,6 +42,9 @@ fun AppNavHost() {
                 },
                 onNavigateToEditEvent = {
                     navController.navigate(ScreenRoute.EditEvent.createRoute(it))
+                },
+                onNavigateToSettings = {
+                    navController.navigate(ScreenRoute.Settings.route)
                 })
 
         }
@@ -75,6 +79,10 @@ fun AppNavHost() {
                     navController.popBackStack()
                 }
             )
+        }
+
+        composable(route = ScreenRoute.Settings.route) {
+            SettingsScreen(viewModel = hiltViewModel())
         }
     }
 }

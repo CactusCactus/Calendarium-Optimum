@@ -6,6 +6,8 @@ import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
+import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.NavEvent.EditEvent
+import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent.ContextEventDelete
 import com.kuba.calendarium.util.getTodayMidnight
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -74,14 +76,14 @@ class CalendarViewModel @Inject constructor(
                 ContextMenuOption.DELETE -> if (_uiState.value.showDialogDelete) {
                     _uiState.update { _uiState.value.copy(deleteDialogShowing = true) }
                 } else {
-                    onEvent(UIEvent.ContextEventDelete(!_uiState.value.showDialogDelete))
+                    onEvent(ContextEventDelete(!_uiState.value.showDialogDelete))
                 }
 
                 ContextMenuOption.EDIT -> {
                     _uiState.update { _uiState.value.copy(contextMenuOpen = false) }
 
                     contextMenuEvent?.let {
-                        viewModelScope.launch { _navEvent.send(NavEvent.EditEvent(it.id)) }
+                        viewModelScope.launch { _navEvent.send(EditEvent(it.id)) }
                     } ?: Timber.e("ContextMenuEvent is null and cannot be edited")
                 }
             }
@@ -110,6 +112,7 @@ class CalendarViewModel @Inject constructor(
                 }
             }
 
+            UIEvent.SettingsClicked -> viewModelScope.launch { _navEvent.send(NavEvent.Settings) }
         }
     }
 
@@ -139,9 +142,11 @@ class CalendarViewModel @Inject constructor(
         data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         object DeleteDialogDismiss : UIEvent()
+        object SettingsClicked : UIEvent()
     }
 
     sealed class NavEvent {
         data class EditEvent(val eventId: Long) : NavEvent()
+        object Settings : NavEvent()
     }
 }
