@@ -49,7 +49,68 @@ abstract class ModifyEventViewModel(
             }
 
             is UIEvent.DateSelected -> _uiState.update {
-                _uiState.value.copy(selectedDate = event.date)
+                when (_uiState.value.currentDateTimeMode) {
+                    DateTimeMode.FROM -> {
+                        var dateEnd = _uiState.value.selectedDateEnd
+
+                        if (dateEnd != null && dateEnd < event.date) {
+                            dateEnd = event.date
+                        }
+
+                        _uiState.value.copy(selectedDate = event.date, selectedDateEnd = dateEnd)
+                    }
+
+                    DateTimeMode.TO -> {
+                        var dateStart = _uiState.value.selectedDate
+
+                        if (dateStart > event.date) {
+                            dateStart = event.date
+                        }
+
+                        _uiState.value.copy(selectedDate = dateStart, selectedDateEnd = event.date)
+                    }
+                }
+            }
+
+            is UIEvent.TimeSelected -> _uiState.update {
+                when (_uiState.value.currentDateTimeMode) {
+                    DateTimeMode.FROM -> {
+                        var timeEnd = _uiState.value.selectedTimeEnd ?: event.time
+
+                        if (timeEnd < event.time) {
+                            timeEnd = event.time
+                        }
+
+                        _uiState.value.copy(selectedTime = event.time, selectedTimeEnd = timeEnd)
+                    }
+
+                    DateTimeMode.TO -> {
+                        var timeStart = _uiState.value.selectedTime ?: event.time
+
+                        if (timeStart > event.time) {
+                            timeStart = event.time
+                        }
+
+                        _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = event.time)
+                    }
+                }
+            }
+
+            is UIEvent.ClearDateAndTime -> _uiState.update {
+                when (event.mode) {
+                    DateTimeMode.FROM -> _uiState.value.copy(
+                        selectedDate = getTodayMidnight(),
+                        selectedTime = null
+                    ) // Can't be fully cleared
+                    DateTimeMode.TO -> _uiState.value.copy(
+                        selectedDateEnd = null,
+                        selectedTimeEnd = null
+                    )
+                }
+            }
+
+            is UIEvent.ClearTime -> _uiState.update {
+                _uiState.value.copy(selectedTime = null, selectedTimeEnd = null)
             }
 
             UIEvent.DoneClicked -> viewModelScope.launch {
@@ -57,24 +118,20 @@ abstract class ModifyEventViewModel(
                 _navEvent.send(Finish(_uiState.value.selectedDate))
             }
             // Date picker events
-            UIEvent.DatePickerOpened -> _uiState.update {
-                _uiState.value.copy(datePickerOpen = true)
+            is UIEvent.DatePickerOpened -> _uiState.update {
+                _uiState.value.copy(datePickerOpen = true, currentDateTimeMode = event.mode)
             }
 
             UIEvent.DatePickerDismissed -> _uiState.update {
                 _uiState.value.copy(datePickerOpen = false)
             }
 
-            UIEvent.TimePickerOpened -> _uiState.update {
-                _uiState.value.copy(timePickerOpen = true)
+            is UIEvent.TimePickerOpened -> _uiState.update {
+                _uiState.value.copy(timePickerOpen = true, currentDateTimeMode = event.mode)
             }
 
             UIEvent.TimePickerDismissed -> _uiState.update {
                 _uiState.value.copy(timePickerOpen = false)
-            }
-
-            is UIEvent.TimeSelected -> _uiState.update {
-                _uiState.value.copy(selectedTime = event.date)
             }
         }
     }
@@ -114,9 +171,12 @@ abstract class ModifyEventViewModel(
         val title: String = "",
         val description: String = "",
         val selectedDate: Long = getTodayMidnight(),
+        val selectedDateEnd: Long? = null,
         val selectedTime: Long? = null,
+        val selectedTimeEnd: Long? = null,
         val datePickerOpen: Boolean = false,
         val timePickerOpen: Boolean = false,
+        val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
 
         // Validation
         val titleError: ValidationError? = null,
@@ -128,10 +188,12 @@ abstract class ModifyEventViewModel(
         data class TitleChanged(val title: String) : UIEvent()
         data class DescriptionChanged(val description: String) : UIEvent()
         data class DateSelected(val date: Long) : UIEvent()
-        data class TimeSelected(val date: Long?) : UIEvent()
+        data class TimeSelected(val time: Long) : UIEvent()
+        object ClearTime : UIEvent()
+        data class ClearDateAndTime(val mode: DateTimeMode) : UIEvent()
         object DoneClicked : UIEvent()
-        object DatePickerOpened : UIEvent()
-        object TimePickerOpened : UIEvent()
+        data class DatePickerOpened(val mode: DateTimeMode) : UIEvent()
+        data class TimePickerOpened(val mode: DateTimeMode) : UIEvent()
         object DatePickerDismissed : UIEvent()
         object TimePickerDismissed : UIEvent()
     }
@@ -143,4 +205,8 @@ abstract class ModifyEventViewModel(
     enum class ValidationError {
         TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG
     }
+}
+
+enum class DateTimeMode {
+    FROM, TO
 }

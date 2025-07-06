@@ -32,7 +32,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.ui.common.DatePickerModal
-import com.kuba.calendarium.ui.common.StandardDoubleSpacer
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TimePickerModal
@@ -175,50 +174,120 @@ private fun MainColumn(
 
         StandardSpacer()
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Date
-            OutlinedTextField(
-                value = uiState.selectedDate.standardDateFormat(),
-                onValueChange = { /* NO-OP */ },
-                readOnly = true,
-                maxLines = 1,
-                modifier = Modifier
-                    .textFieldClickable(uiState.selectedDate) {
-                        onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
+        DateTimeRow(
+            selectedDate = uiState.selectedDate,
+            selectedTime = uiState.selectedTime,
+            onDateFieldClicked = {
+                onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened(DateTimeMode.FROM))
+            },
+            onTimeFieldClicked = {
+                onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.FROM))
+            },
+            onTimeCheckboxChange = {
+                if (it) {
+                    onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.FROM))
+                } else {
+                    onEvent(ModifyEventViewModel.UIEvent.ClearTime)
+                }
+            })
+
+        StandardSpacer()
+
+        uiState.selectedDateEnd?.let {
+            DateTimeRow(
+                selectedDate = it,
+                selectedTime = uiState.selectedTimeEnd,
+                onDateFieldClicked = {
+                    onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened(DateTimeMode.TO))
+                },
+                onTimeFieldClicked = {
+                    onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.TO))
+                },
+                onTimeCheckboxChange = {
+                    if (it) {
+                        onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.TO))
+                    } else {
+                        onEvent(ModifyEventViewModel.UIEvent.ClearTime)
                     }
-                    .defaultMinSize(1.dp)
+                },
+                showSetTimeCheckbox = false
             )
-
-            StandardDoubleSpacer()
-
-            // Time
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                uiState.selectedTime?.let {
-                    OutlinedTextField(
-                        value = it.standardTimeFormat(),
-                        onValueChange = { /* NO-OP */ },
-                        readOnly = true,
-                        maxLines = 1,
-                        modifier = Modifier
-                            .textFieldClickable(uiState.selectedDate) {
-                                onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened)
-                            }
-                            .defaultMinSize(1.dp)
-                    )
-                } ?: Text("Set time")
-
-                Checkbox(
-                    checked = uiState.selectedTime != null,
-                    onCheckedChange = {
-                        if (it) {
-                            onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened)
-                        } else {
-                            onEvent(ModifyEventViewModel.UIEvent.TimeSelected(null))
-                        }
+        } ?: Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = uiState.selectedDateEnd != null,
+                onCheckedChange = {
+                    if (it) {
+                        onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened(DateTimeMode.TO))
+                    } else {
+                        onEvent(ModifyEventViewModel.UIEvent.ClearDateAndTime(DateTimeMode.TO))
                     }
+                },
+            )
+            Text("Set end date and time")
+        }
+    }
+}
+
+@Composable
+private fun DateTimeRow(
+    selectedDate: Long,
+    selectedTime: Long?,
+    onDateFieldClicked: () -> Unit,
+    onTimeFieldClicked: () -> Unit,
+    onTimeCheckboxChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    showSetTimeCheckbox: Boolean = true
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        // Date
+        OutlinedTextField(
+            value = selectedDate.standardDateFormat(),
+            onValueChange = { /* NO-OP */ },
+            readOnly = true,
+            maxLines = 1,
+            label = { Text("Date") },
+            modifier = Modifier
+                .textFieldClickable(selectedDate) {
+                    onDateFieldClicked()
+                }
+                .defaultMinSize(minWidth = 1.dp)
+        )
+
+        StandardSpacer()
+
+        // Time (start)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.End
+        ) {
+            selectedTime?.let {
+                OutlinedTextField(
+                    value = it.standardTimeFormat(),
+                    onValueChange = { /* NO-OP */ },
+                    readOnly = true,
+                    maxLines = 1,
+                    label = { "Time" },
+                    modifier = Modifier
+                        .textFieldClickable(selectedTime) {
+                            onTimeFieldClicked()
+                        }
+                        .defaultMinSize(minWidth = 1.dp),
+                )
+            }
+
+            if (showSetTimeCheckbox) {
+                Text("Set time")
+            }
+
+            if (showSetTimeCheckbox) {
+                Checkbox(
+                    checked = selectedTime != null,
+                    onCheckedChange = { onTimeCheckboxChange(it) }
                 )
             }
         }
