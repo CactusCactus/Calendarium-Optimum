@@ -20,7 +20,7 @@ interface EventDao {
     @Delete
     suspend fun delete(event: Event)
 
-    @Query("SELECT * FROM event WHERE date = :date ORDER BY time")
+    @Query("SELECT * FROM event WHERE :date >= date AND (:date <= date_end OR date_end IS NULL) ORDER BY time")
     fun getEventsForDate(date: Long): Flow<List<Event>>
 
     @Query("SELECT * FROM event WHERE id = :id")

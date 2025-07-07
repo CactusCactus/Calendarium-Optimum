@@ -47,7 +47,6 @@ import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.datePickerHeadlinePadding
-import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
@@ -135,7 +134,7 @@ private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modif
 
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
-        contentPadding = PaddingValues(standardHalfPadding),
+        contentPadding = PaddingValues(standardPadding),
         modifier = modifier.fillMaxWidth()
     ) {
         if (events.isNotEmpty()) {
@@ -177,7 +176,11 @@ private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier =
                 Spacer(modifier = Modifier.weight(1f))
 
                 event.time?.let {
-                    Text(text = it.standardTimeFormat())
+                    val timeText = it.standardTimeFormat() + event.timeEnd?.let {
+                        " - ${it.standardTimeFormat()}"
+                    }
+
+                    Text(text = timeText)
                 }
             }
             StandardQuarterSpacer()
