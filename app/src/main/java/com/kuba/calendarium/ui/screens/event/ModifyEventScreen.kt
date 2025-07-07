@@ -1,15 +1,23 @@
 package com.kuba.calendarium.ui.screens.event
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
@@ -17,6 +25,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -28,18 +38,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.ui.common.DatePickerModal
-import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TimePickerModal
+import com.kuba.calendarium.ui.common.dateTimeRowPrefixLabelWidth
 import com.kuba.calendarium.ui.common.descriptionMinHeight
 import com.kuba.calendarium.ui.common.fabContentPadding
 import com.kuba.calendarium.ui.common.fabSize
+import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.common.textFieldClickable
+import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.util.standardDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.toLocalizedString
@@ -72,7 +85,7 @@ fun ModifyEventScreen(
         floatingActionButton = {
             // FAB doesn't have enable function, so it's replaced by a button styled to look like one
             Button(
-                onClick = { viewModel.onEvent(ModifyEventViewModel.UIEvent.DoneClicked) },
+                onClick = { viewModel.onEvent(UIEvent.DoneClicked) },
                 modifier = Modifier.size(width = fabSize, height = fabSize),
                 contentPadding = PaddingValues(fabContentPadding),
                 enabled = viewModel.uiState.collectAsState().value.isValid,
@@ -92,10 +105,10 @@ fun ModifyEventScreen(
             DatePickerModal(
                 initialDate = viewModel.uiState.collectAsState().value.selectedDate,
                 onDatePicked = {
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(it))
+                    viewModel.onEvent(UIEvent.DateSelected(it))
                 },
                 onDismissRequest = {
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DatePickerDismissed)
+                    viewModel.onEvent(UIEvent.DatePickerDismissed)
                 }
             )
         }
@@ -107,10 +120,10 @@ fun ModifyEventScreen(
             TimePickerModal(
                 initialTime = time,
                 onTimePicked = {
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.TimeSelected(it))
+                    viewModel.onEvent(UIEvent.TimeSelected(it))
                 },
                 onDismissRequest = {
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.TimePickerDismissed)
+                    viewModel.onEvent(UIEvent.TimePickerDismissed)
                 }
             )
         }
@@ -120,7 +133,7 @@ fun ModifyEventScreen(
 @Composable
 private fun MainColumn(
     uiState: ModifyEventViewModel.UIState,
-    onEvent: (ModifyEventViewModel.UIEvent) -> Unit,
+    onEvent: (UIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -134,7 +147,7 @@ private fun MainColumn(
 
         OutlinedTextField(
             value = uiState.title,
-            onValueChange = { onEvent(ModifyEventViewModel.UIEvent.TitleChanged(it)) },
+            onValueChange = { onEvent(UIEvent.TitleChanged(it)) },
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(stringResource(R.string.input_title_placeholder)) },
             isError = uiState.titleError != null,
@@ -152,7 +165,7 @@ private fun MainColumn(
 
         OutlinedTextField(
             value = uiState.description,
-            onValueChange = { onEvent(ModifyEventViewModel.UIEvent.DescriptionChanged(it)) },
+            onValueChange = { onEvent(UIEvent.DescriptionChanged(it)) },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = descriptionMinHeight),
@@ -168,58 +181,83 @@ private fun MainColumn(
             }
         )
 
-        StandardHalfSpacer()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.add_event_date_label))
 
-        Text(stringResource(R.string.add_event_date_label))
+            Spacer(modifier.weight(1f))
 
-        StandardSpacer()
+            Text("Set time", color = LocalContentColor.current.copy(alpha = 0.7f))
+
+            Checkbox(
+                checked = uiState.selectedTime != null,
+                onCheckedChange = {
+                    if (it) {
+                        onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO))
+                    } else {
+                        onEvent(UIEvent.ClearTime)
+                    }
+                }
+            )
+        }
 
         DateTimeRow(
             selectedDate = uiState.selectedDate,
             selectedTime = uiState.selectedTime,
+            labelStart = if (uiState.selectedDateEnd != null) {
+                {
+                    Text(
+                        text = stringResource(R.string.time_selection_from),
+                        modifier = Modifier.width(dateTimeRowPrefixLabelWidth)
+                    )
+                }
+            } else null,
+            labelEnd = if (uiState.selectedDateEnd != null) {
+                { Spacer(Modifier.size(standardIconSize)) }
+            } else null,
             onDateFieldClicked = {
-                onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened(DateTimeMode.FROM))
+                onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
             },
             onTimeFieldClicked = {
-                onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.FROM))
+                onEvent(UIEvent.TimePickerOpened(DateTimeMode.FROM))
             },
-            onTimeCheckboxChange = {
-                if (it) {
-                    onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.FROM))
-                } else {
-                    onEvent(ModifyEventViewModel.UIEvent.ClearTime)
-                }
-            })
-
-        StandardSpacer()
+        )
 
         uiState.selectedDateEnd?.let {
             DateTimeRow(
                 selectedDate = it,
                 selectedTime = uiState.selectedTimeEnd,
-                onDateFieldClicked = {
-                    onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened(DateTimeMode.TO))
+                labelStart = {
+                    Text(
+                        text = stringResource(R.string.time_selection_to),
+                        modifier = Modifier.width(dateTimeRowPrefixLabelWidth)
+                    )
                 },
-                onTimeFieldClicked = {
-                    onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.TO))
-                },
-                onTimeCheckboxChange = {
-                    if (it) {
-                        onEvent(ModifyEventViewModel.UIEvent.TimePickerOpened(DateTimeMode.TO))
-                    } else {
-                        onEvent(ModifyEventViewModel.UIEvent.ClearTime)
+                labelEnd = {
+                    IconButton(
+                        onClick = { onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO)) },
+                        modifier = Modifier.size(standardIconSize)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_close_24),
+                            contentDescription = "Remove end date",
+                        )
                     }
                 },
-                showSetTimeCheckbox = false
+                onDateFieldClicked = {
+                    onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
+                },
+                onTimeFieldClicked = {
+                    onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO))
+                }
             )
         } ?: Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(
                 checked = uiState.selectedDateEnd != null,
                 onCheckedChange = {
                     if (it) {
-                        onEvent(ModifyEventViewModel.UIEvent.DatePickerOpened(DateTimeMode.TO))
+                        onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
                     } else {
-                        onEvent(ModifyEventViewModel.UIEvent.ClearDateAndTime(DateTimeMode.TO))
+                        onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO))
                     }
                 },
             )
@@ -232,62 +270,89 @@ private fun MainColumn(
 private fun DateTimeRow(
     selectedDate: Long,
     selectedTime: Long?,
+    labelStart: @Composable (RowScope.() -> Unit)?,
+    labelEnd: @Composable (RowScope.() -> Unit)?,
     onDateFieldClicked: () -> Unit,
     onTimeFieldClicked: () -> Unit,
-    onTimeCheckboxChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    showSetTimeCheckbox: Boolean = true
+    modifier: Modifier = Modifier
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier.fillMaxWidth()
     ) {
+        if (labelStart != null) {
+            labelStart()
+            StandardSpacer()
+        }
+
         // Date
-        OutlinedTextField(
-            value = selectedDate.standardDateFormat(),
-            onValueChange = { /* NO-OP */ },
-            readOnly = true,
+        OutlinedText(
+            text = selectedDate.standardDateFormat(),
             maxLines = 1,
-            label = { Text("Date") },
+            label = "Date",
             modifier = Modifier
-                .textFieldClickable(selectedDate) {
-                    onDateFieldClicked()
-                }
-                .defaultMinSize(minWidth = 1.dp)
+                .clickable { onDateFieldClicked() }
+                .fillMaxWidth()
+                .weight(1f)
         )
 
         StandardSpacer()
 
         // Time (start)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.End
-        ) {
+        AnimatedVisibility(visible = selectedTime != null) {
             selectedTime?.let {
-                OutlinedTextField(
-                    value = it.standardTimeFormat(),
-                    onValueChange = { /* NO-OP */ },
-                    readOnly = true,
+                OutlinedText(
+                    text = it.standardTimeFormat(),
                     maxLines = 1,
-                    label = { "Time" },
-                    modifier = Modifier
-                        .textFieldClickable(selectedTime) {
-                            onTimeFieldClicked()
-                        }
-                        .defaultMinSize(minWidth = 1.dp),
+                    label = "Time",
+                    modifier = Modifier.textFieldClickable(selectedTime) {
+                        onTimeFieldClicked()
+                    }
                 )
             }
+        }
 
-            if (showSetTimeCheckbox) {
-                Text("Set time")
-            }
+        if (labelEnd != null) {
+            StandardSpacer()
+            labelEnd()
+        }
+    }
+}
 
-            if (showSetTimeCheckbox) {
-                Checkbox(
-                    checked = selectedTime != null,
-                    onCheckedChange = { onTimeCheckboxChange(it) }
+@Composable
+fun OutlinedText(
+    text: String,
+    maxLines: Int,
+    modifier: Modifier = Modifier,
+    label: String? = null
+) {
+    Box(modifier = modifier) {
+        Text(
+            text = text,
+            maxLines = maxLines,
+            modifier = modifier
+                .border(
+                    width = 1.dp,
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+                .padding(standardPadding)
+        )
+
+        label?.let {
+            Box(
+                modifier = Modifier
+                    .offset(y = (-8).dp, x = 8.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.background,
+                        shape = MaterialTheme.shapes.extraSmall
+                    )
+                    .padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelMedium
                 )
             }
         }

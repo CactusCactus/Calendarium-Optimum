@@ -24,3 +24,5 @@ val standardIconSize = 24.dp
 val descriptionMinHeight = 128.dp
 
 val datePickerHeadlinePadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 12.dp)
+
+val dateTimeRowPrefixLabelWidth = 48.dp

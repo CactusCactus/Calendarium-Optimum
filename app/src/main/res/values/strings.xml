@@ -18,4 +18,6 @@
     <string name="edit_event_screen_title">Edit Event</string>
     <string name="dont_ask_again_label">Don\'t ask again</string>
     <string name="settings_show_delete_dialog_text">Show delete confirmation dialog</string>
+    <string name="time_selection_from">From</string>
+    <string name="time_selection_to">To</string>
 </resources>
