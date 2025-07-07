@@ -20,4 +20,6 @@
     <string name="settings_show_delete_dialog_text">Show delete confirmation dialog</string>
     <string name="time_selection_from">From</string>
     <string name="time_selection_to">To</string>
+    <string name="set_end_date_and_time_text">Set end date and time</string>
+    <string name="set_time_label">Set time</string>
 </resources>

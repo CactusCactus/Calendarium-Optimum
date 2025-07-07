@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.ui.common.DatePickerModal
+import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TimePickerModal
 import com.kuba.calendarium.ui.common.dateTimeRowPrefixLabelWidth
@@ -181,12 +183,21 @@ private fun MainColumn(
             }
         )
 
+        StandardSpacer()
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.add_event_date_label))
 
-            Spacer(modifier.weight(1f))
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(1.dp)
+            )
 
-            Text("Set time", color = LocalContentColor.current.copy(alpha = 0.7f))
+            Text(
+                stringResource(R.string.set_time_label),
+                color = LocalContentColor.current.copy(alpha = 0.7f)
+            )
 
             Checkbox(
                 checked = uiState.selectedTime != null,
@@ -199,6 +210,8 @@ private fun MainColumn(
                 }
             )
         }
+
+        StandardHalfSpacer()
 
         DateTimeRow(
             selectedDate = uiState.selectedDate,
@@ -223,6 +236,8 @@ private fun MainColumn(
         )
 
         uiState.selectedDateEnd?.let {
+            StandardSpacer()
+
             DateTimeRow(
                 selectedDate = it,
                 selectedTime = uiState.selectedTimeEnd,
@@ -261,7 +276,7 @@ private fun MainColumn(
                     }
                 },
             )
-            Text("Set end date and time")
+            Text(stringResource(R.string.set_end_date_and_time_text))
         }
     }
 }
@@ -300,7 +315,7 @@ private fun DateTimeRow(
         StandardSpacer()
 
         // Time (start)
-        AnimatedVisibility(visible = selectedTime != null) {
+        AnimatedVisibility(selectedTime != null) {
             selectedTime?.let {
                 OutlinedText(
                     text = it.standardTimeFormat(),

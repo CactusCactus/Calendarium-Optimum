@@ -104,7 +104,7 @@ abstract class ModifyEventViewModel(
                     ) // Can't be fully cleared
                     DateTimeMode.TO -> _uiState.value.copy(
                         selectedDateEnd = null,
-                        selectedTimeEnd = null
+                        selectedTimeEnd = _uiState.value.selectedTime
                     )
                 }
             }
