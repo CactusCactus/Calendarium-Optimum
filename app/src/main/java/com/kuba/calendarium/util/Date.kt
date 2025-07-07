@@ -8,6 +8,8 @@ import java.util.TimeZone
 
 const val STANDARD_DATE_FORMAT = "dd/MM/yyyy"
 
+const val SHORT_DATE_FORMAT = "dd/MM"
+
 const val STANDARD_TIME_FORMAT = "HH:mm"
 
 fun Long.standardDateFormat(): String =
@@ -15,15 +17,15 @@ fun Long.standardDateFormat(): String =
         timeZone = TimeZone.getTimeZone("UTC")
     }.format(Date(this))
 
+fun Long.shortDateFormat(): String =
+    SimpleDateFormat(SHORT_DATE_FORMAT, Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }.format(Date(this))
+
 fun Long.standardTimeFormat(): String =
     SimpleDateFormat(STANDARD_TIME_FORMAT, Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }.format(Date(this))
-
-fun Date.standardDateFormat(): String =
-    SimpleDateFormat(STANDARD_DATE_FORMAT, Locale.getDefault()).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-    }.format(this)
 
 fun getTodayMidnight(timeZone: TimeZone = TimeZone.getTimeZone("UTC")) =
     Calendar.getInstance(timeZone).apply {
@@ -41,3 +43,12 @@ fun Long.resetToMidnight(timeZone: TimeZone = TimeZone.getTimeZone("UTC")) =
         set(Calendar.SECOND, 0)
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
+
+fun Long.isSameDay(other: Long, timeZone: TimeZone = TimeZone.getTimeZone("UTC")): Boolean {
+    val thisCalendar = Calendar.getInstance(timeZone).apply { timeInMillis = this@isSameDay }
+    val otherCalendar = Calendar.getInstance(timeZone).apply { timeInMillis = other }
+
+    return thisCalendar.get(Calendar.DAY_OF_YEAR) == otherCalendar.get(Calendar.DAY_OF_YEAR) &&
+            thisCalendar.get(Calendar.YEAR) == otherCalendar.get(Calendar.YEAR)
+
+}

@@ -50,6 +50,8 @@ import com.kuba.calendarium.ui.common.datePickerHeadlinePadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
+import com.kuba.calendarium.util.isSameDay
+import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import kotlinx.coroutines.flow.collectLatest
 
@@ -176,16 +178,39 @@ private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier =
                 Spacer(modifier = Modifier.weight(1f))
 
                 event.time?.let {
-                    val timeText = it.standardTimeFormat() + event.timeEnd?.let {
-                        " - ${it.standardTimeFormat()}"
-                    }
-
-                    Text(text = timeText)
+                    TimeDisplay(event.time, event.timeEnd)
                 }
             }
+
             StandardQuarterSpacer()
 
             Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+}
+
+@Composable
+private fun TimeDisplay(timeStart: Long, timeEnd: Long?, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        val displayDates = timeEnd != null && !timeStart.isSameDay(timeEnd)
+
+        HourDateText(timeStart, displayDates)
+
+        timeEnd?.let {
+            Text(text = " — ", style = MaterialTheme.typography.bodyLarge)
+
+            HourDateText(it, displayDates)
+        }
+    }
+}
+
+@Composable
+private fun HourDateText(timestamp: Long, showDate: Boolean, modifier: Modifier = Modifier) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+        Text(timestamp.standardTimeFormat(), style = MaterialTheme.typography.bodyLarge)
+
+        if (showDate) {
+            Text(timestamp.shortDateFormat(), style = MaterialTheme.typography.labelSmall)
         }
     }
 }

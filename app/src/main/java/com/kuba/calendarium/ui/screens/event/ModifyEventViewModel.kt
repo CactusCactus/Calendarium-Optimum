@@ -67,7 +67,15 @@ abstract class ModifyEventViewModel(
                             dateStart = event.date
                         }
 
-                        _uiState.value.copy(selectedDate = dateStart, selectedDateEnd = event.date)
+                        // If not set set as selectedTime (or null if selectedTime not set)
+                        val selectedTime =
+                            _uiState.value.selectedTimeEnd ?: _uiState.value.selectedTime
+
+                        _uiState.value.copy(
+                            selectedDate = dateStart,
+                            selectedDateEnd = event.date,
+                            selectedTimeEnd = selectedTime
+                        )
                     }
                 }
             }
@@ -75,23 +83,27 @@ abstract class ModifyEventViewModel(
             is UIEvent.TimeSelected -> _uiState.update {
                 when (_uiState.value.currentDateTimeMode) {
                     DateTimeMode.FROM -> {
-                        var timeEnd = _uiState.value.selectedTimeEnd ?: event.time
+                        val timeStart = _uiState.value.selectedDate + event.time // Add date
+                        var timeEnd = _uiState.value.selectedTimeEnd ?: timeStart
 
-                        if (timeEnd < event.time) {
-                            timeEnd = event.time
+                        if (timeEnd < timeStart) {
+                            timeEnd = timeStart
                         }
 
-                        _uiState.value.copy(selectedTime = event.time, selectedTimeEnd = timeEnd)
+                        _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = timeEnd)
                     }
 
                     DateTimeMode.TO -> {
-                        var timeStart = _uiState.value.selectedTime ?: event.time
+                        val timeEnd =
+                            (_uiState.value.selectedDateEnd ?: _uiState.value.selectedDate) +
+                                    event.time
+                        var timeStart = _uiState.value.selectedTime ?: timeEnd
 
-                        if (timeStart > event.time) {
-                            timeStart = event.time
+                        if (timeStart > timeEnd) {
+                            timeStart = timeEnd
                         }
 
-                        _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = event.time)
+                        _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = timeEnd)
                     }
                 }
             }
@@ -104,7 +116,7 @@ abstract class ModifyEventViewModel(
                     ) // Can't be fully cleared
                     DateTimeMode.TO -> _uiState.value.copy(
                         selectedDateEnd = null,
-                        selectedTimeEnd = _uiState.value.selectedTime
+                        selectedTimeEnd = null
                     )
                 }
             }
