@@ -83,10 +83,12 @@ abstract class ModifyEventViewModel(
             is UIEvent.TimeSelected -> _uiState.update {
                 when (_uiState.value.currentDateTimeMode) {
                     DateTimeMode.FROM -> {
-                        val timeStart = _uiState.value.selectedDate + event.time // Add date
-                        var timeEnd = _uiState.value.selectedTimeEnd ?: timeStart
+                        val timeStart = _uiState.value.selectedDate + event.time // Add date to time
+                        var timeEnd = if (_uiState.value.selectedDateEnd != null) {
+                            (_uiState.value.selectedTimeEnd ?: event.time) + event.time
+                        } else null // Set end time only when end date is set
 
-                        if (timeEnd < timeStart) {
+                        if (timeEnd != null && timeEnd < timeStart) {
                             timeEnd = timeStart
                         }
 
@@ -96,10 +98,10 @@ abstract class ModifyEventViewModel(
                     DateTimeMode.TO -> {
                         val timeEnd =
                             (_uiState.value.selectedDateEnd ?: _uiState.value.selectedDate) +
-                                    event.time
-                        var timeStart = _uiState.value.selectedTime ?: timeEnd
+                                    event.time // Add date to time
+                        var timeStart = _uiState.value.selectedTime
 
-                        if (timeStart > timeEnd) {
+                        if (timeStart != null && timeStart > timeEnd) {
                             timeStart = timeEnd
                         }
 

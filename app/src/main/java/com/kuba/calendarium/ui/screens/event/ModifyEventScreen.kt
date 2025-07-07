@@ -203,7 +203,7 @@ private fun MainColumn(
                 checked = uiState.selectedTime != null,
                 onCheckedChange = {
                     if (it) {
-                        onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO))
+                        onEvent(UIEvent.TimePickerOpened(DateTimeMode.FROM))
                     } else {
                         onEvent(UIEvent.ClearTime)
                     }
