@@ -21,7 +21,9 @@ class AddEventViewModel @Inject constructor(
                 title = _uiState.value.title,
                 description = _uiState.value.description,
                 date = _uiState.value.selectedDate,
-                time = _uiState.value.selectedTime
+                time = _uiState.value.selectedTime,
+                dateEnd = _uiState.value.selectedDateEnd,
+                timeEnd = _uiState.value.selectedTimeEnd
             )
         )
     }
