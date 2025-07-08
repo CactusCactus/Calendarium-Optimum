@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.IOException
+import java.util.Calendar
 
 @RunWith(AndroidJUnit4::class)
 class RoomEventsRepositoryTest {
@@ -30,6 +31,12 @@ class RoomEventsRepositoryTest {
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
         eventDao = db.eventDao()
         repository = EventsRepository(eventDao)
+    }
+
+    @After
+    @Throws(IOException::class)
+    fun tearDown() {
+        db.close()
     }
 
     @Test
@@ -207,10 +214,54 @@ class RoomEventsRepositoryTest {
         }
     }
 
-    @After
-    @Throws(IOException::class)
-    fun tearDown() {
-        db.close()
-    }
+    @Test
+    fun insertEventAndFetchItForMultipleDates() = runTest {
+        val eventId = "insertEventAndFetchItForMultipleDates".hashCode().toLong()
+        val dateStart = System.currentTimeMillis().resetToMidnight()
+        val dateMiddle = Calendar.getInstance().apply {
+            timeInMillis = dateStart
+            add(Calendar.DAY_OF_MONTH, 1)
+        }.timeInMillis
+        val dateEnd = Calendar.getInstance().apply {
+            timeInMillis = dateStart
+            add(Calendar.DAY_OF_MONTH, 2)
+        }.timeInMillis
 
+        // Fail scenario
+        val dateAfterEnd = Calendar.getInstance().apply {
+            timeInMillis = dateStart
+            add(Calendar.DAY_OF_MONTH, 3)
+        }.timeInMillis
+
+
+        val event = Event(
+            id = eventId,
+            title = "Test Event",
+            description = "This is a test event",
+            date = dateStart,
+            dateEnd = dateEnd
+        )
+
+        repository.insertEvent(event)
+
+        repository.getEventsForDate(dateStart).test {
+            val emittedEvents = awaitItem()
+            assertThat(emittedEvents).containsExactly(event)
+        }
+
+        repository.getEventsForDate(dateMiddle).test {
+            val emittedEvents = awaitItem()
+            assertThat(emittedEvents).containsExactly(event)
+        }
+
+        repository.getEventsForDate(dateEnd).test {
+            val emittedEvents = awaitItem()
+            assertThat(emittedEvents).containsExactly(event)
+        }
+
+        repository.getEventsForDate(dateAfterEnd).test {
+            val emittedEvents = awaitItem()
+            assertThat(emittedEvents).isEmpty()
+        }
+    }
 }
