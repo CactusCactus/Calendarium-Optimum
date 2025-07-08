@@ -54,6 +54,7 @@ import com.kuba.calendarium.util.isSameDay
 import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import kotlinx.coroutines.flow.collectLatest
+import java.util.TimeZone
 
 @Composable
 fun CalendarScreen(
@@ -225,6 +226,9 @@ private fun CalendarPicker(
     onSettingsClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Offset the display by local time zone
+    val date = date + TimeZone.getDefault().getOffset(date)
+
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = date,
         initialDisplayedMonthMillis = date

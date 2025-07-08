@@ -314,7 +314,7 @@ private fun DateTimeRow(
 
         StandardSpacer()
 
-        // Time (start)
+        // Time
         AnimatedVisibility(selectedTime != null) {
             selectedTime?.let {
                 OutlinedText(
