@@ -40,6 +40,7 @@ class RoomEventsRepositoryTest {
             id = eventId,
             title = "Test Event",
             description = "This is a test event",
+
             date = System.currentTimeMillis()
         )
 
@@ -69,7 +70,7 @@ class RoomEventsRepositoryTest {
             id = eventId,
             title = "Original Test Event",
             description = "This is a test event",
-            date = System.currentTimeMillis()
+            date = System.currentTimeMillis(),
         )
 
         val updatedEvent = Event(
