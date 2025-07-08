@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.ui.common.DatePickerModal
@@ -152,6 +154,7 @@ private fun MainColumn(
             onValueChange = { onEvent(UIEvent.TitleChanged(it)) },
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(stringResource(R.string.input_title_placeholder)) },
+            maxLines = 1,
             isError = uiState.titleError != null,
             supportingText = {
                 uiState.titleError?.let {
@@ -160,7 +163,8 @@ private fun MainColumn(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-            }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
         )
 
         StandardSpacer()
@@ -180,7 +184,8 @@ private fun MainColumn(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-            }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
         )
 
         StandardSpacer()
