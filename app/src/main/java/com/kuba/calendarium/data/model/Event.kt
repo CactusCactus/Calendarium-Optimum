@@ -12,5 +12,6 @@ data class Event(
     @ColumnInfo(name = "date") val date: Long,
     @ColumnInfo(name = "time") val time: Long? = null,
     @ColumnInfo(name = "date_end") val dateEnd: Long? = null,
-    @ColumnInfo(name = "time_end") val timeEnd: Long? = null
+    @ColumnInfo(name = "time_end") val timeEnd: Long? = null,
+    @ColumnInfo(name = "is_done") val done: Boolean = false
 )

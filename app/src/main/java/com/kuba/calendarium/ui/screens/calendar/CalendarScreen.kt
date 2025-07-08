@@ -5,7 +5,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -42,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.ConfirmDialog
 import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
@@ -141,13 +141,16 @@ private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modif
         modifier = modifier.fillMaxWidth()
     ) {
         if (events.isNotEmpty()) {
-            items(events) {
+            items(items = events, key = { event -> event.id }) { event ->
                 EventRow(
-                    event = it,
+                    event = event,
                     onLongClick = {
-                        viewModel.onEvent(UIEvent.ContextMenuOpen(it))
+                        viewModel.onEvent(UIEvent.ContextMenuOpen(event))
                     },
-                    modifier = Modifier.fillMaxSize()
+                    onCheckedChange = {
+                        viewModel.onEvent(UIEvent.DoneChanged(event, it))
+                    },
+                    modifier = Modifier.fillMaxSize().animateItem()
                 )
 
                 StandardHalfSpacer()
@@ -165,7 +168,12 @@ private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modif
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun EventRow(
+    event: Event,
+    onLongClick: () -> Unit,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Card(
         modifier = modifier.combinedClickable(
             onClick = { /* NO-OP */ },
@@ -174,9 +182,18 @@ private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier =
     ) {
         Column(modifier = Modifier.padding(standardPadding)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = event.title, style = MaterialTheme.typography.titleLarge)
+                CheckboxNoPadding(
+                    checked = event.done,
+                    onCheckedChange = onCheckedChange
+                )
 
-                Spacer(modifier = Modifier.weight(1f))
+                StandardQuarterSpacer()
+
+                Text(
+                    text = event.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
 
                 event.time?.let {
                     TimeDisplay(event.time, event.timeEnd)
@@ -210,10 +227,18 @@ private fun TimeDisplay(timeStart: Long, timeEnd: Long?, modifier: Modifier = Mo
 @Composable
 private fun HourDateText(timestamp: Long, showDate: Boolean, modifier: Modifier = Modifier) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
-        Text(timestamp.standardTimeFormat(), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            timestamp.standardTimeFormat(),
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1
+        )
 
         if (showDate) {
-            Text(timestamp.shortDateFormat(), style = MaterialTheme.typography.labelSmall)
+            Text(
+                timestamp.shortDateFormat(),
+                style = MaterialTheme.typography.labelSmall,
+                maxLines = 1
+            )
         }
     }
 }
