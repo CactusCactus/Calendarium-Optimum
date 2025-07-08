@@ -182,9 +182,11 @@ private fun EventRow(event: Event, onLongClick: () -> Unit, modifier: Modifier =
                 }
             }
 
-            StandardQuarterSpacer()
+            if (event.description.isNotBlank()) {
+                StandardQuarterSpacer()
 
-            Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
+                Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
+            }
         }
     }
 }
