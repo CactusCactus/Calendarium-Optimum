@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
 import com.kuba.calendarium.util.getTodayMidnight
+import com.kuba.calendarium.util.resetToMidnight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -57,7 +58,10 @@ abstract class ModifyEventViewModel(
                             dateEnd = event.date
                         }
 
-                        _uiState.value.copy(selectedDate = event.date, selectedDateEnd = dateEnd)
+                        _uiState.value.copy(
+                            selectedDate = event.date.resetToMidnight(),
+                            selectedDateEnd = dateEnd?.resetToMidnight()
+                        )
                     }
 
                     DateTimeMode.TO -> {
@@ -72,8 +76,8 @@ abstract class ModifyEventViewModel(
                             _uiState.value.selectedTimeEnd ?: _uiState.value.selectedTime
 
                         _uiState.value.copy(
-                            selectedDate = dateStart,
-                            selectedDateEnd = event.date,
+                            selectedDate = dateStart.resetToMidnight(),
+                            selectedDateEnd = event.date.resetToMidnight(),
                             selectedTimeEnd = selectedTime
                         )
                     }
@@ -85,7 +89,10 @@ abstract class ModifyEventViewModel(
                     DateTimeMode.FROM -> {
                         val timeStart = _uiState.value.selectedDate + event.time // Add date to time
                         var timeEnd = if (_uiState.value.selectedDateEnd != null) {
-                            (_uiState.value.selectedTimeEnd ?: event.time) + event.time
+                            val selectedDate =
+                                _uiState.value.selectedDateEnd ?: _uiState.value.selectedDate
+
+                            selectedDate + event.time
                         } else null // Set end time only when end date is set
 
                         if (timeEnd != null && timeEnd < timeStart) {
