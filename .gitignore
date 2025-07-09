@@ -31,7 +31,6 @@ output-metadata.json
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea
 .DS_Store
-/build
 /captures
 .externalNativeBuild
 .cxx
