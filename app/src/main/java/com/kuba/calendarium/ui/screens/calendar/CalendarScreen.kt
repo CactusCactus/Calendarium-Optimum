@@ -213,6 +213,8 @@ private fun EventRow(
                     )
 
                     event.time?.let {
+                        StandardQuarterSpacer()
+
                         TimeDisplay(event.time, event.timeEnd)
                     }
                 }
