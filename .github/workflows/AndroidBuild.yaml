@@ -50,17 +50,15 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-audio
           script: ./gradlew connectedCheck
 
-      - name: Create directory and file
-        run:
-          mkdir -p ./test-results
-          > test-results.html
+      - run: mkdir -p test-results
+      - run: touch test-results/test-results.html
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: test-results.html
-          path: ./test-results/test-results.html
+          path: test-results/test-results.html
 
   build:
     runs-on: ubuntu-latest
@@ -86,13 +84,11 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease
 
-      - name: Create directory and file
-        run:
-          mkdir -p ./dist
-          > CalendariumOptimum.apk
+      - run: mkdir -p dist
+      - run: touch dist/CalendariumOptimum.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4.6.2
         with:
           name: CalendariumOptimum.apk
-          path: ./dist/CalendariumOptimum.apk
+          path: dist/CalendariumOptimum.apk
