@@ -1,7 +1,9 @@
 package com.kuba.calendarium.ui.screens.calendar
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
@@ -44,6 +46,7 @@ import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.ConfirmDialog
 import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
+import com.kuba.calendarium.ui.common.LineWithText
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.datePickerHeadlinePadding
@@ -135,13 +138,24 @@ private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modif
         viewModel.getEventsForDate(date)
     }.collectAsState(initial = emptyList())
 
+    val firstDoneIndex = events.indexOfFirst { it.done }
+
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         contentPadding = PaddingValues(standardPadding),
         modifier = modifier.fillMaxWidth()
     ) {
         if (events.isNotEmpty()) {
-            items(items = events, key = { event -> event.id }) { event ->
+            itemsIndexed(
+                items = events,
+                key = { i: Int, event: Event -> event.id }) { i: Int, event: Event ->
+
+                if (i == firstDoneIndex) {
+                    LineWithText(stringResource(R.string.done))
+                }
+
+                StandardHalfSpacer()
+
                 EventRow(
                     event = event,
                     onLongClick = {
@@ -150,7 +164,9 @@ private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modif
                     onCheckedChange = {
                         viewModel.onEvent(UIEvent.DoneChanged(event, it))
                     },
-                    modifier = Modifier.fillMaxSize().animateItem()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .animateItem()
                 )
 
                 StandardHalfSpacer()
@@ -180,30 +196,40 @@ private fun EventRow(
             onLongClick = onLongClick
         )
     ) {
-        Column(modifier = Modifier.padding(standardPadding)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CheckboxNoPadding(
-                    checked = event.done,
-                    onCheckedChange = onCheckedChange
-                )
+        Box {
+            Column(modifier = Modifier.padding(standardPadding)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CheckboxNoPadding(
+                        checked = event.done,
+                        onCheckedChange = onCheckedChange
+                    )
 
-                StandardQuarterSpacer()
+                    StandardQuarterSpacer()
 
-                Text(
-                    text = event.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
-                )
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.weight(1f)
+                    )
 
-                event.time?.let {
-                    TimeDisplay(event.time, event.timeEnd)
+                    event.time?.let {
+                        TimeDisplay(event.time, event.timeEnd)
+                    }
+                }
+
+                if (event.description.isNotBlank()) {
+                    StandardQuarterSpacer()
+
+                    Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
-            if (event.description.isNotBlank()) {
-                StandardQuarterSpacer()
-
-                Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
+            if (event.done) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
+                )
             }
         }
     }
