@@ -1,7 +1,13 @@
 package com.kuba.calendarium.ui.navigation
 
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,7 +26,8 @@ fun AppNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = ScreenRoute.Calendar.route
+        startDestination = ScreenRoute.Calendar.route,
+        modifier = Modifier.fillMaxSize()
     ) {
         composable(route = ScreenRoute.Calendar.route) { backStackEntry ->
             val viewModel = hiltViewModel<CalendarViewModel>()
@@ -51,7 +58,9 @@ fun AppNavHost() {
 
         composable(
             route = ScreenRoute.AddEvent.route,
-            arguments = listOf(navArgument(ARG_SELECTED_DATE_MS) { type = NavType.LongType })
+            arguments = listOf(navArgument(ARG_SELECTED_DATE_MS) { type = NavType.LongType }),
+            enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
         ) {
             AddEventScreen(
                 viewModel = hiltViewModel(),
@@ -67,7 +76,9 @@ fun AppNavHost() {
 
         composable(
             route = ScreenRoute.EditEvent.route,
-            arguments = listOf(navArgument(ARG_EVENT_ID) { type = NavType.LongType })
+            arguments = listOf(navArgument(ARG_EVENT_ID) { type = NavType.LongType }),
+            enterTransition = { slideInVertically(initialOffsetY = { it }) },
+            exitTransition = { slideOutVertically(targetOffsetY = { it }) }
         ) {
             EditEvenScreen(
                 viewModel = hiltViewModel(),
@@ -81,7 +92,10 @@ fun AppNavHost() {
             )
         }
 
-        composable(route = ScreenRoute.Settings.route) {
+        composable(
+            route = ScreenRoute.Settings.route,
+            enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }) {
             SettingsScreen(viewModel = hiltViewModel())
         }
     }
