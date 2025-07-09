@@ -50,6 +50,11 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-audio
           script: ./gradlew connectedCheck
 
+      - name: Create directory and file
+        run:
+          mkdir -p ./test-results
+          > test-results.html
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: ${{ always() }}
@@ -80,6 +85,11 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew assembleRelease
+
+      - name: Create directory and file
+        run:
+          mkdir -p ./dist
+          > CalendariumOptimum.apk
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4.6.2
