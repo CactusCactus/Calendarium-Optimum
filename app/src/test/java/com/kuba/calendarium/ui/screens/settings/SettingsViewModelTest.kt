@@ -5,6 +5,7 @@ import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -35,6 +36,7 @@ class SettingsViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+        unmockkAll()
     }
 
     @Test

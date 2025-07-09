@@ -22,6 +22,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "com.kuba.calendarium.HiltTestRunner"
+        testInstrumentationRunnerArguments["clearPackageData"] = "true"
     }
 
     buildTypes {
@@ -49,6 +50,8 @@ android {
         unitTests {
             isIncludeAndroidResources = true
         }
+
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
 }
 
@@ -110,6 +113,7 @@ dependencies {
     androidTestImplementation(libs.turbine)
     androidTestImplementation(libs.hilt.android.testing)
     kspAndroidTest(libs.hilt.android.compiler)
+    androidTestUtil(libs.orchestrator)
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

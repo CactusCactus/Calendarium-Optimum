@@ -32,7 +32,7 @@ object TestModule {
     @Provides
     @Singleton
     fun provideUserPreferencesRepository(@ApplicationContext context: Context) =
-        UserPreferencesRepository(context, TEST_PREFS_NAME)
+        UserPreferencesRepository(context)
 
     @Provides
     fun provideTestDispatcher(): CoroutineDispatcher = StandardTestDispatcher()

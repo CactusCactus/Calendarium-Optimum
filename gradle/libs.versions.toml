@@ -16,7 +16,8 @@ activityCompose = "1.10.1"
 composeBom = "2025.06.01"
 mockk = "1.14.2"
 mockkAgentJvm = "1.14.2"
-navigationCompose = "2.9.0"
+navigationCompose = "2.9.1"
+orchestratorVersion = "1.5.1"
 roomRuntime = "2.7.2"
 timber = "5.0.1"
 truth = "1.1.5"
@@ -60,6 +61,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-agent-jvm = { module = "io.mockk:mockk-agent-jvm", version.ref = "mockkAgentJvm" }
+orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestratorVersion" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

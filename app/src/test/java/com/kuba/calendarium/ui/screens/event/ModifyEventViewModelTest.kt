@@ -9,7 +9,9 @@ import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
 import com.kuba.calendarium.util.resetToMidnight
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.util.Calendar
@@ -29,6 +31,11 @@ class ModifyEventViewModelTest {
 
         // AddEventViewModel is picked for implementation of the abstract class ModifyEventViewModel
         viewModel = AddEventViewModel(mockEventsRepository, mockSavedStateHandle)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
 
     @Test

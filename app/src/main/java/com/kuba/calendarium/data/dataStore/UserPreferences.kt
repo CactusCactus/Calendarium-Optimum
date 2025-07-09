@@ -10,16 +10,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+private const val USER_PREFERENCES_NAME = "user_preferences"
 
-class UserPreferencesRepository @Inject constructor(
-    private val appContext: Context,
-    dataStoreName: String = USER_PREFERENCES_NAME
-) {
-    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = dataStoreName)
+internal val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = USER_PREFERENCES_NAME)
 
+class UserPreferencesRepository @Inject constructor(private val appContext: Context) {
     companion object {
-        private const val USER_PREFERENCES_NAME = "user_preferences"
-
         private const val KEY_SHOW_DIALOG_DELETE = "show_dialog_delete"
 
         const val SHOW_DIALOG_DEFAULT = true
@@ -35,5 +31,10 @@ class UserPreferencesRepository @Inject constructor(
             preferences[booleanPreferencesKey(KEY_SHOW_DIALOG_DELETE)] = show
         }
     }
-}
 
+    suspend fun clear() {
+        appContext.dataStore.edit { preferences ->
+            preferences.clear()
+        }
+    }
+}

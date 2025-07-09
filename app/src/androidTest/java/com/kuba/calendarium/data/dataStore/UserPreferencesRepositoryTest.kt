@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,6 +21,12 @@ class UserPreferencesRepositoryTest {
         userPreferencesRepository = UserPreferencesRepository(context)
     }
 
+    @After
+    fun tearDown() {
+        runTest {
+            userPreferencesRepository.clear()
+        }
+    }
 
     @Test
     fun testShowDialogDeletePreference() = runTest {

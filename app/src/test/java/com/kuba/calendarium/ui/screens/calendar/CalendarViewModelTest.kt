@@ -24,7 +24,8 @@ class CalendarViewModelTest {
     @Before
     fun setUp() {
         mockEventsRepository = mockk()
-        userPreferencesRepository = mockk()
+        userPreferencesRepository = mockk(relaxed = true)
+
         viewModel = CalendarViewModel(mockEventsRepository, userPreferencesRepository)
     }
 
