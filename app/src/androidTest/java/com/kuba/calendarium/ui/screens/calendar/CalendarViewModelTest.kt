@@ -231,4 +231,33 @@ class CalendarViewModelTest {
             }
         }
     }
+
+    @Test
+    fun testUserSettingEventAsDone() {
+        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
+            scenario.onActivity {
+                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
+                val eventId = "testUserSettingEventAsDone".hashCode().toLong()
+
+                val event = Event(
+                    id = eventId,
+                    title = "Test Event",
+                    description = "Test Description",
+                    date = Calendar.getInstance().time.time.resetToMidnight()
+                )
+
+                runTest {
+                    eventsRepository.insertEvent(event)
+                    viewModel.onEvent(CalendarViewModel.UIEvent.DoneChanged(event, true))
+                    advanceUntilIdle()
+
+                    eventsRepository.getEventById(eventId).test {
+                        val event = awaitItem()
+
+                        assertThat(event?.done).isTrue()
+                    }
+                }
+            }
+        }
+    }
 }
