@@ -57,6 +57,8 @@ import com.kuba.calendarium.util.isSameDay
 import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import kotlinx.coroutines.flow.collectLatest
+import java.time.Instant
+import java.time.ZoneOffset
 import java.util.TimeZone
 
 @Composable
@@ -91,11 +93,19 @@ fun CalendarScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val selectedDate = viewModel.selectedDate.collectAsState().value
+            val localDate =
+                Instant.ofEpochMilli(selectedDate).atZone(ZoneOffset.UTC).toLocalDate()
 
-            CalendarPicker(
-                date = selectedDate,
-                onDateSelected = { viewModel.onEvent(UIEvent.DateSelected(it)) },
-                onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) }
+            NewCalendarPicker(
+                date = localDate,
+                onDateSelected = {
+                    viewModel.onEvent(
+                        UIEvent.DateSelected(
+                            it.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+                        )
+                    )
+                }
+//                onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) }
             )
 
             val pagerState = rememberPagerState(

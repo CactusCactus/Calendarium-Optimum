@@ -103,6 +103,9 @@ dependencies {
     implementation(libs.firebase.crashlytics.ndk)
     implementation(libs.firebase.analytics)
 
+    // Calendar Kizitonwose
+    implementation(libs.calendar.compose)
+
     // Tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
