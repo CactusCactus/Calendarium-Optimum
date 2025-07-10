@@ -10,10 +10,17 @@ const val STANDARD_DATE_FORMAT = "dd/MM/yyyy"
 
 const val SHORT_DATE_FORMAT = "dd/MM"
 
+const val TITLE_DATE_FORMAT = "d MMMM yyyy"
+
 const val STANDARD_TIME_FORMAT = "HH:mm"
 
 fun Long.standardDateFormat(): String =
     SimpleDateFormat(STANDARD_DATE_FORMAT, Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }.format(Date(this))
+
+fun Long.titleDateFormat(): String =
+    SimpleDateFormat(TITLE_DATE_FORMAT, Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }.format(Date(this))
 

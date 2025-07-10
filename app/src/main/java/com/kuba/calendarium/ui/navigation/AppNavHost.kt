@@ -94,8 +94,8 @@ fun AppNavHost() {
 
         composable(
             route = ScreenRoute.Settings.route,
-            enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
-            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }) {
+            enterTransition = { slideInVertically(initialOffsetY = { -it }) },
+            exitTransition = { slideOutVertically(targetOffsetY = { -it }) }) {
             SettingsScreen(viewModel = hiltViewModel())
         }
     }

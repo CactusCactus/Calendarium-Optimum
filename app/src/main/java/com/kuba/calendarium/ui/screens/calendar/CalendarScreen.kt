@@ -28,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.ui.common.AnimatedText
 import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.ConfirmDialog
 import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
@@ -50,17 +52,20 @@ import com.kuba.calendarium.ui.common.LineWithText
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.datePickerHeadlinePadding
+import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import com.kuba.calendarium.util.isSameDay
 import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
+import com.kuba.calendarium.util.titleDateFormat
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.TimeZone
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     viewModel: CalendarViewModel,
@@ -78,6 +83,12 @@ fun CalendarScreen(
     }
 
     Scaffold(
+        topBar = {
+            AppBar(
+                title = viewModel.selectedDate.collectAsState().value.titleDateFormat(),
+                onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 onNavigateToAddEvent(viewModel.selectedDate.value)
@@ -104,8 +115,8 @@ fun CalendarScreen(
                             it.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
                         )
                     )
-                }
-//                onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) }
+                },
+                modifier = Modifier.padding(standardHalfPadding)
             )
 
             val pagerState = rememberPagerState(
@@ -140,6 +151,29 @@ fun CalendarScreen(
 
         ShowDialogsAndBottomSheets(viewModel)
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppBar(title: String, onSettingsClicked: () -> Unit) {
+    TopAppBar(
+        title = {
+            AnimatedText(
+                text = title,
+                style = MaterialTheme.typography.displaySmall,
+                maxLines = 1
+            )
+        },
+        actions = {
+            IconButton(onClick = onSettingsClicked) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_settings_24),
+                    contentDescription = "Settings",
+                    modifier = Modifier.size(standardIconSize)
+                )
+            }
+        }
+    )
 }
 
 @Composable
