@@ -24,3 +24,4 @@
 </ul>
 <br><br>
 <p1>Used architecture: MVVM</p1>
+<p1>Work organisation: Trello</p1>
