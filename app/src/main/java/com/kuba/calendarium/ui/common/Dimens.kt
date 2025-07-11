@@ -23,3 +23,6 @@ val standardIconSize = 28.dp
 val descriptionMinHeight = 128.dp
 
 val dateTimeRowPrefixLabelWidth = 48.dp
+
+val dialogMinWidth = 280.dp
+

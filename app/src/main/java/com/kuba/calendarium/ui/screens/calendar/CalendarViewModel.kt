@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.Calendar
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -131,13 +132,22 @@ class CalendarViewModel @Inject constructor(
                 userPreferencesRepository.setCalendarModePreference(newDisplayMode)
                 _uiState.update { _uiState.value.copy(calendarDisplayMode = newDisplayMode) }
             }
+
+            UIEvent.DatePickerDialogDismiss -> _uiState.update {
+                _uiState.value.copy(datePickerDialogShowing = false)
+            }
+
+            UIEvent.ShowDatePickerDialog -> _uiState.update {
+                _uiState.value.copy(datePickerDialogShowing = true)
+            }
         }
     }
 
-    fun pageIndexToDateMillis(pageIndex: Int): Long = Calendar.getInstance().apply {
-        timeInMillis = getTodayMidnight()
-        add(Calendar.DAY_OF_YEAR, pageIndex - PAGER_INITIAL_OFFSET_DAYS)
-    }.timeInMillis
+    fun pageIndexToDateMillis(pageIndex: Int): Long =
+        Calendar.getInstance(TimeZone.getDefault()).apply {
+            timeInMillis = getTodayMidnight()
+            add(Calendar.DAY_OF_YEAR, pageIndex - PAGER_INITIAL_OFFSET_DAYS)
+        }.timeInMillis
 
     fun dateMillisToPageIndex(dateMillis: Long): Int {
         val startDateOfPager = getTodayMidnight()
@@ -150,6 +160,7 @@ class CalendarViewModel @Inject constructor(
         var contextMenuOpen: Boolean = false,
         var contextMenuName: String = "",
         var deleteDialogShowing: Boolean = false,
+        var datePickerDialogShowing: Boolean = false,
         var showDialogDelete: Boolean = UserPreferencesRepository.SHOW_DIALOG_DEFAULT,
         var calendarDisplayMode: CalendarDisplayMode = CalendarDisplayMode.UNDEFINED
     )
@@ -158,12 +169,14 @@ class CalendarViewModel @Inject constructor(
         data class DateSelected(val date: Long) : UIEvent()
         data class ContextMenuOpen(val event: Event) : UIEvent()
         data class DoneChanged(val event: Event, val checked: Boolean) : UIEvent()
-        object ContextMenuDismiss : UIEvent()
         data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
-        object DeleteDialogDismiss : UIEvent()
         object SettingsClicked : UIEvent()
         object CalendarModeClicked : UIEvent()
+        object ShowDatePickerDialog : UIEvent()
+        object DeleteDialogDismiss : UIEvent()
+        object DatePickerDialogDismiss : UIEvent()
+        object ContextMenuDismiss : UIEvent()
     }
 
     sealed class NavEvent {

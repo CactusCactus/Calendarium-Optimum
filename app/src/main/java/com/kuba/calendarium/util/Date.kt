@@ -1,6 +1,8 @@
 package com.kuba.calendarium.util
 
 import java.text.SimpleDateFormat
+import java.time.Month
+import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -57,5 +59,8 @@ fun Long.isSameDay(other: Long, timeZone: TimeZone = TimeZone.getTimeZone("UTC")
 
     return thisCalendar.get(Calendar.DAY_OF_YEAR) == otherCalendar.get(Calendar.DAY_OF_YEAR) &&
             thisCalendar.get(Calendar.YEAR) == otherCalendar.get(Calendar.YEAR)
+}
 
+fun getMonthNames(textStyle: TextStyle = TextStyle.SHORT) = Month.entries.map { month ->
+    month.getDisplayName(textStyle, Locale.getDefault())
 }

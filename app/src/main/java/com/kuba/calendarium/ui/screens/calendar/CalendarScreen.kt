@@ -3,6 +3,7 @@ package com.kuba.calendarium.ui.screens.calendar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.ConfirmDialog
 import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.LineWithText
+import com.kuba.calendarium.ui.common.MonthYearPickerModal
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.standardHalfPadding
@@ -88,6 +90,7 @@ fun CalendarScreen(
             AppBar(
                 title = viewModel.selectedDate.collectAsState().value.titleDateFormat(),
                 calendarDisplayMode = viewModel.uiState.collectAsState().value.calendarDisplayMode,
+                onTitleClicked = { viewModel.onEvent(UIEvent.ShowDatePickerDialog) },
                 onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) },
                 onCalendarModeClicked = { viewModel.onEvent(UIEvent.CalendarModeClicked) }
             )
@@ -168,6 +171,7 @@ fun CalendarScreen(
 private fun AppBar(
     title: String,
     calendarDisplayMode: CalendarDisplayMode,
+    onTitleClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
     onCalendarModeClicked: () -> Unit
 ) {
@@ -176,7 +180,8 @@ private fun AppBar(
             AnimatedText(
                 text = title,
                 style = MaterialTheme.typography.displaySmall,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.clickable(onClick = onTitleClicked)
             )
         },
         navigationIcon = {
@@ -428,6 +433,16 @@ private fun ShowDialogsAndBottomSheets(viewModel: CalendarViewModel) {
             onConfirm = { viewModel.onEvent(UIEvent.ContextEventDelete(it)) },
             onDismiss = { viewModel.onEvent(UIEvent.DeleteDialogDismiss) }
         )
+    }
+
+    if (uiState.datePickerDialogShowing) {
+        MonthYearPickerModal(
+            initialDate = viewModel.selectedDate.collectAsState().value,
+            onDatePicked = {
+                viewModel.onEvent(UIEvent.DateSelected(it))
+                viewModel.onEvent(UIEvent.DatePickerDialogDismiss)
+            },
+            onDismissRequest = { viewModel.onEvent(UIEvent.DatePickerDialogDismiss) })
     }
 }
 
