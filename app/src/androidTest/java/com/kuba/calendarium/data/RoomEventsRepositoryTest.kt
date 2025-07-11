@@ -10,8 +10,13 @@ import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.util.resetToMidnight
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -19,6 +24,7 @@ import org.junit.runner.RunWith
 import java.io.IOException
 import java.util.Calendar
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class RoomEventsRepositoryTest {
     private lateinit var eventDao: EventDao
@@ -27,6 +33,7 @@ class RoomEventsRepositoryTest {
 
     @Before
     fun setUp() {
+        Dispatchers.setMain(StandardTestDispatcher())
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
         eventDao = db.eventDao()
@@ -37,6 +44,7 @@ class RoomEventsRepositoryTest {
     @Throws(IOException::class)
     fun tearDown() {
         db.close()
+        Dispatchers.resetMain()
     }
 
     @Test
