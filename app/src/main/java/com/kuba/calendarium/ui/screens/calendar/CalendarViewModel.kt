@@ -32,7 +32,7 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-    internal val eventsRepository: EventsRepository,
+    private val eventsRepository: EventsRepository,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UIState())
@@ -41,16 +41,15 @@ class CalendarViewModel @Inject constructor(
 
     private val _selectedDate = MutableStateFlow(getTodayMidnight())
 
+    val selectedDate = _selectedDate.asStateFlow()
+
     private val _navEvent = Channel<NavEvent>()
 
     val navEvent = _navEvent.receiveAsFlow()
 
-    val selectedDate = _selectedDate.asStateFlow()
-
     val eventCountMap: StateFlow<Map<LocalDate, Int>> =
-        _selectedDate.map { date ->
-            YearMonth.from(date)
-        }.distinctUntilChanged()
+        _selectedDate.map { date -> YearMonth.from(date) }
+            .distinctUntilChanged()
             .flatMapLatest { yearMonth ->
                 val firstDayOfMonth = yearMonth.atDay(1)
                 val lastDayOfMonth = yearMonth.atEndOfMonth()
@@ -67,10 +66,12 @@ class CalendarViewModel @Inject constructor(
 
     companion object {
         const val PAGER_VIRTUAL_PAGE_COUNT: Long = 365 * 10 // ~10 years
+
         const val PAGER_INITIAL_OFFSET_DAYS: Long = PAGER_VIRTUAL_PAGE_COUNT / 2
     }
 
     init {
+        // Collect the user preferences
         viewModelScope.launch {
             userPreferencesRepository.getShowDialogDeletePreference().collect { value ->
                 _uiState.update { _uiState.value.copy(showDialogDelete = value) }
@@ -89,7 +90,34 @@ class CalendarViewModel @Inject constructor(
 
     fun onEvent(event: UIEvent) {
         when (event) {
+            // Event manipulation events
             is UIEvent.DateSelected -> _selectedDate.update { event.date }
+
+            is ContextEventDelete -> {
+                _uiState.update {
+                    _uiState.value.copy(
+                        contextMenuOpen = false,
+                        deleteDialogShowing = false,
+                        showDialogDelete = !event.dontShowAgain
+                    )
+                }
+
+                viewModelScope.launch {
+                    contextMenuEvent?.let {
+                        eventsRepository.deleteEvent(it)
+                        contextMenuEvent = null
+                    } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
+
+                    userPreferencesRepository
+                        .setShowDialogDeletePreference(!event.dontShowAgain)
+                }
+            }
+
+            is UIEvent.DoneChanged -> viewModelScope.launch {
+                eventsRepository.updateEvent(event.event.copy(done = event.checked))
+            }
+
+            // Context menu events
             is UIEvent.ContextMenuOpen -> {
                 _uiState.update {
                     _uiState.value.copy(contextMenuOpen = true, contextMenuName = event.event.title)
@@ -117,35 +145,20 @@ class CalendarViewModel @Inject constructor(
                 }
             }
 
+            // Dialog events
+            UIEvent.ShowDatePickerDialog -> _uiState.update {
+                _uiState.value.copy(datePickerDialogShowing = true)
+            }
+
+            UIEvent.DatePickerDialogDismiss -> _uiState.update {
+                _uiState.value.copy(datePickerDialogShowing = false)
+            }
+
             UIEvent.DeleteDialogDismiss -> _uiState.update {
                 _uiState.value.copy(contextMenuOpen = false, deleteDialogShowing = false)
             }
 
-            is ContextEventDelete -> {
-                _uiState.update {
-                    _uiState.value.copy(
-                        contextMenuOpen = false,
-                        deleteDialogShowing = false,
-                        showDialogDelete = !event.dontShowAgain
-                    )
-                }
-
-                viewModelScope.launch {
-                    contextMenuEvent?.let {
-                        eventsRepository.deleteEvent(it)
-                        contextMenuEvent = null
-                    } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
-
-                    userPreferencesRepository
-                        .setShowDialogDeletePreference(!event.dontShowAgain)
-                }
-            }
-
-            UIEvent.SettingsClicked -> viewModelScope.launch { _navEvent.send(NavEvent.Settings) }
-            is UIEvent.DoneChanged -> viewModelScope.launch {
-                eventsRepository.updateEvent(event.event.copy(done = event.checked))
-            }
-
+            // Toolbar events
             UIEvent.CalendarModeClicked -> viewModelScope.launch {
                 val newDisplayMode =
                     if (_uiState.value.calendarDisplayMode == CalendarDisplayMode.WEEK)
@@ -155,18 +168,10 @@ class CalendarViewModel @Inject constructor(
                 _uiState.update { _uiState.value.copy(calendarDisplayMode = newDisplayMode) }
             }
 
-            UIEvent.DatePickerDialogDismiss -> _uiState.update {
-                _uiState.value.copy(datePickerDialogShowing = false)
-            }
+            UIEvent.SettingsClicked -> viewModelScope.launch { _navEvent.send(NavEvent.Settings) }
 
-            UIEvent.ShowDatePickerDialog -> _uiState.update {
-                _uiState.value.copy(datePickerDialogShowing = true)
-            }
         }
     }
-
-    fun pageIndexToLocalDate(pageIndex: Int): LocalDate =
-        getTodayMidnight().plusDays(pageIndex - PAGER_INITIAL_OFFSET_DAYS)
 
     fun localDateToPageIndex(localDate: LocalDate): Long {
         val startDateOfPager = getTodayMidnight()
@@ -174,6 +179,9 @@ class CalendarViewModel @Inject constructor(
         val daysDifference = localDate.toEpochDay() - startDateOfPager.toEpochDay()
         return PAGER_INITIAL_OFFSET_DAYS + daysDifference
     }
+
+    fun pageIndexToLocalDate(pageIndex: Int): LocalDate =
+        getTodayMidnight().plusDays(pageIndex - PAGER_INITIAL_OFFSET_DAYS)
 
     data class UIState(
         var contextMenuOpen: Boolean = false,
