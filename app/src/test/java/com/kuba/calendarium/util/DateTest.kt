@@ -7,8 +7,6 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.TimeZone
 
-private val timeZone = TimeZone.getTimeZone("UTC")
-
 class DateTest {
     @Test
     fun standardDateFormat() {
