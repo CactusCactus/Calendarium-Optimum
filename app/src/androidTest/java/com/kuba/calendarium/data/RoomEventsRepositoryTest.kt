@@ -9,7 +9,6 @@ import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.repo.EventsRepository
-import com.kuba.calendarium.util.resetToMidnight
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -22,7 +21,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.IOException
-import java.util.Calendar
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -56,7 +55,7 @@ class RoomEventsRepositoryTest {
             title = "Test Event",
             description = "This is a test event",
 
-            date = System.currentTimeMillis()
+            date = LocalDate.now()
         )
 
         val insertedId = repository.insertEvent(event)
@@ -85,14 +84,14 @@ class RoomEventsRepositoryTest {
             id = eventId,
             title = "Original Test Event",
             description = "This is a test event",
-            date = System.currentTimeMillis(),
+            date = LocalDate.now(),
         )
 
         val updatedEvent = Event(
             id = eventId,
             title = "Updated Test Event",
             description = "This is a test event",
-            date = System.currentTimeMillis()
+            date = LocalDate.now()
         )
 
         repository.getEventById(eventId).test {
@@ -121,7 +120,7 @@ class RoomEventsRepositoryTest {
             id = eventId,
             title = "Test Event",
             description = "This is a test event",
-            date = System.currentTimeMillis()
+            date = LocalDate.now()
         )
 
         repository.insertEvent(event)
@@ -143,7 +142,7 @@ class RoomEventsRepositoryTest {
     fun addEventsAndCheckFlowByDate() = runTest {
         val eventId1 = "addEventsAndCheckFlow1".hashCode().toLong()
         val eventId2 = "addEventsAndCheckFlow2".hashCode().toLong()
-        val date = System.currentTimeMillis().resetToMidnight()
+        val date = LocalDate.now()
 
         val event1 = Event(
             id = eventId1,
@@ -178,14 +177,14 @@ class RoomEventsRepositoryTest {
             id = eventId,
             title = "Original Test Event",
             description = "This is a test event",
-            date = System.currentTimeMillis()
+            date = LocalDate.now()
         )
 
         val updatedEvent = Event(
             id = eventId,
             title = "Updated Test Event",
             description = "This is an updated test event",
-            date = System.currentTimeMillis()
+            date = LocalDate.now()
         )
 
         repository.insertEvent(originalEvent)
@@ -208,7 +207,7 @@ class RoomEventsRepositoryTest {
             id = eventId,
             title = "Updated Test Event",
             description = "This is an updated test event",
-            date = System.currentTimeMillis()
+            date = LocalDate.now()
         )
 
         repository.updateEvent(updatedEvent)
@@ -225,21 +224,12 @@ class RoomEventsRepositoryTest {
     @Test
     fun insertEventAndFetchItForMultipleDates() = runTest {
         val eventId = "insertEventAndFetchItForMultipleDates".hashCode().toLong()
-        val dateStart = System.currentTimeMillis().resetToMidnight()
-        val dateMiddle = Calendar.getInstance().apply {
-            timeInMillis = dateStart
-            add(Calendar.DAY_OF_MONTH, 1)
-        }.timeInMillis
-        val dateEnd = Calendar.getInstance().apply {
-            timeInMillis = dateStart
-            add(Calendar.DAY_OF_MONTH, 2)
-        }.timeInMillis
+        val dateStart = LocalDate.now()
+        val dateMiddle = dateStart.plusDays(1)
+        val dateEnd = dateStart.plusDays(2)
 
         // Fail scenario
-        val dateAfterEnd = Calendar.getInstance().apply {
-            timeInMillis = dateStart
-            add(Calendar.DAY_OF_MONTH, 3)
-        }.timeInMillis
+        val dateAfterEnd = dateStart.plusDays(3)
 
 
         val event = Event(

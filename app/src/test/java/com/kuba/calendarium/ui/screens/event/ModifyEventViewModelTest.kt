@@ -6,7 +6,6 @@ import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
-import com.kuba.calendarium.util.resetToMidnight
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.unmockkAll
@@ -14,8 +13,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.util.Calendar
-import java.util.Date
+import java.time.LocalDate
+import java.time.LocalTime
 
 class ModifyEventViewModelTest {
     private lateinit var mockEventsRepository: EventsRepository
@@ -40,14 +39,11 @@ class ModifyEventViewModelTest {
 
     @Test
     fun `Done button clicked - Finish event sent`() = runTest {
-        val date = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 21)
-            set(Calendar.MINUTE, 37)
-        }.time
+        val date = LocalDate.of(1995, 2, 19)
 
         coEvery { mockEventsRepository.insertEvent(any()) } returns 1
         // Set date of the Event (other fields are not important in this case)
-        viewModel.onEvent(UIEvent.DateSelected(date.time))
+        viewModel.onEvent(UIEvent.DateSelected(date))
 
         viewModel.navEvent.test {
             viewModel.onEvent(UIEvent.DoneClicked)
@@ -55,9 +51,8 @@ class ModifyEventViewModelTest {
             val finishEvent = awaitItem()
             assert(finishEvent is ModifyEventViewModel.NavEvent.Finish)
 
-            // Date is reset to midnight before being inserted into repository
-            val expectedDate = date.time
-            assert((finishEvent as ModifyEventViewModel.NavEvent.Finish).eventDate == expectedDate.resetToMidnight())
+            val expectedDate = date
+            assert((finishEvent as ModifyEventViewModel.NavEvent.Finish).eventDate == expectedDate)
 
             // Should fire only once
             expectNoEvents()
@@ -184,13 +179,13 @@ class ModifyEventViewModelTest {
 
         assert(viewModel.uiState.value.datePickerOpen)
 
-        val date = Date().time
+        val date = LocalDate.now()
 
         viewModel.onEvent(UIEvent.DateSelected(date))
         viewModel.onEvent(UIEvent.DatePickerDismissed)
 
         // Date is reset to midnight before being saved
-        assert(viewModel.uiState.value.selectedDate == date.resetToMidnight())
+        assert(viewModel.uiState.value.selectedDate == date)
         assert(viewModel.uiState.value.datePickerOpen.not())
     }
 
@@ -215,20 +210,12 @@ class ModifyEventViewModelTest {
 
         assert(viewModel.uiState.value.timePickerOpen)
 
-        val time = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 21)
-            set(Calendar.MINUTE, 37)
-            set(Calendar.YEAR, 0)
-            set(Calendar.MONTH, 0)
-            set(Calendar.DAY_OF_MONTH, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        val time = LocalTime.of(21, 37)
 
         viewModel.onEvent(UIEvent.TimeSelected(time))
         viewModel.onEvent(UIEvent.TimePickerDismissed)
 
-        // date timestamp should be added to the timestamp before being saved
-        assert(viewModel.uiState.value.selectedTime == time + viewModel.uiState.value.selectedDate)
+        assert(viewModel.uiState.value.selectedTime == time)
         assert(viewModel.uiState.value.timePickerOpen.not())
     }
 
@@ -240,11 +227,11 @@ class ModifyEventViewModelTest {
         assertThat(viewModel.uiState.value.datePickerOpen).isTrue()
         assertThat(viewModel.uiState.value.currentDateTimeMode).isEqualTo(DateTimeMode.TO)
 
-        val date = System.currentTimeMillis()
+        val date = LocalDate.now()
         viewModel.onEvent(UIEvent.DateSelected(date))
         viewModel.onEvent(UIEvent.DatePickerDismissed)
 
-        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(date.resetToMidnight())
+        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(date)
         assertThat(viewModel.uiState.value.datePickerOpen).isFalse()
     }
 
@@ -268,11 +255,11 @@ class ModifyEventViewModelTest {
         assertThat(viewModel.uiState.value.datePickerOpen).isTrue()
         assertThat(viewModel.uiState.value.currentDateTimeMode).isEqualTo(DateTimeMode.TO)
 
-        val date = System.currentTimeMillis()
+        val date = LocalDate.now()
         viewModel.onEvent(UIEvent.DateSelected(date))
         viewModel.onEvent(UIEvent.DatePickerDismissed)
 
-        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(date.resetToMidnight())
+        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(date)
         assertThat(viewModel.uiState.value.datePickerOpen).isFalse()
 
         viewModel.onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO))
@@ -281,11 +268,8 @@ class ModifyEventViewModelTest {
 
     @Test
     fun `User picks end date before start date - start date is set to end date`() {
-        val date = System.currentTimeMillis()
-        val dateBefore = Calendar.getInstance().apply {
-            timeInMillis = date
-            add(Calendar.DAY_OF_MONTH, -1)
-        }.timeInMillis
+        val date = LocalDate.now()
+        val dateBefore = date.minusDays(1)
 
         viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
         viewModel.onEvent(UIEvent.DateSelected(date))
@@ -293,17 +277,14 @@ class ModifyEventViewModelTest {
         viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
         viewModel.onEvent(UIEvent.DateSelected(dateBefore))
 
-        assertThat(viewModel.uiState.value.selectedDate).isEqualTo(dateBefore.resetToMidnight())
-        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(dateBefore.resetToMidnight())
+        assertThat(viewModel.uiState.value.selectedDate).isEqualTo(dateBefore)
+        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(dateBefore)
     }
 
     @Test
     fun `User pics start date after end date - end date is set ot start date`() {
-        val date = System.currentTimeMillis()
-        val dateAfter = Calendar.getInstance().apply {
-            timeInMillis = date
-            add(Calendar.DAY_OF_MONTH, 1)
-        }.timeInMillis
+        val date = LocalDate.now()
+        val dateAfter = date.plusDays(1)
 
         // Initial date
         viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
@@ -314,15 +295,14 @@ class ModifyEventViewModelTest {
         viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
         viewModel.onEvent(UIEvent.DateSelected(dateAfter))
 
-        assertThat(viewModel.uiState.value.selectedDate).isEqualTo(dateAfter.resetToMidnight())
-        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(dateAfter.resetToMidnight())
+        assertThat(viewModel.uiState.value.selectedDate).isEqualTo(dateAfter)
+        assertThat(viewModel.uiState.value.selectedDateEnd).isEqualTo(dateAfter)
     }
 
     @Test
     fun `Both dates are set, user sets time - time is set for both values`() {
-        val date = System.currentTimeMillis().resetToMidnight()
-
-        val time = getTestTime()
+        val date = LocalDate.now()
+        val time = LocalTime.of(21, 37)
 
         // Initial date
         viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
@@ -338,18 +318,15 @@ class ModifyEventViewModelTest {
 
         assertThat(viewModel.uiState.value.datePickerOpen).isFalse()
         assertThat(viewModel.uiState.value.timePickerOpen).isFalse()
-        assertThat(viewModel.uiState.value.selectedTime).isEqualTo(time + date)
-        assertThat(viewModel.uiState.value.selectedTimeEnd).isEqualTo(time + date)
+        assertThat(viewModel.uiState.value.selectedTime).isEqualTo(time)
+        assertThat(viewModel.uiState.value.selectedTimeEnd).isEqualTo(time)
     }
 
     @Test
     fun `User picks end time before start time - start time is set to end time`() {
-        val date = System.currentTimeMillis().resetToMidnight()
-        val time = getTestTime()
-        val timeBefore = Calendar.getInstance().apply {
-            timeInMillis = time
-            add(Calendar.HOUR_OF_DAY, -1)
-        }.timeInMillis
+        val date = LocalDate.now()
+        val time = LocalTime.of(21, 37)
+        val timeBefore = time.minusHours(1)
 
         // Initial time and date
         viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
@@ -366,18 +343,15 @@ class ModifyEventViewModelTest {
         viewModel.onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO))
         viewModel.onEvent(UIEvent.TimeSelected(timeBefore))
 
-        assertThat(viewModel.uiState.value.selectedTime).isEqualTo(timeBefore + date)
-        assertThat(viewModel.uiState.value.selectedTimeEnd).isEqualTo(timeBefore + date)
+        assertThat(viewModel.uiState.value.selectedTime).isEqualTo(timeBefore)
+        assertThat(viewModel.uiState.value.selectedTimeEnd).isEqualTo(timeBefore)
     }
 
     @Test
     fun `User picks start time after end time - end time is set to start time`() {
-        val date = System.currentTimeMillis().resetToMidnight()
-        val time = getTestTime()
-        val timeAfter = Calendar.getInstance().apply {
-            timeInMillis = time
-            add(Calendar.HOUR_OF_DAY, 1)
-        }.timeInMillis
+        val date = LocalDate.now()
+        val time = LocalTime.of(21, 37)
+        val timeAfter = time.plusHours(1)
 
         // Initial time and date
         viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
@@ -394,18 +368,7 @@ class ModifyEventViewModelTest {
         viewModel.onEvent(UIEvent.TimePickerOpened(DateTimeMode.FROM))
         viewModel.onEvent(UIEvent.TimeSelected(timeAfter))
 
-        assertThat(viewModel.uiState.value.selectedTime).isEqualTo(timeAfter + date)
-        assertThat(viewModel.uiState.value.selectedTimeEnd).isEqualTo(timeAfter + date)
+        assertThat(viewModel.uiState.value.selectedTime).isEqualTo(timeAfter)
+        assertThat(viewModel.uiState.value.selectedTimeEnd).isEqualTo(timeAfter)
     }
-
-    private fun getTestTime() = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 21)
-        set(Calendar.MINUTE, 37)
-        set(Calendar.SECOND, 13)
-        set(Calendar.MILLISECOND, 0)
-        set(Calendar.YEAR, 0)
-        set(Calendar.MONTH, 0)
-        set(Calendar.DAY_OF_MONTH, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
 }

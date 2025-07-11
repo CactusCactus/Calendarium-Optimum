@@ -3,15 +3,43 @@ package com.kuba.calendarium.data.model
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.TypeConverter
+import java.time.LocalDate
+import java.time.LocalTime
 
 @Entity
 data class Event(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "description") val description: String,
-    @ColumnInfo(name = "date") val date: Long,
-    @ColumnInfo(name = "time") val time: Long? = null,
-    @ColumnInfo(name = "date_end") val dateEnd: Long? = null,
-    @ColumnInfo(name = "time_end") val timeEnd: Long? = null,
+    @ColumnInfo(name = "date") val date: LocalDate,
+    @ColumnInfo(name = "time") val time: LocalTime? = null,
+    @ColumnInfo(name = "date_end") val dateEnd: LocalDate? = null,
+    @ColumnInfo(name = "time_end") val timeEnd: LocalTime? = null,
     @ColumnInfo(name = "is_done") val done: Boolean = false
 )
+
+class TimeConverters {
+    @TypeConverter
+    fun fromTimestamp(value: Long?): LocalDate? {
+        return value?.let { LocalDate.ofEpochDay(it) }
+    }
+
+    @TypeConverter
+    fun dateToTimestamp(date: LocalDate?): Long? {
+        return date?.toEpochDay()
+    }
+
+    @TypeConverter
+    fun fromTime(value: Long?): LocalTime? {
+        return value?.let { LocalTime.ofNanoOfDay(it) }
+    }
+
+    @TypeConverter
+    fun timeToLong(time: LocalTime?): Long? {
+        return time?.toNanoOfDay()
+    }
+}
+
+
+

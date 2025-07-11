@@ -61,13 +61,15 @@ import com.kuba.calendarium.util.standardDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.toLocalizedString
 import kotlinx.coroutines.flow.collectLatest
+import java.time.LocalDate
+import java.time.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModifyEventScreen(
     title: String,
     viewModel: ModifyEventViewModel,
-    onNavigateUp: (Long) -> Unit
+    onNavigateUp: (eventDate: LocalDate) -> Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.navEvent.collectLatest {
@@ -118,7 +120,7 @@ fun ModifyEventScreen(
         }
 
         val time =
-            viewModel.uiState.collectAsState().value.selectedTime ?: System.currentTimeMillis()
+            viewModel.uiState.collectAsState().value.selectedTime ?: LocalTime.now()
 
         if (viewModel.uiState.collectAsState().value.timePickerOpen) {
             TimePickerModal(
@@ -288,8 +290,8 @@ private fun MainColumn(
 
 @Composable
 private fun DateTimeRow(
-    selectedDate: Long,
-    selectedTime: Long?,
+    selectedDate: LocalDate,
+    selectedTime: LocalTime?,
     labelStart: @Composable (RowScope.() -> Unit)?,
     labelEnd: @Composable (RowScope.() -> Unit)?,
     onDateFieldClicked: () -> Unit,

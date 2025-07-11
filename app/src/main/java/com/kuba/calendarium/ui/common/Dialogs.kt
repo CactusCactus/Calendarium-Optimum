@@ -54,22 +54,23 @@ import androidx.compose.ui.window.Dialog
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.util.getMonthNames
+import com.kuba.calendarium.util.toLocalDate
+import com.kuba.calendarium.util.toMillis
 import timber.log.Timber
-import java.time.Instant
-import java.time.ZoneOffset
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerModal(
-    initialDate: Long,
-    onDatePicked: (Long) -> Unit,
+    initialDate: LocalDate,
+    onDatePicked: (LocalDate) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate,
-        initialDisplayedMonthMillis = initialDate
+        initialSelectedDateMillis = initialDate.toMillis(),
+        initialDisplayedMonthMillis = initialDate.toMillis()
     )
 
     DatePickerDialog(
@@ -77,7 +78,7 @@ fun DatePickerModal(
         confirmButton = {
             TextButton(onClick = {
                 datePickerState.selectedDateMillis?.let {
-                    onDatePicked(it)
+                    onDatePicked(it.toLocalDate())
                     onDismissRequest()
                 } ?: run {
                     Timber.e("DatePickerDialog: selectedDateMillis is null")
@@ -100,15 +101,14 @@ fun DatePickerModal(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerModal(
-    initialTime: Long,
-    onTimePicked: (Long) -> Unit,
+    initialTime: LocalTime,
+    onTimePicked: (LocalTime) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val timeCalendar = Calendar.getInstance().apply { timeInMillis = initialTime }
     val timePickerState = rememberTimePickerState(
-        initialHour = timeCalendar.get(Calendar.HOUR_OF_DAY),
-        initialMinute = timeCalendar.get(Calendar.MINUTE),
+        initialHour = initialTime.hour,
+        initialMinute = initialTime.minute,
         is24Hour = true
     )
 
@@ -137,7 +137,7 @@ fun TimePickerModal(
                     StandardSpacer()
 
                     TextButton(onClick = {
-                        onTimePicked(timePickerState.hour * 3600000L + timePickerState.minute * 60000)
+                        onTimePicked(LocalTime.of(timePickerState.hour, timePickerState.minute))
                         onDismissRequest()
                     }) {
                         Text(stringResource(R.string.confirm))
@@ -150,14 +150,12 @@ fun TimePickerModal(
 
 @Composable
 fun MonthYearPickerModal(
-    initialDate: Long,
-    onDatePicked: (Long) -> Unit,
+    initialDate: LocalDate,
+    onDatePicked: (LocalDate) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var localDate by remember {
-        mutableStateOf(Instant.ofEpochMilli(initialDate).atZone(ZoneOffset.UTC).toLocalDate())
-    }
+    var localDate by remember { mutableStateOf(initialDate) }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(modifier = modifier.widthIn(min = dialogMinWidth)) {
@@ -205,13 +203,7 @@ fun MonthYearPickerModal(
                         val selected = localDate.month.value == index + 1
 
                         Button(
-                            onClick = {
-                                localDate = localDate.withMonth(index + 1)
-                                val millis = localDate.atStartOfDay(ZoneOffset.UTC).toInstant()
-                                    .toEpochMilli()
-
-                                onDatePicked(millis)
-                            },
+                            onClick = { onDatePicked(localDate.withMonth(index + 1)) },
                             modifier = Modifier
                                 .aspectRatio(1.5f)
                                 .fillMaxWidth(),

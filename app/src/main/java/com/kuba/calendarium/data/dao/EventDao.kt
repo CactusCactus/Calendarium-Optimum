@@ -8,6 +8,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.kuba.calendarium.data.model.Event
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface EventDao {
@@ -24,11 +25,13 @@ interface EventDao {
         "SELECT * FROM event WHERE (date_end IS NOT NULL AND :date BETWEEN date AND date_end) " +
                 "OR :date == date ORDER BY is_done ASC, time ASC"
     )
-    fun getEventsForDate(date: Long): Flow<List<Event>>
+    fun getEventsForDate(date: LocalDate): Flow<List<Event>>
 
-    @Query("SELECT COUNT(*) FROM event WHERE" +
-            " (date_end IS NOT NULL AND :date BETWEEN date AND date_end) OR :date == date")
-    fun getEventCountForDate(date: Long): Flow<Int>
+    @Query(
+        "SELECT COUNT(*) FROM event WHERE" +
+                " (date_end IS NOT NULL AND :date BETWEEN date AND date_end) OR :date == date"
+    )
+    fun getEventCountForDate(date: LocalDate): Flow<Int>
 
     @Query("SELECT * FROM event WHERE id = :id")
     fun getEventById(id: Long): Flow<Event?>

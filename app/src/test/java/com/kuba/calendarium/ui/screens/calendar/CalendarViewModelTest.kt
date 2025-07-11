@@ -6,14 +6,13 @@ import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.Companion.PAGER_INITIAL_OFFSET_DAYS
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
-import com.kuba.calendarium.util.getTodayMidnight
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
-import java.util.Calendar
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CalendarViewModelTest {
@@ -34,12 +33,9 @@ class CalendarViewModelTest {
         val pageIndexes = intArrayOf(-10, -5, 0, 5, 10)
 
         pageIndexes.forEach { pageIndex ->
-            val expectedDate = Calendar.getInstance().apply {
-                timeInMillis = getTodayMidnight()
-                add(Calendar.DAY_OF_YEAR, pageIndex - PAGER_INITIAL_OFFSET_DAYS)
-            }.timeInMillis
+            val expectedDate = LocalDate.now().plusDays(pageIndex - PAGER_INITIAL_OFFSET_DAYS)
 
-            val result = viewModel.pageIndexToDateMillis(pageIndex)
+            val result = viewModel.pageIndexToLocalDate(pageIndex)
 
             assert(result == expectedDate)
         }
@@ -47,52 +43,31 @@ class CalendarViewModelTest {
 
     @Test
     fun testDateMillisToPageIndex() {
-        val dateMillis = Calendar.getInstance().apply { timeInMillis = getTodayMidnight() }
+        val dateMillis = LocalDate.now()
 
-        assertThat(viewModel.dateMillisToPageIndex(dateMillis.timeInMillis)).isEqualTo(
+        assertThat(viewModel.localDateToPageIndex(dateMillis)).isEqualTo(
             PAGER_INITIAL_OFFSET_DAYS
         )
-        val dayAfter = Calendar.getInstance().apply {
-            timeInMillis = getTodayMidnight()
-            add(Calendar.DAY_OF_YEAR, 1)
-        }
-        val dayBefore = Calendar.getInstance().apply {
-            timeInMillis = getTodayMidnight()
-            add(Calendar.DAY_OF_YEAR, -1)
-        }
-        val twoDaysBefore = Calendar.getInstance().apply {
-            timeInMillis = getTodayMidnight()
-            add(Calendar.DAY_OF_YEAR, -2)
-        }
-        val inHundredDays = Calendar.getInstance().apply {
-            timeInMillis = getTodayMidnight()
-            add(Calendar.DAY_OF_YEAR, 100)
-        }
-        val inNegativeHundredDays = Calendar.getInstance().apply {
-            timeInMillis = getTodayMidnight()
-            add(Calendar.DAY_OF_YEAR, -100)
-        }
+        val dayAfter = LocalDate.now().plusDays(1)
+        val dayBefore = LocalDate.now().minusDays(1)
+        val twoDaysBefore = LocalDate.now().minusDays(2)
+        val inTwentyDays = LocalDate.now().plusDays(20)
 
-        assertThat(viewModel.dateMillisToPageIndex(dayAfter.timeInMillis)).isEqualTo(
+        assertThat(viewModel.localDateToPageIndex(dayAfter)).isEqualTo(
             PAGER_INITIAL_OFFSET_DAYS + 1
         )
 
-        assertThat(viewModel.dateMillisToPageIndex(dayBefore.timeInMillis)).isEqualTo(
+        assertThat(viewModel.localDateToPageIndex(dayBefore)).isEqualTo(
             PAGER_INITIAL_OFFSET_DAYS - 1
         )
 
-        assertThat(viewModel.dateMillisToPageIndex(twoDaysBefore.timeInMillis)).isEqualTo(
+        assertThat(viewModel.localDateToPageIndex(twoDaysBefore)).isEqualTo(
             PAGER_INITIAL_OFFSET_DAYS - 2
         )
 
-        assertThat(viewModel.dateMillisToPageIndex(inHundredDays.timeInMillis)).isEqualTo(
-            PAGER_INITIAL_OFFSET_DAYS + 100
+        assertThat(viewModel.localDateToPageIndex(inTwentyDays)).isEqualTo(
+            PAGER_INITIAL_OFFSET_DAYS + 20
         )
-
-        // TODO This test fails because I don't account for a leap year
-//        assertThat(viewModel.dateMillisToPageIndex(inNegativeHundredDays.timeInMillis)).isEqualTo(
-//            PAGER_INITIAL_OFFSET_DAYS - 100
-//        )
     }
 
     @Test

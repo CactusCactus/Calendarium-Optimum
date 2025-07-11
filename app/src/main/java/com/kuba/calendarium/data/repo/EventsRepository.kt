@@ -2,22 +2,18 @@ package com.kuba.calendarium.data.repo
 
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
-import com.kuba.calendarium.util.resetToMidnight
 import com.kuba.calendarium.util.standardDateFormat
 import timber.log.Timber
+import java.time.LocalDate
 import javax.inject.Inject
 
 class EventsRepository @Inject constructor(private val dao: EventDao) {
-    fun getEventsForDate(date: Long) = dao.getEventsForDate(date.resetToMidnight()).also {
+    fun getEventsForDate(date: LocalDate) = dao.getEventsForDate(date).also {
         Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
     }
 
     fun getEventById(id: Long) = dao.getEventById(id).also {
         Timber.d("Fetched Event flow for id: $id")
-    }
-
-    fun getEventCountForDate(date: Long) = dao.getEventCountForDate(date.resetToMidnight()).also {
-        Timber.d("Counted $it events for date: ${date.standardDateFormat()}")
     }
 
     suspend fun insertEvent(event: Event) = dao.insert(event).also {

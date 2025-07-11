@@ -8,7 +8,6 @@ import com.kuba.calendarium.DummyHiltActivity
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
-import com.kuba.calendarium.util.resetToMidnight
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +24,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.Calendar
+import java.time.LocalDate
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -70,13 +69,9 @@ class CalendarViewModelTest {
             scenario.onActivity {
                 val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
 
-                val date1 = Calendar.getInstance().apply {
-                    set(Calendar.DAY_OF_MONTH, 1)
-                }.time.time.resetToMidnight()
+                val date1 = LocalDate.now().withDayOfMonth(1)
 
-                val date2 = Calendar.getInstance().apply {
-                    set(Calendar.DAY_OF_MONTH, 2)
-                }.time.time.resetToMidnight()
+                val date2 = LocalDate.now().withDayOfMonth(2)
 
                 val event1 = Event(
                     id = 1,
@@ -89,7 +84,7 @@ class CalendarViewModelTest {
                     id = 2,
                     title = "Test Event 2",
                     description = "Test Description 2",
-                    date = date2.resetToMidnight()
+                    date = date2
                 )
 
                 runTest {
@@ -127,7 +122,7 @@ class CalendarViewModelTest {
                     id = 1,
                     title = "Test Event",
                     description = "Test Description",
-                    date = Calendar.getInstance().time.time.resetToMidnight()
+                    date = LocalDate.now()
                 )
 
                 runTest {
@@ -167,7 +162,7 @@ class CalendarViewModelTest {
                     id = 1,
                     title = "Test Event",
                     description = "Test Description",
-                    date = Calendar.getInstance().time.time.resetToMidnight()
+                    date = LocalDate.now()
                 )
 
                 runTest {
@@ -241,7 +236,7 @@ class CalendarViewModelTest {
                     id = eventId,
                     title = "Test Event",
                     description = "Test Description",
-                    date = Calendar.getInstance().time.time.resetToMidnight()
+                    date = LocalDate.now()
                 )
 
                 runTest {

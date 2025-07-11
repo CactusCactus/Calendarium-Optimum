@@ -63,16 +63,15 @@ import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.titleDateFormat
 import kotlinx.coroutines.flow.collectLatest
-import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
-import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     viewModel: CalendarViewModel,
-    onNavigateToAddEvent: (selectedDate: Long) -> Unit,
+    onNavigateToAddEvent: (selectedDate: LocalDate) -> Unit,
     onNavigateToEditEvent: (eventId: Long) -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
@@ -124,7 +123,7 @@ fun CalendarScreen(
 
             AnimatedVisibility(visible = calendarMode == CalendarDisplayMode.WEEK) {
                 CalendarWeekPicker(
-                    date = selectedDate,
+                    initialDate = selectedDate,
                     onDateSelected = {
                         viewModel.onEvent(UIEvent.DateSelected(it))
                     },
@@ -133,13 +132,13 @@ fun CalendarScreen(
             }
 
             val pagerState = rememberPagerState(
-                initialPage = CalendarViewModel.PAGER_INITIAL_OFFSET_DAYS,
-                pageCount = { CalendarViewModel.PAGER_VIRTUAL_PAGE_COUNT }
+                initialPage = CalendarViewModel.PAGER_INITIAL_OFFSET_DAYS.toInt(),
+                pageCount = { CalendarViewModel.PAGER_VIRTUAL_PAGE_COUNT.toInt() }
             )
 
             LaunchedEffect(pagerState.currentPage, pagerState.isScrollInProgress) {
                 if (!pagerState.isScrollInProgress) {
-                    val newDateFromPager = viewModel.pageIndexToDateMillis(pagerState.currentPage)
+                    val newDateFromPager = viewModel.pageIndexToLocalDate(pagerState.currentPage)
 
                     if (newDateFromPager != selectedDate) {
                         viewModel.onEvent(UIEvent.DateSelected(newDateFromPager))
@@ -148,7 +147,7 @@ fun CalendarScreen(
             }
 
             LaunchedEffect(selectedDate) {
-                pagerState.animateScrollToPage(viewModel.dateMillisToPageIndex(selectedDate))
+                pagerState.animateScrollToPage(viewModel.localDateToPageIndex(selectedDate).toInt())
             }
 
             HorizontalPager(
@@ -158,7 +157,7 @@ fun CalendarScreen(
                     .weight(1f),
                 verticalAlignment = Alignment.Top
             ) { page ->
-                EventsList(viewModel, viewModel.pageIndexToDateMillis(page))
+                EventsList(viewModel, viewModel.pageIndexToLocalDate(page))
             }
         }
 
@@ -212,7 +211,11 @@ private fun AppBar(
 }
 
 @Composable
-private fun EventsList(viewModel: CalendarViewModel, date: Long, modifier: Modifier = Modifier) {
+private fun EventsList(
+    viewModel: CalendarViewModel,
+    date: LocalDate,
+    modifier: Modifier = Modifier
+) {
     val events by remember(date) {
         viewModel.getEventsForDate(date)
     }.collectAsState(initial = emptyList())
@@ -294,7 +297,13 @@ private fun EventRow(
                     event.time?.let {
                         StandardQuarterSpacer()
 
-                        TimeDisplay(event.time, event.timeEnd)
+                        val timeEnd = if (event.dateEnd != null && event.timeEnd != null) {
+                            LocalDateTime.of(event.dateEnd, event.timeEnd)
+                        } else {
+                            null
+                        }
+
+                        TimeDisplay(LocalDateTime.of(event.date, event.time), timeEnd)
                     }
                 }
 
@@ -317,7 +326,11 @@ private fun EventRow(
 }
 
 @Composable
-private fun TimeDisplay(timeStart: Long, timeEnd: Long?, modifier: Modifier = Modifier) {
+private fun TimeDisplay(
+    timeStart: LocalDateTime,
+    timeEnd: LocalDateTime?,
+    modifier: Modifier = Modifier
+) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         val displayDates = timeEnd != null && !timeStart.isSameDay(timeEnd)
 
@@ -332,17 +345,17 @@ private fun TimeDisplay(timeStart: Long, timeEnd: Long?, modifier: Modifier = Mo
 }
 
 @Composable
-private fun HourDateText(timestamp: Long, showDate: Boolean, modifier: Modifier = Modifier) {
+private fun HourDateText(time: LocalDateTime, showDate: Boolean, modifier: Modifier = Modifier) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Text(
-            timestamp.standardTimeFormat(),
+            time.toLocalTime().standardTimeFormat(),
             style = MaterialTheme.typography.bodyLarge,
             maxLines = 1
         )
 
         if (showDate) {
             Text(
-                timestamp.shortDateFormat(),
+                time.toLocalDate().shortDateFormat(),
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 1
             )
@@ -352,8 +365,8 @@ private fun HourDateText(timestamp: Long, showDate: Boolean, modifier: Modifier 
 
 @Composable
 private fun CalendarMonthPicker(
-    date: Long,
-    onDateSelected: (Long) -> Unit,
+    date: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { YearMonth.now() }
@@ -368,27 +381,20 @@ private fun CalendarMonthPicker(
         firstDayOfWeek = firstDayOfWeek
     )
 
-    val localDate = Instant.ofEpochMilli(date).atZone(ZoneOffset.UTC).toLocalDate()
-
     CalendarMonthDatePicker(
         state = state,
-        initialSelectedDate = localDate,
-        onDateSelected = {
-            val millis = it.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            onDateSelected(millis)
-        },
+        initialSelectedDate = date,
+        onDateSelected = onDateSelected,
         modifier = modifier
     )
 }
 
 @Composable
 private fun CalendarWeekPicker(
-    date: Long,
-    onDateSelected: (Long) -> Unit,
+    initialDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val localDate = Instant.ofEpochMilli(date).atZone(ZoneOffset.UTC).toLocalDate()
-
     val currentMonth = remember { LocalDate.now() }
     val startMonth = remember { currentMonth.minusMonths(100) }
     val endMonth = remember { currentMonth.plusMonths(100) }
@@ -403,11 +409,8 @@ private fun CalendarWeekPicker(
 
     CalendarWeekDatePicker(
         state = state,
-        initialSelectedDate = localDate,
-        onDateSelected = {
-            val millis = it.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            onDateSelected(millis)
-        },
+        initialSelectedDate = initialDate,
+        onDateSelected = onDateSelected,
         modifier = modifier
     )
 }

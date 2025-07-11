@@ -6,13 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
 import com.kuba.calendarium.util.getTodayMidnight
-import com.kuba.calendarium.util.resetToMidnight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
 
 // TODO eventsRepository should be protected but it's gonna break tests
 abstract class ModifyEventViewModel(
@@ -59,8 +60,8 @@ abstract class ModifyEventViewModel(
                         }
 
                         _uiState.value.copy(
-                            selectedDate = event.date.resetToMidnight(),
-                            selectedDateEnd = dateEnd?.resetToMidnight()
+                            selectedDate = event.date,
+                            selectedDateEnd = dateEnd
                         )
                     }
 
@@ -76,8 +77,8 @@ abstract class ModifyEventViewModel(
                             _uiState.value.selectedTimeEnd ?: _uiState.value.selectedTime
 
                         _uiState.value.copy(
-                            selectedDate = dateStart.resetToMidnight(),
-                            selectedDateEnd = event.date.resetToMidnight(),
+                            selectedDate = dateStart,
+                            selectedDateEnd = event.date,
                             selectedTimeEnd = selectedTime
                         )
                     }
@@ -87,12 +88,9 @@ abstract class ModifyEventViewModel(
             is UIEvent.TimeSelected -> _uiState.update {
                 when (_uiState.value.currentDateTimeMode) {
                     DateTimeMode.FROM -> {
-                        val timeStart = _uiState.value.selectedDate + event.time // Add date to time
+                        val timeStart = event.time
                         var timeEnd = if (_uiState.value.selectedDateEnd != null) {
-                            val selectedDate =
-                                _uiState.value.selectedDateEnd ?: _uiState.value.selectedDate
-
-                            selectedDate + event.time
+                            event.time
                         } else null // Set end time only when end date is set
 
                         if (timeEnd != null && timeEnd < timeStart) {
@@ -103,9 +101,7 @@ abstract class ModifyEventViewModel(
                     }
 
                     DateTimeMode.TO -> {
-                        val timeEnd =
-                            (_uiState.value.selectedDateEnd ?: _uiState.value.selectedDate) +
-                                    event.time // Add date to time
+                        val timeEnd = event.time
                         var timeStart = _uiState.value.selectedTime
 
                         if (timeStart != null && timeStart > timeEnd) {
@@ -191,10 +187,10 @@ abstract class ModifyEventViewModel(
     data class UIState(
         val title: String = "",
         val description: String = "",
-        val selectedDate: Long = getTodayMidnight(),
-        val selectedDateEnd: Long? = null,
-        val selectedTime: Long? = null,
-        val selectedTimeEnd: Long? = null,
+        val selectedDate: LocalDate = getTodayMidnight(),
+        val selectedDateEnd: LocalDate? = null,
+        val selectedTime: LocalTime? = null,
+        val selectedTimeEnd: LocalTime? = null,
         val datePickerOpen: Boolean = false,
         val timePickerOpen: Boolean = false,
         val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
@@ -208,8 +204,8 @@ abstract class ModifyEventViewModel(
     sealed class UIEvent {
         data class TitleChanged(val title: String) : UIEvent()
         data class DescriptionChanged(val description: String) : UIEvent()
-        data class DateSelected(val date: Long) : UIEvent()
-        data class TimeSelected(val time: Long) : UIEvent()
+        data class DateSelected(val date: LocalDate) : UIEvent()
+        data class TimeSelected(val time: LocalTime) : UIEvent()
         object ClearTime : UIEvent()
         data class ClearDateAndTime(val mode: DateTimeMode) : UIEvent()
         object DoneClicked : UIEvent()
@@ -220,7 +216,7 @@ abstract class ModifyEventViewModel(
     }
 
     sealed class NavEvent {
-        data class Finish(val eventDate: Long) : NavEvent()
+        data class Finish(val eventDate: LocalDate) : NavEvent()
     }
 
     enum class ValidationError {

@@ -3,11 +3,11 @@ package com.kuba.calendarium.ui.screens.event.addEvent
 import androidx.lifecycle.SavedStateHandle
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.repo.EventsRepository
-import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_MS
+import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_EPOCH_DAY
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
-import com.kuba.calendarium.util.getTodayMidnight
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,9 +28,12 @@ class AddEventViewModel @Inject constructor(
         )
     }
 
-    override fun initUIState(): MutableStateFlow<UIState> = MutableStateFlow(
-        UIState(
-            selectedDate = savedStateHandle.get<Long>(ARG_SELECTED_DATE_MS) ?: getTodayMidnight()
+    override fun initUIState(): MutableStateFlow<UIState> {
+        val epochDays = savedStateHandle.get<Long>(ARG_SELECTED_DATE_EPOCH_DAY)
+            ?: LocalDate.now().toEpochDay()
+
+        return MutableStateFlow(
+            UIState(selectedDate = LocalDate.ofEpochDay(epochDays))
         )
-    )
+    }
 }

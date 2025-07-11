@@ -19,9 +19,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.util.Calendar
-import java.util.TimeZone
-import java.util.concurrent.TimeUnit
+import java.time.LocalDate
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -45,8 +43,8 @@ class CalendarViewModel @Inject constructor(
     private var contextMenuEvent: Event? = null
 
     companion object {
-        const val PAGER_VIRTUAL_PAGE_COUNT = 365 * 10 // ~10 years
-        const val PAGER_INITIAL_OFFSET_DAYS = PAGER_VIRTUAL_PAGE_COUNT / 2
+        const val PAGER_VIRTUAL_PAGE_COUNT: Long = 365 * 10 // ~10 years
+        const val PAGER_INITIAL_OFFSET_DAYS: Long = PAGER_VIRTUAL_PAGE_COUNT / 2
     }
 
     init {
@@ -63,7 +61,7 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun getEventsForDate(date: Long): Flow<List<Event>> = eventsRepository.getEventsForDate(date)
+    fun getEventsForDate(date: LocalDate): Flow<List<Event>> = eventsRepository.getEventsForDate(date)
 
     fun onEvent(event: UIEvent) {
         when (event) {
@@ -143,17 +141,14 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun pageIndexToDateMillis(pageIndex: Int): Long =
-        Calendar.getInstance(TimeZone.getDefault()).apply {
-            timeInMillis = getTodayMidnight()
-            add(Calendar.DAY_OF_YEAR, pageIndex - PAGER_INITIAL_OFFSET_DAYS)
-        }.timeInMillis
+    fun pageIndexToLocalDate(pageIndex: Int): LocalDate =
+        getTodayMidnight().plusDays(pageIndex - PAGER_INITIAL_OFFSET_DAYS)
 
-    fun dateMillisToPageIndex(dateMillis: Long): Int {
+    fun localDateToPageIndex(localDate: LocalDate): Long {
         val startDateOfPager = getTodayMidnight()
 
-        val daysDifference = TimeUnit.MILLISECONDS.toDays(dateMillis - startDateOfPager)
-        return PAGER_INITIAL_OFFSET_DAYS + daysDifference.toInt()
+        val daysDifference = localDate.toEpochDay() - startDateOfPager.toEpochDay()
+        return PAGER_INITIAL_OFFSET_DAYS + daysDifference
     }
 
     data class UIState(
@@ -166,7 +161,7 @@ class CalendarViewModel @Inject constructor(
     )
 
     sealed class UIEvent {
-        data class DateSelected(val date: Long) : UIEvent()
+        data class DateSelected(val date: LocalDate) : UIEvent()
         data class ContextMenuOpen(val event: Event) : UIEvent()
         data class DoneChanged(val event: Event, val checked: Boolean) : UIEvent()
         data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
