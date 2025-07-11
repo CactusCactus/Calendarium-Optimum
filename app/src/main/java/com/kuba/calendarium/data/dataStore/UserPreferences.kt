@@ -42,6 +42,12 @@ class UserPreferencesRepository @Inject constructor(private val appContext: Cont
 
     suspend fun setCalendarModePreference(mode: CalendarViewModel.CalendarDisplayMode) {
         appContext.dataStore.edit { preferences ->
+            var mode = mode
+
+            if (mode == CalendarViewModel.CalendarDisplayMode.UNDEFINED) {
+                mode = CALENDAR_MODE_DEFAULT
+            }
+
             preferences[stringPreferencesKey(KEY_CALENDAR_MODE)] = mode.name
         }
     }

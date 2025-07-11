@@ -5,9 +5,11 @@ import androidx.test.core.app.ActivityScenario
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.DummyHiltActivity
+import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
+import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.Dispatchers
@@ -38,6 +40,9 @@ class CalendarViewModelTest {
     @Inject
     lateinit var eventsRepository: EventsRepository
 
+    @Inject
+    lateinit var userPreferencesRepository: UserPreferencesRepository
+
     @Before
     fun setUp() {
         testDispatcher = StandardTestDispatcher()
@@ -57,7 +62,7 @@ class CalendarViewModelTest {
             scenario.onActivity {
                 val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
                 assertThat(viewModel).isNotNull()
-                assertThat(viewModel.eventsRepository).isNotNull()
+                assertThat(eventsRepository).isNotNull()
             }
         }
     }
@@ -88,18 +93,19 @@ class CalendarViewModelTest {
                 )
 
                 runTest {
-                    viewModel.eventsRepository.insertEvent(event1)
-                    viewModel.eventsRepository.insertEvent(event2)
-                    viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(date1))
+                    eventsRepository.insertEvent(event1)
+                    eventsRepository.insertEvent(event2)
+                    viewModel.onEvent(UIEvent.DateSelected(date1))
+                    advanceUntilIdle()
 
                     viewModel.selectedDate.flatMapLatest {
-                        viewModel.eventsRepository.getEventsForDate(it).catch { emit(emptyList()) }
+                        eventsRepository.getEventsForDate(it).catch { emit(emptyList()) }
                     }.test {
                         val events = awaitItem()
                         assertThat(events).hasSize(1)
                         assertThat(events.first()).isEqualTo(event1)
 
-                        viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(date2))
+                        viewModel.onEvent(UIEvent.DateSelected(date2))
 
                         val events2 = awaitItem()
                         assertThat(events2).hasSize(1)
@@ -126,22 +132,24 @@ class CalendarViewModelTest {
                 )
 
                 runTest {
-                    viewModel.eventsRepository.insertEvent(event)
-                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOpen(event))
+                    eventsRepository.insertEvent(event)
+                    viewModel.onEvent(UIEvent.ContextMenuOpen(event))
 
                     assertThat(viewModel.uiState.value.contextMenuOpen).isTrue()
 
                     viewModel.onEvent(
-                        CalendarViewModel.UIEvent.ContextMenuOptionSelected(ContextMenuOption.DELETE)
+                        UIEvent.ContextMenuOptionSelected(ContextMenuOption.DELETE)
                     )
 
                     assertThat(viewModel.uiState.value.deleteDialogShowing).isTrue()
 
-                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(false))
+                    viewModel.onEvent(UIEvent.ContextEventDelete(false))
+                    advanceUntilIdle()
 
-                    viewModel.eventsRepository.getEventById(event.id).test {
+                    eventsRepository.getEventById(event.id).test {
                         val events = awaitItem()
                         assertThat(events).isNull()
+
                         cancelAndConsumeRemainingEvents()
                     }
 
@@ -166,20 +174,20 @@ class CalendarViewModelTest {
                 )
 
                 runTest {
-                    viewModel.eventsRepository.insertEvent(event)
-                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextMenuOpen(event))
+                    eventsRepository.insertEvent(event)
+                    viewModel.onEvent(UIEvent.ContextMenuOpen(event))
 
                     assertThat(viewModel.uiState.value.contextMenuOpen).isTrue()
 
                     viewModel.onEvent(
-                        CalendarViewModel.UIEvent.ContextMenuOptionSelected(ContextMenuOption.DELETE)
+                        UIEvent.ContextMenuOptionSelected(ContextMenuOption.DELETE)
                     )
 
                     assertThat(viewModel.uiState.value.deleteDialogShowing).isTrue()
 
-                    viewModel.onEvent(CalendarViewModel.UIEvent.DeleteDialogDismiss)
+                    viewModel.onEvent(UIEvent.DeleteDialogDismiss)
 
-                    viewModel.eventsRepository.getEventById(event.id).test {
+                    eventsRepository.getEventById(event.id).test {
                         val events = awaitItem()
                         assertThat(events).isNotNull()
                         cancelAndConsumeRemainingEvents()
@@ -192,34 +200,33 @@ class CalendarViewModelTest {
         }
     }
 
-//    @Test // FIXME: This test is not working
+//    @Test //TODO this test fails and I don't know why
 //    fun testUserCheckDontShowAgainDeleteDialogAndDataSaved() {
 //        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
 //            scenario.onActivity {
-//                val testUserPrefs = UserPreferencesRepository(it)
 //                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
+//                val event = Event(
+//                    id = 1,
+//                    title = "Test Event",
+//                    description = "Test Description",
+//                    date = LocalDate.now()
+//                )
 //
-//                runTest {
-//                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(dontShowAgain = true))
+//                runTest(testDispatcher) {
+//                    viewModel.onEvent(UIEvent.ContextMenuOpen(event))
+//                    viewModel.onEvent(UIEvent.ContextEventDelete(dontShowAgain = true))
 //                    advanceUntilIdle()
 //
-//                    testUserPrefs.getShowDialogDeletePreference().test {
-//                        val item = awaitItem()
+//                    val item1 = userPreferencesRepository.getShowDialogDeletePreference().first()
+//                    assertThat(item1).isFalse()
 //
-//                        assertThat(item).isFalse()
-//                        cancelAndConsumeRemainingEvents()
-//                    }
 //
-//                    viewModel.onEvent(CalendarViewModel.UIEvent.ContextEventDelete(dontShowAgain = false))
+//                    viewModel.onEvent(UIEvent.ContextMenuOpen(event))
+//                    viewModel.onEvent(UIEvent.ContextEventDelete(dontShowAgain = false))
 //                    advanceUntilIdle()
 //
-//                    testUserPrefs.getShowDialogDeletePreference().test {
-//                        val item = awaitItem()
-//
-//                        assertThat(item).isTrue()
-//                        cancelAndConsumeRemainingEvents()
-//                    }
-//
+//                    val item2 = userPreferencesRepository.getShowDialogDeletePreference().first()
+//                    assertThat(item2).isTrue()
 //                }
 //            }
 //        }
@@ -241,7 +248,7 @@ class CalendarViewModelTest {
 
                 runTest {
                     eventsRepository.insertEvent(event)
-                    viewModel.onEvent(CalendarViewModel.UIEvent.DoneChanged(event, true))
+                    viewModel.onEvent(UIEvent.DoneChanged(event, true))
                     advanceUntilIdle()
 
                     eventsRepository.getEventById(eventId).test {
