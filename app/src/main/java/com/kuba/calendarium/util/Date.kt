@@ -10,7 +10,7 @@ const val STANDARD_DATE_FORMAT = "dd/MM/yyyy"
 
 const val SHORT_DATE_FORMAT = "dd/MM"
 
-const val TITLE_DATE_FORMAT = "d MMMM yyyy"
+const val TITLE_DATE_FORMAT = "d MMM yyyy"
 
 const val STANDARD_TIME_FORMAT = "HH:mm"
 

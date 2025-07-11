@@ -10,8 +10,17 @@ fun ModifyEventViewModel.ValidationError.toLocalizedString(context: Context): St
         R.string.error_event_title_too_long,
         ModifyEventViewModel.MAX_TITLE_LENGTH
     )
+
     ModifyEventViewModel.ValidationError.DESCRIPTION_TOO_LONG -> context.getString(
         R.string.error_event_description_too_long,
         ModifyEventViewModel.MAX_DESCRIPTION_LENGTH
     )
+}
+
+inline fun <reified T : Enum<T>> valueOfOrNull(type: String): T? {
+    return try {
+        java.lang.Enum.valueOf(T::class.java, type)
+    } catch (_: IllegalArgumentException) {
+        null
+    }
 }

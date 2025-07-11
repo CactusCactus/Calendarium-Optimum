@@ -54,6 +54,12 @@ class CalendarViewModel @Inject constructor(
                 _uiState.update { _uiState.value.copy(showDialogDelete = value) }
             }
         }
+
+        viewModelScope.launch {
+            userPreferencesRepository.getCalendarModePreference().collect { value ->
+                _uiState.update { _uiState.value.copy(calendarDisplayMode = value) }
+            }
+        }
     }
 
     fun getEventsForDate(date: Long): Flow<List<Event>> = eventsRepository.getEventsForDate(date)
@@ -117,13 +123,13 @@ class CalendarViewModel @Inject constructor(
                 eventsRepository.updateEvent(event.event.copy(done = event.checked))
             }
 
-            UIEvent.CalendarModeClicked -> _uiState.update {
-                _uiState.value.copy(
-                    calendarDisplayMode =
-                        if (_uiState.value.calendarDisplayMode == CalendarDisplayMode.WEEK)
-                            CalendarDisplayMode.MONTH
-                        else CalendarDisplayMode.WEEK
-                )
+            UIEvent.CalendarModeClicked -> viewModelScope.launch {
+                val newDisplayMode =
+                    if (_uiState.value.calendarDisplayMode == CalendarDisplayMode.WEEK)
+                        CalendarDisplayMode.MONTH
+                    else CalendarDisplayMode.WEEK
+                userPreferencesRepository.setCalendarModePreference(newDisplayMode)
+                _uiState.update { _uiState.value.copy(calendarDisplayMode = newDisplayMode) }
             }
         }
     }
@@ -145,7 +151,7 @@ class CalendarViewModel @Inject constructor(
         var contextMenuName: String = "",
         var deleteDialogShowing: Boolean = false,
         var showDialogDelete: Boolean = UserPreferencesRepository.SHOW_DIALOG_DEFAULT,
-        var calendarDisplayMode: CalendarDisplayMode = CalendarDisplayMode.MONTH
+        var calendarDisplayMode: CalendarDisplayMode = CalendarDisplayMode.UNDEFINED
     )
 
     sealed class UIEvent {
@@ -167,6 +173,7 @@ class CalendarViewModel @Inject constructor(
 
     enum class CalendarDisplayMode {
         WEEK,
-        MONTH
+        MONTH,
+        UNDEFINED // To avoid animating a default one before we get data from tha data store
     }
 }
