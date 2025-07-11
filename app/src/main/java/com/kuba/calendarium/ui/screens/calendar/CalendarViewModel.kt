@@ -116,6 +116,15 @@ class CalendarViewModel @Inject constructor(
             is UIEvent.DoneChanged -> viewModelScope.launch {
                 eventsRepository.updateEvent(event.event.copy(done = event.checked))
             }
+
+            UIEvent.CalendarModeClicked -> _uiState.update {
+                _uiState.value.copy(
+                    calendarDisplayMode =
+                        if (_uiState.value.calendarDisplayMode == CalendarDisplayMode.WEEK)
+                            CalendarDisplayMode.MONTH
+                        else CalendarDisplayMode.WEEK
+                )
+            }
         }
     }
 
@@ -135,7 +144,8 @@ class CalendarViewModel @Inject constructor(
         var contextMenuOpen: Boolean = false,
         var contextMenuName: String = "",
         var deleteDialogShowing: Boolean = false,
-        var showDialogDelete: Boolean = UserPreferencesRepository.SHOW_DIALOG_DEFAULT
+        var showDialogDelete: Boolean = UserPreferencesRepository.SHOW_DIALOG_DEFAULT,
+        var calendarDisplayMode: CalendarDisplayMode = CalendarDisplayMode.MONTH
     )
 
     sealed class UIEvent {
@@ -147,10 +157,16 @@ class CalendarViewModel @Inject constructor(
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         object DeleteDialogDismiss : UIEvent()
         object SettingsClicked : UIEvent()
+        object CalendarModeClicked : UIEvent()
     }
 
     sealed class NavEvent {
         data class EditEvent(val eventId: Long) : NavEvent()
         object Settings : NavEvent()
+    }
+
+    enum class CalendarDisplayMode {
+        WEEK,
+        MONTH
     }
 }

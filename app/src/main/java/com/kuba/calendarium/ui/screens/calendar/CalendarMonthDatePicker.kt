@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,9 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kizitonwose.calendar.compose.CalendarState
 import com.kizitonwose.calendar.compose.HorizontalCalendar
+import com.kizitonwose.calendar.compose.WeekCalendar
+import com.kizitonwose.calendar.compose.weekcalendar.WeekCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.WeekDay
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
+import com.kuba.calendarium.ui.common.standardQuarterPadding
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -52,7 +57,7 @@ fun CalendarMonthDatePicker(
     HorizontalCalendar(
         state = state,
         dayContent = {
-            Day(
+            DayBox(
                 day = it,
                 selected = it.date == selectedDate,
                 onSelected = {
@@ -71,7 +76,79 @@ fun CalendarMonthDatePicker(
 }
 
 @Composable
-private fun Day(day: CalendarDay, selected: Boolean, onSelected: (CalendarDay) -> Unit) {
+fun CalendarWeekDatePicker(
+    state: WeekCalendarState,
+    initialSelectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var selectedDate by remember(initialSelectedDate) { mutableStateOf(initialSelectedDate) }
+
+    LaunchedEffect(selectedDate.dayOfWeek) {
+        state.animateScrollToWeek(selectedDate)
+    }
+
+    WeekCalendar(
+        state = state,
+        dayContent = {
+            WeekDayBox(
+                day = it,
+                selected = it.date == selectedDate,
+                onSelected = {
+                    selectedDate = it.date
+                    onDateSelected(it.date)
+                }
+            )
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun WeekDayBox(day: WeekDay, selected: Boolean, onSelected: (WeekDay) -> Unit) {
+    val selectedColor = MaterialTheme.colorScheme.primaryContainer
+    val shape = MaterialTheme.shapes.large
+
+    val todayModifier = if (day.date == LocalDate.now()) {
+        Modifier.border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shape = shape
+        )
+    } else Modifier
+
+    Column(
+        modifier = Modifier
+            .aspectRatio(1f)
+            .padding(standardQuarterPadding)
+            .background(
+                color = if (selected) selectedColor else Color.Transparent,
+                shape = shape
+            )
+            .then(todayModifier)
+            .clip(shape)
+            .clickable(onClick = { onSelected(day) })
+            .padding(standardQuarterPadding),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val textColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else
+            MaterialTheme.colorScheme.onBackground
+        Text(
+            text = day.date.dayOfWeek.displayText(),
+            style = MaterialTheme.typography.bodyMedium,
+            color = textColor
+        )
+
+        Text(
+            text = day.date.dayOfMonth.toString(),
+            style = MaterialTheme.typography.bodyLarge,
+            color = textColor
+        )
+    }
+}
+
+@Composable
+private fun DayBox(day: CalendarDay, selected: Boolean, onSelected: (CalendarDay) -> Unit) {
     val selectedColor = MaterialTheme.colorScheme.primaryContainer
     val shape = MaterialTheme.shapes.large
 
@@ -86,7 +163,7 @@ private fun Day(day: CalendarDay, selected: Boolean, onSelected: (CalendarDay) -
     Box(
         modifier = Modifier
             .aspectRatio(1f)
-            .padding(4.dp)
+            .padding(standardQuarterPadding)
             .background(
                 color = if (selected) selectedColor else Color.Transparent,
                 shape = shape

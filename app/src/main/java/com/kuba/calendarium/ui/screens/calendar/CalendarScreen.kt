@@ -1,5 +1,6 @@
 package com.kuba.calendarium.ui.screens.calendar
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Event
@@ -52,6 +54,7 @@ import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
+import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.CalendarDisplayMode
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import com.kuba.calendarium.util.isSameDay
 import com.kuba.calendarium.util.shortDateFormat
@@ -59,6 +62,7 @@ import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.titleDateFormat
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneOffset
 
@@ -83,7 +87,8 @@ fun CalendarScreen(
         topBar = {
             AppBar(
                 title = viewModel.selectedDate.collectAsState().value.titleDateFormat(),
-                onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) }
+                onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) },
+                onCalendarModeClicked = { viewModel.onEvent(UIEvent.CalendarModeClicked) }
             )
         },
         floatingActionButton = {
@@ -101,14 +106,27 @@ fun CalendarScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val selectedDate = viewModel.selectedDate.collectAsState().value
+            val calendarMode = viewModel.uiState.collectAsState().value.calendarDisplayMode
 
-            CalendarPicker(
-                date = selectedDate,
-                onDateSelected = {
-                    viewModel.onEvent(UIEvent.DateSelected(it))
-                },
-                modifier = Modifier.padding(standardHalfPadding)
-            )
+            AnimatedVisibility(visible = calendarMode == CalendarDisplayMode.MONTH) {
+                CalendarMonthPicker(
+                    date = selectedDate,
+                    onDateSelected = {
+                        viewModel.onEvent(UIEvent.DateSelected(it))
+                    },
+                    modifier = Modifier.padding(standardHalfPadding)
+                )
+            }
+
+            AnimatedVisibility(visible = calendarMode == CalendarDisplayMode.WEEK) {
+                CalendarWeekPicker(
+                    date = selectedDate,
+                    onDateSelected = {
+                        viewModel.onEvent(UIEvent.DateSelected(it))
+                    },
+                    modifier = Modifier.padding(standardHalfPadding)
+                )
+            }
 
             val pagerState = rememberPagerState(
                 initialPage = CalendarViewModel.PAGER_INITIAL_OFFSET_DAYS,
@@ -146,7 +164,11 @@ fun CalendarScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppBar(title: String, onSettingsClicked: () -> Unit) {
+private fun AppBar(
+    title: String,
+    onSettingsClicked: () -> Unit,
+    onCalendarModeClicked: () -> Unit
+) {
     TopAppBar(
         title = {
             AnimatedText(
@@ -160,6 +182,14 @@ private fun AppBar(title: String, onSettingsClicked: () -> Unit) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings_24),
                     contentDescription = "Settings",
+                    modifier = Modifier.size(standardIconSize)
+                )
+            }
+
+            IconButton(onClick = onCalendarModeClicked) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_calendar_month_24),
+                    contentDescription = "Calendar Mode",
                     modifier = Modifier.size(standardIconSize)
                 )
             }
@@ -307,7 +337,7 @@ private fun HourDateText(timestamp: Long, showDate: Boolean, modifier: Modifier 
 }
 
 @Composable
-private fun CalendarPicker(
+private fun CalendarMonthPicker(
     date: Long,
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -327,6 +357,37 @@ private fun CalendarPicker(
     val localDate = Instant.ofEpochMilli(date).atZone(ZoneOffset.UTC).toLocalDate()
 
     CalendarMonthDatePicker(
+        state = state,
+        initialSelectedDate = localDate,
+        onDateSelected = {
+            val millis = it.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            onDateSelected(millis)
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun CalendarWeekPicker(
+    date: Long,
+    onDateSelected: (Long) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val localDate = Instant.ofEpochMilli(date).atZone(ZoneOffset.UTC).toLocalDate()
+
+    val currentMonth = remember { LocalDate.now() }
+    val startMonth = remember { currentMonth.minusMonths(100) }
+    val endMonth = remember { currentMonth.plusMonths(100) }
+    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
+
+    val state = rememberWeekCalendarState(
+        firstVisibleWeekDate = currentMonth,
+        startDate = startMonth,
+        endDate = endMonth,
+        firstDayOfWeek = firstDayOfWeek
+    )
+
+    CalendarWeekDatePicker(
         state = state,
         initialSelectedDate = localDate,
         onDateSelected = {

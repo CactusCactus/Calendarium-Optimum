@@ -4,13 +4,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
 
 // Padding
+val standardDoublePadding = 32.dp
+
 val standardPadding = 16.dp
 
 val standardHalfPadding = 8.dp
 
-val standardDoublePadding = 32.dp
-
-val standardQuarterPadding = 8.dp
+val standardQuarterPadding = 4.dp
 
 // FAB
 val fabSize = 56.dp
