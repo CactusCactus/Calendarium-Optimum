@@ -87,6 +87,7 @@ fun CalendarScreen(
         topBar = {
             AppBar(
                 title = viewModel.selectedDate.collectAsState().value.titleDateFormat(),
+                calendarDisplayMode = viewModel.uiState.collectAsState().value.calendarDisplayMode,
                 onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) },
                 onCalendarModeClicked = { viewModel.onEvent(UIEvent.CalendarModeClicked) }
             )
@@ -166,6 +167,7 @@ fun CalendarScreen(
 @Composable
 private fun AppBar(
     title: String,
+    calendarDisplayMode: CalendarDisplayMode,
     onSettingsClicked: () -> Unit,
     onCalendarModeClicked: () -> Unit
 ) {
@@ -177,7 +179,7 @@ private fun AppBar(
                 maxLines = 1
             )
         },
-        actions = {
+        navigationIcon = {
             IconButton(onClick = onSettingsClicked) {
                 Icon(
                     painter = painterResource(R.drawable.ic_settings_24),
@@ -185,10 +187,17 @@ private fun AppBar(
                     modifier = Modifier.size(standardIconSize)
                 )
             }
-
+        },
+        actions = {
             IconButton(onClick = onCalendarModeClicked) {
+                val iconRes = if (calendarDisplayMode == CalendarDisplayMode.MONTH) {
+                    R.drawable.ic_calendar_week_24
+                } else {
+                    R.drawable.ic_calendar_month_24
+                }
+
                 Icon(
-                    painter = painterResource(R.drawable.ic_calendar_month_24),
+                    painter = painterResource(iconRes),
                     contentDescription = "Calendar Mode",
                     modifier = Modifier.size(standardIconSize)
                 )
