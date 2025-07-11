@@ -14,12 +14,19 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.LocalDate
+import java.time.YearMonth
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -39,6 +46,22 @@ class CalendarViewModel @Inject constructor(
     val navEvent = _navEvent.receiveAsFlow()
 
     val selectedDate = _selectedDate.asStateFlow()
+
+    val eventCountMap: StateFlow<Map<LocalDate, Int>> =
+        _selectedDate.map { date ->
+            YearMonth.from(date)
+        }.distinctUntilChanged()
+            .flatMapLatest { yearMonth ->
+                val firstDayOfMonth = yearMonth.atDay(1)
+                val lastDayOfMonth = yearMonth.atEndOfMonth()
+
+                eventsRepository.getEventCountForDateRange(firstDayOfMonth, lastDayOfMonth)
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = WhileSubscribed(),
+                initialValue = emptyMap()
+            )
 
     private var contextMenuEvent: Event? = null
 
@@ -61,7 +84,8 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun getEventsForDate(date: LocalDate): Flow<List<Event>> = eventsRepository.getEventsForDate(date)
+    fun getEventsForDate(date: LocalDate): Flow<List<Event>> =
+        eventsRepository.getEventsForDate(date)
 
     fun onEvent(event: UIEvent) {
         when (event) {

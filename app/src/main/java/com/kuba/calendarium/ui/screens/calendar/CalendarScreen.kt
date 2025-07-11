@@ -67,6 +67,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
+var compositionCount = 0
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
@@ -110,6 +112,7 @@ fun CalendarScreen(
         ) {
             val selectedDate = viewModel.selectedDate.collectAsState().value
             val calendarMode = viewModel.uiState.collectAsState().value.calendarDisplayMode
+            val eventsMap = viewModel.eventCountMap.collectAsState().value
 
             AnimatedVisibility(visible = calendarMode == CalendarDisplayMode.MONTH) {
                 CalendarMonthPicker(
@@ -117,6 +120,7 @@ fun CalendarScreen(
                     onDateSelected = {
                         viewModel.onEvent(UIEvent.DateSelected(it))
                     },
+                    eventsMap = eventsMap,
                     modifier = Modifier.padding(standardHalfPadding)
                 )
             }
@@ -127,6 +131,7 @@ fun CalendarScreen(
                     onDateSelected = {
                         viewModel.onEvent(UIEvent.DateSelected(it))
                     },
+                    eventsMap = eventsMap,
                     modifier = Modifier.padding(standardHalfPadding)
                 )
             }
@@ -367,6 +372,7 @@ private fun HourDateText(time: LocalDateTime, showDate: Boolean, modifier: Modif
 private fun CalendarMonthPicker(
     date: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
+    eventsMap: Map<LocalDate, Int>,
     modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { YearMonth.now() }
@@ -385,6 +391,7 @@ private fun CalendarMonthPicker(
         state = state,
         initialSelectedDate = date,
         onDateSelected = onDateSelected,
+        eventsMap = eventsMap,
         modifier = modifier
     )
 }
@@ -393,6 +400,7 @@ private fun CalendarMonthPicker(
 private fun CalendarWeekPicker(
     initialDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
+    eventsMap: Map<LocalDate, Int>,
     modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { LocalDate.now() }
@@ -411,6 +419,7 @@ private fun CalendarWeekPicker(
         state = state,
         initialSelectedDate = initialDate,
         onDateSelected = onDateSelected,
+        eventsMap = eventsMap,
         modifier = modifier
     )
 }

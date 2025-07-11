@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,6 +47,7 @@ fun CalendarMonthDatePicker(
     state: CalendarState,
     initialSelectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
+    eventsMap: Map<LocalDate, Int>,
     modifier: Modifier = Modifier
 ) {
     var selectedDate by remember(initialSelectedDate) { mutableStateOf(initialSelectedDate) }
@@ -60,6 +62,7 @@ fun CalendarMonthDatePicker(
             DayBox(
                 day = it,
                 selected = it.date == selectedDate,
+                eventCount = eventsMap[it.date] ?: 0,
                 onSelected = {
                     selectedDate = it.date
                     onDateSelected(it.date)
@@ -80,6 +83,7 @@ fun CalendarWeekDatePicker(
     state: WeekCalendarState,
     initialSelectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
+    eventsMap: Map<LocalDate, Int>,
     modifier: Modifier = Modifier
 ) {
     var selectedDate by remember(initialSelectedDate) { mutableStateOf(initialSelectedDate) }
@@ -94,6 +98,7 @@ fun CalendarWeekDatePicker(
             WeekDayBox(
                 day = it,
                 selected = it.date == selectedDate,
+                eventCount = eventsMap[it.date] ?: 0,
                 onSelected = {
                     selectedDate = it.date
                     onDateSelected(it.date)
@@ -105,7 +110,12 @@ fun CalendarWeekDatePicker(
 }
 
 @Composable
-private fun WeekDayBox(day: WeekDay, selected: Boolean, onSelected: (WeekDay) -> Unit) {
+private fun WeekDayBox(
+    day: WeekDay,
+    selected: Boolean,
+    eventCount: Int,
+    onSelected: (WeekDay) -> Unit
+) {
     val selectedColor = MaterialTheme.colorScheme.primaryContainer
     val shape = MaterialTheme.shapes.large
 
@@ -119,7 +129,7 @@ private fun WeekDayBox(day: WeekDay, selected: Boolean, onSelected: (WeekDay) ->
 
     Column(
         modifier = Modifier
-            .aspectRatio(1f)
+            .aspectRatio(0.8f)
             .padding(standardQuarterPadding)
             .background(
                 color = if (selected) selectedColor else Color.Transparent,
@@ -144,11 +154,27 @@ private fun WeekDayBox(day: WeekDay, selected: Boolean, onSelected: (WeekDay) ->
             style = MaterialTheme.typography.bodyLarge,
             color = textColor
         )
+
+        if (eventCount > 0) {
+            Box(
+                modifier = Modifier
+                    .size(4.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape
+                    )
+            )
+        }
     }
 }
 
 @Composable
-private fun DayBox(day: CalendarDay, selected: Boolean, onSelected: (CalendarDay) -> Unit) {
+private fun DayBox(
+    day: CalendarDay,
+    selected: Boolean,
+    eventCount: Int,
+    onSelected: (CalendarDay) -> Unit
+) {
     val selectedColor = MaterialTheme.colorScheme.primaryContainer
     val shape = MaterialTheme.shapes.large
 
@@ -173,15 +199,28 @@ private fun DayBox(day: CalendarDay, selected: Boolean, onSelected: (CalendarDay
             .clickable(onClick = { onSelected(day) }),
         contentAlignment = Alignment.Center
     ) {
-        val alpha = if (day.position == DayPosition.MonthDate) 1f else 0.25f
+        val alphaText = if (day.position == DayPosition.MonthDate) 1f else 0.25f
         val textColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else
             MaterialTheme.colorScheme.onBackground
 
         Text(
             text = day.date.dayOfMonth.toString(),
             style = MaterialTheme.typography.bodyLarge,
-            color = textColor.copy(alpha = alpha)
+            color = textColor.copy(alpha = alphaText)
         )
+
+        if (eventCount > 0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 4.dp)
+                    .size(4.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = CircleShape
+                    )
+            )
+        }
     }
 }
 
