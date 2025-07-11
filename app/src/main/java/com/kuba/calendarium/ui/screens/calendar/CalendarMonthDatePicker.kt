@@ -10,10 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,13 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kizitonwose.calendar.compose.CalendarState
 import com.kizitonwose.calendar.compose.HorizontalCalendar
-import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
-import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
-import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -37,26 +35,17 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun NewCalendarPicker(
-    date: LocalDate,
+fun CalendarMonthDatePicker(
+    state: CalendarState,
+    initialSelectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth.minusMonths(100) }
-    val endMonth = remember { currentMonth.plusMonths(100) }
-    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
+    var selectedDate by remember(initialSelectedDate) { mutableStateOf(initialSelectedDate) }
 
-    var selectedDate by remember { mutableStateOf(date) }
-
-    val state = rememberCalendarState(
-        startMonth = startMonth,
-        endMonth = endMonth,
-        firstVisibleMonth = currentMonth,
-        firstDayOfWeek = firstDayOfWeek
-    )
-
-    val composableScope = rememberCoroutineScope()
+    LaunchedEffect(selectedDate.month) {
+        state.animateScrollToMonth(YearMonth.of(selectedDate.year, selectedDate.month))
+    }
 
     HorizontalCalendar(
         state = state,
@@ -67,14 +56,6 @@ fun NewCalendarPicker(
                 onSelected = {
                     selectedDate = it.date
                     onDateSelected(it.date)
-
-                    if (it.position != DayPosition.MonthDate) {
-                        val yearMonth = YearMonth.of(it.date.year, it.date.month)
-
-                        composableScope.launch {
-                            state.animateScrollToMonth(yearMonth)
-                        }
-                    }
                 }
             )
         },

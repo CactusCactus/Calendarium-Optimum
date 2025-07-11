@@ -19,8 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -29,7 +27,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,9 +36,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import com.kizitonwose.calendar.compose.rememberCalendarState
+import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.ui.common.AnimatedText
@@ -51,7 +49,6 @@ import com.kuba.calendarium.ui.common.ContextMenuBottomSheet
 import com.kuba.calendarium.ui.common.LineWithText
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
-import com.kuba.calendarium.ui.common.datePickerHeadlinePadding
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
@@ -62,8 +59,8 @@ import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.titleDateFormat
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
+import java.time.YearMonth
 import java.time.ZoneOffset
-import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,17 +101,11 @@ fun CalendarScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val selectedDate = viewModel.selectedDate.collectAsState().value
-            val localDate =
-                Instant.ofEpochMilli(selectedDate).atZone(ZoneOffset.UTC).toLocalDate()
 
-            NewCalendarPicker(
-                date = localDate,
+            CalendarPicker(
+                date = selectedDate,
                 onDateSelected = {
-                    viewModel.onEvent(
-                        UIEvent.DateSelected(
-                            it.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-                        )
-                    )
+                    viewModel.onEvent(UIEvent.DateSelected(it))
                 },
                 modifier = Modifier.padding(standardHalfPadding)
             )
@@ -315,62 +306,34 @@ private fun HourDateText(timestamp: Long, showDate: Boolean, modifier: Modifier 
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CalendarPicker(
     date: Long,
     onDateSelected: (Long) -> Unit,
-    onSettingsClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Offset the display by local time zone
-    val date = date + TimeZone.getDefault().getOffset(date)
+    val currentMonth = remember { YearMonth.now() }
+    val startMonth = remember { currentMonth.minusMonths(100) }
+    val endMonth = remember { currentMonth.plusMonths(100) }
+    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
 
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = date,
-        initialDisplayedMonthMillis = date
+    val state = rememberCalendarState(
+        startMonth = startMonth,
+        endMonth = endMonth,
+        firstVisibleMonth = currentMonth,
+        firstDayOfWeek = firstDayOfWeek
     )
 
-    LaunchedEffect(date) {
-        datePickerState.selectedDateMillis = date
-        datePickerState.displayedMonthMillis = date
-    }
+    val localDate = Instant.ofEpochMilli(date).atZone(ZoneOffset.UTC).toLocalDate()
 
-    LaunchedEffect(datePickerState.selectedDateMillis) {
-        datePickerState.selectedDateMillis?.let { newSelectedMillis ->
-            if (newSelectedMillis != date) {
-                onDateSelected(newSelectedMillis)
-            }
-        }
-    }
-
-    DatePicker(
-        state = datePickerState,
-        modifier = modifier,
-        title = null,
-        headline = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(datePickerHeadlinePadding)
-            ) {
-                IconButton(onClick = onSettingsClicked) {
-                    Icon(
-                        painterResource(R.drawable.ic_settings_24),
-                        "Settings",
-                        modifier = Modifier.size(standardIconSize)
-                    )
-                }
-
-                StandardHalfSpacer()
-
-                DatePickerDefaults.DatePickerHeadline(
-                    selectedDateMillis = datePickerState.selectedDateMillis,
-                    displayMode = datePickerState.displayMode,
-                    dateFormatter = DatePickerDefaults.dateFormatter()
-                )
-            }
+    CalendarMonthDatePicker(
+        state = state,
+        initialSelectedDate = localDate,
+        onDateSelected = {
+            val millis = it.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            onDateSelected(millis)
         },
-        colors = DatePickerDefaults.colors().copy(containerColor = Color.Transparent)
+        modifier = modifier
     )
 }
 
