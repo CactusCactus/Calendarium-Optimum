@@ -1,12 +1,14 @@
 package com.kuba.calendarium.ui.screens.calendar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -73,6 +75,14 @@ private fun Day(day: CalendarDay, selected: Boolean, onSelected: (CalendarDay) -
     val selectedColor = MaterialTheme.colorScheme.primaryContainer
     val shape = MaterialTheme.shapes.large
 
+    val todayModifier = if (day.date == LocalDate.now()) {
+        Modifier.border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shape = CircleShape
+        )
+    } else Modifier
+
     Box(
         modifier = Modifier
             .aspectRatio(1f)
@@ -81,6 +91,7 @@ private fun Day(day: CalendarDay, selected: Boolean, onSelected: (CalendarDay) -
                 color = if (selected) selectedColor else Color.Transparent,
                 shape = shape
             )
+            .then(todayModifier)
             .clip(shape)
             .clickable(onClick = { onSelected(day) }),
         contentAlignment = Alignment.Center
