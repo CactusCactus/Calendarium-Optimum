@@ -21,7 +21,7 @@ val bodyFontFamily = FontFamily(
 
 val titleFontFamily = FontFamily(
     Font(
-        googleFont = GoogleFont("Roboto Condensed"),
+        googleFont = GoogleFont("Roboto"),
         fontProvider = provider,
     )
 )

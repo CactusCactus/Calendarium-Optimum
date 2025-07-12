@@ -291,7 +291,7 @@ private fun EventRow(
                         onCheckedChange = onCheckedChange
                     )
 
-                    StandardQuarterSpacer()
+                    StandardHalfSpacer()
 
                     Text(
                         text = event.title,
