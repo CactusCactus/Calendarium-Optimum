@@ -23,4 +23,6 @@
     <string name="set_end_date_and_time_text">Set end date and time</string>
     <string name="set_time_label">Set time</string>
     <string name="done">Done</string>
+    <string name="date_time_row_date_label">Date</string>
+    <string name="date_time_row_time_label">Time</string>
 </resources>

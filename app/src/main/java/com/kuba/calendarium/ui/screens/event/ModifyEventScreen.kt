@@ -312,7 +312,7 @@ private fun DateTimeRow(
         OutlinedText(
             text = selectedDate.standardDateFormat(),
             maxLines = 1,
-            label = "Date",
+            label = stringResource(R.string.date_time_row_date_label),
             modifier = Modifier
                 .clickable { onDateFieldClicked() }
                 .fillMaxWidth()
@@ -327,7 +327,7 @@ private fun DateTimeRow(
                 OutlinedText(
                     text = it.standardTimeFormat(),
                     maxLines = 1,
-                    label = "Time",
+                    label = stringResource(R.string.date_time_row_time_label),
                     modifier = Modifier.textFieldClickable(selectedTime) {
                         onTimeFieldClicked()
                     }

@@ -5,7 +5,9 @@ import androidx.test.core.app.ActivityScenario
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.DummyHiltActivity
-import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
+import com.kuba.calendarium.data.repo.EventsRepository
+import com.kuba.calendarium.ui.screens.event.DateTimeMode
+import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -21,6 +23,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
+import java.time.LocalTime
+import javax.inject.Inject
 
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -28,6 +32,9 @@ import java.time.LocalDate
 class AddEventViewModelTest {
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
+
+    @Inject
+    lateinit var repository: EventsRepository
 
     @Before
     fun setUp() {
@@ -60,11 +67,11 @@ class AddEventViewModelTest {
                 val date = LocalDate.now()
 
                 runTest {
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged("Test Title"))
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DescriptionChanged("Test Description"))
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DateSelected(date))
+                    viewModel.onEvent(UIEvent.TitleChanged("Test Title"))
+                    viewModel.onEvent(UIEvent.DescriptionChanged("Test Description"))
+                    viewModel.onEvent(UIEvent.DateSelected(date))
 
-                    viewModel.onEvent(ModifyEventViewModel.UIEvent.DoneClicked)
+                    viewModel.onEvent(UIEvent.DoneClicked)
                     advanceUntilIdle()
 
                     viewModel.eventsRepository.getEventsForDate(date).test {
@@ -79,6 +86,42 @@ class AddEventViewModelTest {
                         assertThat(event1?.date).isEqualTo(date)
 
                         cancelAndConsumeRemainingEvents()
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testAddingEndTimeSameAsStartTimeOnTheSameDate() {
+        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
+            scenario.onActivity {
+                val viewModel = ViewModelProvider(it)[AddEventViewModel::class.java]
+                val date = LocalDate.now()
+                val time = LocalTime.now()
+
+                // Initial setup
+                viewModel.onEvent(UIEvent.TitleChanged("Test Title"))
+                viewModel.onEvent(UIEvent.DescriptionChanged("Test Description"))
+                viewModel.onEvent(UIEvent.DateSelected(date))
+                viewModel.onEvent(UIEvent.TimeSelected(time))
+
+                // End date picked
+                viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
+                viewModel.onEvent(UIEvent.DateSelected(date))
+
+                // End time picked
+                viewModel.onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO))
+                viewModel.onEvent(UIEvent.TimeSelected(time))
+                viewModel.onEvent(UIEvent.DoneClicked)
+
+                runTest {
+                    repository.getEventsForDate(date).test {
+                        val event = awaitItem().firstOrNull()
+
+                        assertThat(event).isNotNull()
+                        assertThat(event?.time).isNotNull()
+                        assertThat(event?.timeEnd).isNull()
                     }
                 }
             }
