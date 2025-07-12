@@ -61,7 +61,7 @@ class UserPreferencesRepositoryTest {
         userPreferencesRepository.setCalendarModePreference(
             CalendarViewModel.CalendarDisplayMode.MONTH
         )
-        userPreferencesRepository.getShowDialogDeletePreference().test {
+        userPreferencesRepository.getCalendarModePreference().test {
             val result = awaitItem()
             assertThat(result).isEqualTo(CalendarViewModel.CalendarDisplayMode.MONTH)
 
