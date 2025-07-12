@@ -67,8 +67,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
 
-var compositionCount = 0
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
@@ -121,6 +119,9 @@ fun CalendarScreen(
                         viewModel.onEvent(UIEvent.DateSelected(it))
                     },
                     eventsMap = eventsMap,
+                    onVisibleDatesChanged = { startDate, endDate ->
+                        viewModel.onEvent(UIEvent.VisibleDatesChanged(startDate, endDate))
+                    },
                     modifier = Modifier.padding(standardHalfPadding)
                 )
             }
@@ -132,6 +133,9 @@ fun CalendarScreen(
                         viewModel.onEvent(UIEvent.DateSelected(it))
                     },
                     eventsMap = eventsMap,
+                    onVisibleDatesChanged = { startDate, endDate ->
+                        viewModel.onEvent(UIEvent.VisibleDatesChanged(startDate, endDate))
+                    },
                     modifier = Modifier.padding(standardHalfPadding)
                 )
             }
@@ -373,6 +377,7 @@ private fun CalendarMonthPicker(
     date: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     eventsMap: Map<LocalDate, Int>,
+    onVisibleDatesChanged: (startDate: LocalDate, endDate: LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { YearMonth.now() }
@@ -386,6 +391,13 @@ private fun CalendarMonthPicker(
         firstVisibleMonth = currentMonth,
         firstDayOfWeek = firstDayOfWeek
     )
+
+    LaunchedEffect(state.firstVisibleMonth, state.lastVisibleMonth) {
+        onVisibleDatesChanged(
+            state.firstVisibleMonth.weekDays.first().first().date,
+            state.lastVisibleMonth.weekDays.last().last().date
+        )
+    }
 
     CalendarMonthDatePicker(
         state = state,
@@ -401,6 +413,7 @@ private fun CalendarWeekPicker(
     initialDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     eventsMap: Map<LocalDate, Int>,
+    onVisibleDatesChanged: (startDate: LocalDate, endDate: LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { LocalDate.now() }
@@ -414,6 +427,10 @@ private fun CalendarWeekPicker(
         endDate = endMonth,
         firstDayOfWeek = firstDayOfWeek
     )
+
+    LaunchedEffect(state.startDate, state.endDate) {
+        onVisibleDatesChanged(state.startDate, state.endDate)
+    }
 
     CalendarWeekDatePicker(
         state = state,

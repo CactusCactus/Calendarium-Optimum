@@ -17,16 +17,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.LocalDate
-import java.time.YearMonth
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,20 +44,17 @@ class CalendarViewModel @Inject constructor(
 
     val navEvent = _navEvent.receiveAsFlow()
 
-    val eventCountMap: StateFlow<Map<LocalDate, Int>> =
-        _selectedDate.map { date -> YearMonth.from(date) }
-            .distinctUntilChanged()
-            .flatMapLatest { yearMonth ->
-                val firstDayOfMonth = yearMonth.atDay(1)
-                val lastDayOfMonth = yearMonth.atEndOfMonth()
+    val visibleDatesRange: MutableStateFlow<Pair<LocalDate, LocalDate>> =
+        MutableStateFlow(getTodayMidnight() to getTodayMidnight())
 
-                eventsRepository.getEventCountForDateRange(firstDayOfMonth, lastDayOfMonth)
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = WhileSubscribed(),
-                initialValue = emptyMap()
-            )
+    val eventCountMap: StateFlow<Map<LocalDate, Int>> =
+        visibleDatesRange.flatMapLatest {
+            eventsRepository.getEventCountForDateRange(it.first, it.second)
+        }.stateIn(
+            scope = viewModelScope,
+            started = WhileSubscribed(),
+            initialValue = emptyMap()
+        )
 
     private var contextMenuEvent: Event? = null
 
@@ -171,6 +165,10 @@ class CalendarViewModel @Inject constructor(
 
             UIEvent.SettingsClicked -> viewModelScope.launch { _navEvent.send(NavEvent.Settings) }
 
+            // Misc
+            is UIEvent.VisibleDatesChanged -> visibleDatesRange.update {
+                event.startDate to event.endDate
+            }
         }
     }
 
@@ -199,6 +197,7 @@ class CalendarViewModel @Inject constructor(
         data class DoneChanged(val event: Event, val checked: Boolean) : UIEvent()
         data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
+        data class VisibleDatesChanged(val startDate: LocalDate, val endDate: LocalDate) : UIEvent()
         object SettingsClicked : UIEvent()
         object CalendarModeClicked : UIEvent()
         object ShowMonthYearPickerDialog : UIEvent()
