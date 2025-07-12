@@ -262,4 +262,56 @@ class RoomEventsRepositoryTest {
             assertThat(emittedEvents).isEmpty()
         }
     }
+
+    @Test
+    fun insertEventsAndCountThem() = runTest {
+        val dateStart = LocalDate.now().minusDays(10)
+        val dateMiddle = LocalDate.now()
+        val dateEnd = LocalDate.now().plusDays(10)
+
+        val eventStartEdge = Event(
+            id = 1,
+            title = "Test Event",
+            description = "This is a test event",
+            date = dateStart
+        )
+
+        val eventMiddle1 = Event(
+            id = 2,
+            title = "Test Event",
+            description = "This is a test event",
+            date = dateMiddle
+        )
+
+        val eventMiddle2 = Event(
+            id = 3,
+            title = "Test Event",
+            description = "This is a test event",
+            date = dateMiddle
+        )
+
+        val eventEndEdge = Event(
+            id = 4,
+            title = "Test Event",
+            description = "This is a test event",
+            date = dateEnd
+        )
+
+        repository.insertEvent(eventStartEdge)
+        repository.insertEvent(eventMiddle1)
+        repository.insertEvent(eventMiddle2)
+        repository.insertEvent(eventEndEdge)
+
+        repository.getEventCountForDateRange(dateStart, dateEnd).test {
+            val eventMap = awaitItem()
+
+            assertThat(eventMap).containsExactly(
+                dateStart, 1,
+                dateMiddle, 2,
+                dateEnd, 1
+            )
+
+            cancelAndConsumeRemainingEvents()
+        }
+    }
 }

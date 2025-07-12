@@ -108,4 +108,13 @@ class CalendarViewModelTest {
         advanceUntilIdle()
         assertThat(viewModel.uiState.value.deleteDialogShowing).isTrue()
     }
+
+    @Test
+    fun testMonthYearDialogShowing() {
+        viewModel.onEvent(UIEvent.ShowMonthYearPickerDialog)
+        assertThat(viewModel.uiState.value.datePickerDialogShowing).isTrue()
+
+        viewModel.onEvent(UIEvent.DatePickerDialogDismiss)
+        assertThat(viewModel.uiState.value.datePickerDialogShowing).isFalse()
+    }
 }

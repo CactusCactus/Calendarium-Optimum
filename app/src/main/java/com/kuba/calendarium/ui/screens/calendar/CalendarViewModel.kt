@@ -147,7 +147,7 @@ class CalendarViewModel @Inject constructor(
             }
 
             // Dialog events
-            UIEvent.ShowDatePickerDialog -> _uiState.update {
+            UIEvent.ShowMonthYearPickerDialog -> _uiState.update {
                 _uiState.value.copy(datePickerDialogShowing = true)
             }
 
@@ -201,7 +201,7 @@ class CalendarViewModel @Inject constructor(
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         object SettingsClicked : UIEvent()
         object CalendarModeClicked : UIEvent()
-        object ShowDatePickerDialog : UIEvent()
+        object ShowMonthYearPickerDialog : UIEvent()
         object DeleteDialogDismiss : UIEvent()
         object DatePickerDialogDismiss : UIEvent()
         object ContextMenuDismiss : UIEvent()

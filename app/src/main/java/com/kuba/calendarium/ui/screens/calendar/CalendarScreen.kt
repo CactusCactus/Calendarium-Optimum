@@ -91,7 +91,7 @@ fun CalendarScreen(
             AppBar(
                 title = viewModel.selectedDate.collectAsState().value.titleDateFormat(),
                 calendarDisplayMode = viewModel.uiState.collectAsState().value.calendarDisplayMode,
-                onTitleClicked = { viewModel.onEvent(UIEvent.ShowDatePickerDialog) },
+                onTitleClicked = { viewModel.onEvent(UIEvent.ShowMonthYearPickerDialog) },
                 onSettingsClicked = { viewModel.onEvent(UIEvent.SettingsClicked) },
                 onCalendarModeClicked = { viewModel.onEvent(UIEvent.CalendarModeClicked) }
             )

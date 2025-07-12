@@ -261,4 +261,55 @@ class CalendarViewModelTest {
             }
         }
     }
+
+    @Test
+    fun testEventCountChanges() {
+        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
+            scenario.onActivity {
+                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
+
+                val date = LocalDate.of(2025, 2, 19)
+                val dateSameMonthBefore = date.minusDays(10)
+                val dateMonthBefore = date.minusMonths(1)
+                val dateOverMonthBefore = date.minusMonths(1).minusDays(10)
+
+                val event = Event(
+                    id = 1,
+                    title = "Test Event",
+                    description = "Test Description",
+                    date = date
+                )
+
+                val eventBefore = Event(
+                    id = 2,
+                    title = "Test Event",
+                    description = "Test Description",
+                    date = dateMonthBefore
+                )
+
+                // Init date
+                viewModel.onEvent(UIEvent.DateSelected(date.plusMonths(1)))
+
+                runTest {
+                    eventsRepository.insertEvent(event)
+                    eventsRepository.insertEvent(eventBefore)
+
+                    viewModel.eventCountMap.test {
+                        skipItems(1) // Skip initial value
+
+                        viewModel.onEvent(UIEvent.DateSelected(date))
+                        assertThat(awaitItem()).containsExactly(date, 1)
+
+                        viewModel.onEvent(UIEvent.DateSelected(dateSameMonthBefore))
+                        expectNoEvents()
+
+                        viewModel.onEvent(UIEvent.DateSelected(dateOverMonthBefore))
+                        assertThat(awaitItem()).containsExactly(dateMonthBefore, 1)
+
+                        cancelAndConsumeRemainingEvents()
+                    }
+                }
+            }
+        }
+    }
 }

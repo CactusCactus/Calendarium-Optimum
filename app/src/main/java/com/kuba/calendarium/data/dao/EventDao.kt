@@ -43,7 +43,8 @@ interface EventDao {
                 "    (e.date_end IS NOT NULL AND ds.generated_date BETWEEN e.date AND e.date_end) " +
                 // Condition for single-day events (where date_end might be NULL or same as date)
                 "    OR (e.date_end IS NULL AND e.date = ds.generated_date) " +
-                "GROUP BY ds.generated_date"
+                "GROUP BY ds.generated_date " +
+                "HAVING COUNT(e.id) > 0"
     )
     fun getEventCountForDateRange(
         dateStart: LocalDate,
