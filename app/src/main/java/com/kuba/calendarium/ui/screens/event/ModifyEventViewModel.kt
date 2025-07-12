@@ -1,8 +1,10 @@
 package com.kuba.calendarium.ui.screens.event
 
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuba.calendarium.data.model.EventTask
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
 import com.kuba.calendarium.util.getTodayMidnight
@@ -150,6 +152,19 @@ abstract class ModifyEventViewModel(
             UIEvent.TimePickerDismissed -> _uiState.update {
                 _uiState.value.copy(timePickerOpen = false)
             }
+
+            is UIEvent.AddUpdateTask -> _uiState.update {
+                it.copy(taskMap = it.taskMap.apply {
+                    put(event.id, EventTask(title = event.title))
+                })
+            }
+
+            is UIEvent.RemoveTask -> _uiState.update {
+                if (it.taskMap.size == 1) {
+                    it.copy(taskMap = mutableStateMapOf())
+                } else
+                    it.copy(taskMap = it.taskMap.apply { remove(event.id) })
+            }
         }
     }
 
@@ -186,6 +201,7 @@ abstract class ModifyEventViewModel(
     data class UIState(
         val title: String = "",
         val description: String? = null,
+        val taskMap: MutableMap<Int, EventTask> = mutableStateMapOf(),
         val selectedDate: LocalDate = getTodayMidnight(),
         val selectedDateEnd: LocalDate? = null,
         val selectedTime: LocalTime? = null,
@@ -205,11 +221,13 @@ abstract class ModifyEventViewModel(
         data class DescriptionChanged(val description: String?) : UIEvent()
         data class DateSelected(val date: LocalDate) : UIEvent()
         data class TimeSelected(val time: LocalTime) : UIEvent()
-        object ClearTime : UIEvent()
         data class ClearDateAndTime(val mode: DateTimeMode) : UIEvent()
-        object DoneClicked : UIEvent()
         data class DatePickerOpened(val mode: DateTimeMode) : UIEvent()
         data class TimePickerOpened(val mode: DateTimeMode) : UIEvent()
+        data class AddUpdateTask(val id: Int, val title: String) : UIEvent()
+        data class RemoveTask(val id: Int) : UIEvent()
+        object ClearTime : UIEvent()
+        object DoneClicked : UIEvent()
         object DatePickerDismissed : UIEvent()
         object TimePickerDismissed : UIEvent()
     }

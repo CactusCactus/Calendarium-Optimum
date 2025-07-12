@@ -25,4 +25,8 @@
     <string name="done">Done</string>
     <string name="date_time_row_date_label">Date</string>
     <string name="date_time_row_time_label">Time</string>
+    <string name="new_task_list_placeholder">Task list</string>
+    <string name="new_task_field_placeholder">New task…</string>
+    <string name="add_task_label">Add task</string>
+    <string name="task_list_header_label">Task list</string>
 </resources>

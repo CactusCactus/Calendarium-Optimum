@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
@@ -43,15 +45,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
+import com.kuba.calendarium.data.model.EventTask
 import com.kuba.calendarium.ui.common.DatePickerModal
 import com.kuba.calendarium.ui.common.OutlinedText
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
+import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TimePickerModal
 import com.kuba.calendarium.ui.common.dateTimeRowPrefixLabelWidth
 import com.kuba.calendarium.ui.common.fabContentPadding
 import com.kuba.calendarium.ui.common.fabSize
 import com.kuba.calendarium.ui.common.outlineBorder
+import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.common.textFieldClickable
@@ -146,7 +151,10 @@ private fun MainColumn(
             .fillMaxSize()
             .padding(standardPadding)
     ) {
-        Text(stringResource(R.string.add_event_information_label))
+        Text(
+            text = stringResource(R.string.add_event_information_label),
+            style = MaterialTheme.typography.titleMedium
+        )
 
         StandardSpacer()
 
@@ -175,6 +183,17 @@ private fun MainColumn(
             descriptionError = uiState.descriptionError,
             onDescriptionChanged = { onEvent(UIEvent.DescriptionChanged(it)) }
         )
+
+        StandardSpacer()
+
+        TaskListRow(
+            taskList = uiState.taskMap.values.toList(),
+            onTaskChanged = { id, task ->
+                onEvent(UIEvent.AddUpdateTask(id, task.title))
+            },
+            onTaskRemoved = {
+                onEvent(UIEvent.RemoveTask(it))
+            })
 
         StandardHalfSpacer()
 
@@ -268,12 +287,82 @@ private fun DescriptionRow(
 }
 
 @Composable
+private fun TaskListRow(
+    taskList: List<EventTask>,
+    onTaskChanged: (Int, EventTask) -> Unit,
+    onTaskRemoved: (Int) -> Unit
+) {
+    if (taskList.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(standardHalfPadding)
+        ) {
+            item {
+                Text(
+                    text = stringResource(R.string.task_list_header_label),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            itemsIndexed(taskList) { index, task ->
+                OutlinedTextField(
+                    value = task.title,
+                    onValueChange = {
+                        onTaskChanged(index, EventTask(title = it))
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { onTaskRemoved(index) }) {
+                            Icon(painterResource(R.drawable.ic_close_24), "Clear task button")
+                        }
+                    },
+                    placeholder = { Text(stringResource(R.string.new_task_field_placeholder)) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = standardPadding)
+                )
+            }
+
+            item {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clickable {
+                            onTaskChanged(taskList.size, EventTask(title = ""))
+                        }
+                        .padding(horizontal = standardPadding, vertical = standardHalfPadding)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_add_24),
+                        contentDescription = "Add task icon",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    StandardQuarterSpacer()
+                    Text(
+                        text = stringResource(R.string.add_task_label),
+                        color = LocalContentColor.current.copy(alpha = 0.7f)
+                    )
+                }
+            }
+        }
+    } else {
+        DataPlaceholder(
+            text = stringResource(R.string.new_task_list_placeholder),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onTaskChanged(0, EventTask(title = "")) })
+    }
+}
+
+@Composable
 private fun DateTimeHeaderRow(
     isTimeSet: Boolean,
     onSetTimeCheckedChanged: (Boolean) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.add_event_date_label))
+        Text(
+            text = stringResource(R.string.add_event_date_label),
+            style = MaterialTheme.typography.titleMedium
+        )
 
         Spacer(
             modifier = Modifier
