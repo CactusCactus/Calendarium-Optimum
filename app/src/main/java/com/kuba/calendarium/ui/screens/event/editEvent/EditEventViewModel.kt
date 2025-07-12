@@ -48,6 +48,11 @@ class EditEventViewModel @Inject constructor(
     }
 
     override suspend fun databaseWriteOperation() {
+        // Nullify endTime if it's exact same as time (on the same day)
+        val endTime = if (_uiState.value.selectedTimeEnd == _uiState.value.selectedTime
+            && _uiState.value.selectedDateEnd == _uiState.value.selectedDate
+        ) null else _uiState.value.selectedTimeEnd
+
         eventsRepository.updateEvent(
             Event(
                 id = eventId,
@@ -56,7 +61,7 @@ class EditEventViewModel @Inject constructor(
                 date = _uiState.value.selectedDate,
                 time = _uiState.value.selectedTime,
                 dateEnd = _uiState.value.selectedDateEnd,
-                timeEnd = _uiState.value.selectedTimeEnd
+                timeEnd = endTime
             )
         )
     }
