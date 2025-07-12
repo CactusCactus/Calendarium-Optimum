@@ -71,7 +71,7 @@ class UserPreferencesRepositoryTest {
         userPreferencesRepository.setCalendarModePreference(
             CalendarViewModel.CalendarDisplayMode.WEEK
         )
-        userPreferencesRepository.getShowDialogDeletePreference().test {
+        userPreferencesRepository.getCalendarModePreference().test {
             val result = awaitItem()
             assertThat(result).isEqualTo(CalendarViewModel.CalendarDisplayMode.WEEK)
 
@@ -84,7 +84,7 @@ class UserPreferencesRepositoryTest {
         userPreferencesRepository.setCalendarModePreference(
             CalendarViewModel.CalendarDisplayMode.UNDEFINED
         )
-        userPreferencesRepository.getShowDialogDeletePreference().test {
+        userPreferencesRepository.getCalendarModePreference().test {
             val result = awaitItem()
             assertThat(result).isEqualTo(UserPreferencesRepository.CALENDAR_MODE_DEFAULT)
 
