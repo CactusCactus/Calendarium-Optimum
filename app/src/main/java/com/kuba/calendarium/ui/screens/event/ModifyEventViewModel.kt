@@ -202,7 +202,7 @@ abstract class ModifyEventViewModel(
 
     sealed class UIEvent {
         data class TitleChanged(val title: String) : UIEvent()
-        data class DescriptionChanged(val description: String) : UIEvent()
+        data class DescriptionChanged(val description: String?) : UIEvent()
         data class DateSelected(val date: LocalDate) : UIEvent()
         data class TimeSelected(val time: LocalTime) : UIEvent()
         object ClearTime : UIEvent()

@@ -1,11 +1,8 @@
 package com.kuba.calendarium.ui.screens.event
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,8 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,8 +32,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,13 +44,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.ui.common.DatePickerModal
+import com.kuba.calendarium.ui.common.OutlinedText
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TimePickerModal
 import com.kuba.calendarium.ui.common.dateTimeRowPrefixLabelWidth
-import com.kuba.calendarium.ui.common.descriptionMinHeight
 import com.kuba.calendarium.ui.common.fabContentPadding
 import com.kuba.calendarium.ui.common.fabSize
+import com.kuba.calendarium.ui.common.outlineBorder
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.common.textFieldClickable
@@ -169,124 +168,199 @@ private fun MainColumn(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
         )
 
-        StandardSpacer()
+        StandardHalfSpacer()
 
-        if (uiState.description != null) {
-            OutlinedTextField(
-                value = uiState.description,
-                onValueChange = { onEvent(UIEvent.DescriptionChanged(it)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = descriptionMinHeight),
-                placeholder = { Text(stringResource(R.string.input_description_placeholder)) },
-                isError = uiState.descriptionError != null,
-                supportingText = {
-                    uiState.descriptionError?.let {
-                        Text(
-                            text = it.toLocalizedString(LocalContext.current),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
-            )
-        }
+        DescriptionRow(
+            description = uiState.description,
+            descriptionError = uiState.descriptionError,
+            onDescriptionChanged = { onEvent(UIEvent.DescriptionChanged(it)) }
+        )
 
-        StandardSpacer()
+        StandardHalfSpacer()
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.add_event_date_label))
-
-            Spacer(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(1.dp)
-            )
-
-            Text(
-                stringResource(R.string.set_time_label),
-                color = LocalContentColor.current.copy(alpha = 0.7f)
-            )
-
-            Checkbox(
-                checked = uiState.selectedTime != null,
-                onCheckedChange = {
-                    if (it) {
-                        onEvent(UIEvent.TimePickerOpened(DateTimeMode.FROM))
-                    } else {
-                        onEvent(UIEvent.ClearTime)
-                    }
-                }
-            )
+        DateTimeHeaderRow(isTimeSet = uiState.selectedTime != null) { checked ->
+            if (checked) {
+                onEvent(UIEvent.TimePickerOpened(DateTimeMode.FROM))
+            } else {
+                onEvent(UIEvent.ClearTime)
+            }
         }
 
         StandardHalfSpacer()
 
-        DateTimeRow(
+        DateTimeRowFrom(
             selectedDate = uiState.selectedDate,
             selectedTime = uiState.selectedTime,
-            labelStart = if (uiState.selectedDateEnd != null) {
-                {
-                    Text(
-                        text = stringResource(R.string.time_selection_from),
-                        modifier = Modifier.width(dateTimeRowPrefixLabelWidth)
-                    )
-                }
-            } else null,
-            labelEnd = if (uiState.selectedDateEnd != null) {
-                { Spacer(Modifier.size(standardIconSize)) }
-            } else null,
-            onDateFieldClicked = {
-                onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
-            },
-            onTimeFieldClicked = {
-                onEvent(UIEvent.TimePickerOpened(DateTimeMode.FROM))
-            },
+            isEndDateSet = uiState.selectedDateEnd != null,
+            onDatePickerOpen = { onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM)) },
+            onTimePickerOpen = { onEvent(UIEvent.TimePickerOpened(DateTimeMode.FROM)) }
         )
 
-        uiState.selectedDateEnd?.let {
-            StandardSpacer()
+        StandardSpacer()
 
-            DateTimeRow(
+        uiState.selectedDateEnd?.let {
+            DateTimeRowTo(
                 selectedDate = it,
                 selectedTime = uiState.selectedTimeEnd,
-                labelStart = {
-                    Text(
-                        text = stringResource(R.string.time_selection_to),
-                        modifier = Modifier.width(dateTimeRowPrefixLabelWidth)
-                    )
-                },
-                labelEnd = {
-                    IconButton(
-                        onClick = { onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO)) },
-                        modifier = Modifier.size(standardIconSize)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_close_24),
-                            contentDescription = "Remove end date",
-                        )
-                    }
-                },
-                onDateFieldClicked = {
+                onClearTime = { onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO)) },
+                onDatePickerOpen = { onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO)) },
+                onTimePickerOpen = { onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO)) }
+            )
+        } ?: SetEndDateCheckbox(
+            isEndDateSet = uiState.selectedDateEnd != null,
+            onCheckedChange = { checked ->
+                if (checked) {
                     onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
-                },
-                onTimeFieldClicked = {
-                    onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO))
+                } else {
+                    onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO))
                 }
-            )
-        } ?: Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = uiState.selectedDateEnd != null,
-                onCheckedChange = {
-                    if (it) {
-                        onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
-                    } else {
-                        onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO))
-                    }
-                },
-            )
-            Text(stringResource(R.string.set_end_date_and_time_text))
+            }
+        )
+    }
+}
+
+@Composable
+private fun DescriptionRow(
+    description: String? = null,
+    descriptionError: ModifyEventViewModel.ValidationError? = null,
+    onDescriptionChanged: (String?) -> Unit
+) {
+    val descriptionFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(description) {
+        if (description != null) {
+            descriptionFocusRequester.requestFocus()
         }
+    }
+
+    if (description != null) {
+        OutlinedTextField(
+            value = description,
+            onValueChange = { onDescriptionChanged(it) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(descriptionFocusRequester),
+            placeholder = { Text(stringResource(R.string.input_description_placeholder)) },
+            isError = descriptionError != null,
+            supportingText = descriptionError?.let {
+                {
+                    Text(
+                        text = it.toLocalizedString(LocalContext.current),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            trailingIcon = {
+                IconButton(onClick = { onDescriptionChanged(null) }) {
+                    Icon(painterResource(R.drawable.ic_close_24), "Clear button")
+                }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
+        )
+    } else {
+        DataPlaceholder(
+            text = stringResource(R.string.input_description_placeholder),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onDescriptionChanged("") }
+        )
+    }
+}
+
+@Composable
+private fun DateTimeHeaderRow(
+    isTimeSet: Boolean,
+    onSetTimeCheckedChanged: (Boolean) -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.add_event_date_label))
+
+        Spacer(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+        )
+
+        Text(
+            stringResource(R.string.set_time_label),
+            color = LocalContentColor.current.copy(alpha = 0.7f)
+        )
+
+        Checkbox(
+            checked = isTimeSet,
+            onCheckedChange = onSetTimeCheckedChanged
+        )
+    }
+}
+
+@Composable
+private fun DateTimeRowFrom(
+    selectedDate: LocalDate,
+    selectedTime: LocalTime?,
+    isEndDateSet: Boolean,
+    onDatePickerOpen: () -> Unit,
+    onTimePickerOpen: () -> Unit
+) {
+    DateTimeRow(
+        selectedDate = selectedDate,
+        selectedTime = selectedTime,
+        labelStart = if (isEndDateSet) {
+            {
+                Text(
+                    text = stringResource(R.string.time_selection_from),
+                    modifier = Modifier.width(dateTimeRowPrefixLabelWidth)
+                )
+            }
+        } else null,
+        labelEnd = if (isEndDateSet) {
+            { Spacer(Modifier.size(standardIconSize)) }
+        } else null,
+        onDateFieldClicked = { onDatePickerOpen() },
+        onTimeFieldClicked = { onTimePickerOpen() }
+    )
+}
+
+@Composable
+private fun DateTimeRowTo(
+    selectedDate: LocalDate,
+    selectedTime: LocalTime?,
+    onClearTime: () -> Unit,
+    onDatePickerOpen: () -> Unit,
+    onTimePickerOpen: () -> Unit
+) {
+    DateTimeRow(
+        selectedDate = selectedDate,
+        selectedTime = selectedTime,
+        labelStart = {
+            Text(
+                text = stringResource(R.string.time_selection_to),
+                modifier = Modifier.width(dateTimeRowPrefixLabelWidth)
+            )
+        },
+        labelEnd = {
+            IconButton(
+                onClick = { onClearTime() },
+                modifier = Modifier.size(standardIconSize)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_close_24),
+                    contentDescription = "Remove end date",
+                )
+            }
+        },
+        onDateFieldClicked = { onDatePickerOpen() },
+        onTimeFieldClicked = { onTimePickerOpen() }
+    )
+}
+
+@Composable
+private fun SetEndDateCheckbox(isEndDateSet: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(
+            checked = isEndDateSet,
+            onCheckedChange = onCheckedChange,
+        )
+        Text(stringResource(R.string.set_end_date_and_time_text))
     }
 }
 
@@ -345,40 +419,24 @@ private fun DateTimeRow(
 }
 
 @Composable
-fun OutlinedText(
+private fun DataPlaceholder(
     text: String,
-    maxLines: Int,
-    modifier: Modifier = Modifier,
-    label: String? = null
+    modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier) {
-        Text(
-            text = text,
-            maxLines = maxLines,
-            modifier = modifier
-                .border(
-                    width = 1.dp,
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-                .padding(standardPadding)
+    Row(
+        modifier = modifier
+            .outlineBorder()
+            .padding(standardPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_add_24),
+            contentDescription = "Add icon",
+            tint = MaterialTheme.colorScheme.primary,
         )
 
-        label?.let {
-            Box(
-                modifier = Modifier
-                    .offset(y = (-8).dp, x = 8.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.background,
-                        shape = MaterialTheme.shapes.extraSmall
-                    )
-                    .padding(horizontal = 4.dp)
-            ) {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-        }
+        StandardHalfSpacer()
+
+        Text(text)
     }
 }
