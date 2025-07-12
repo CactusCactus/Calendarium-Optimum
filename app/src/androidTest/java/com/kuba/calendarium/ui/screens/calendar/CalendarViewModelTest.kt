@@ -200,37 +200,46 @@ class CalendarViewModelTest {
         }
     }
 
-//    @Test //TODO this test fails and I don't know why
-//    fun testUserCheckDontShowAgainDeleteDialogAndDataSaved() {
-//        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
-//            scenario.onActivity {
-//                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
-//                val event = Event(
-//                    id = 1,
-//                    title = "Test Event",
-//                    description = "Test Description",
-//                    date = LocalDate.now()
-//                )
-//
-//                runTest(testDispatcher) {
-//                    viewModel.onEvent(UIEvent.ContextMenuOpen(event))
-//                    viewModel.onEvent(UIEvent.ContextEventDelete(dontShowAgain = true))
-//                    advanceUntilIdle()
-//
-//                    val item1 = userPreferencesRepository.getShowDialogDeletePreference().first()
-//                    assertThat(item1).isFalse()
-//
-//
-//                    viewModel.onEvent(UIEvent.ContextMenuOpen(event))
-//                    viewModel.onEvent(UIEvent.ContextEventDelete(dontShowAgain = false))
-//                    advanceUntilIdle()
-//
-//                    val item2 = userPreferencesRepository.getShowDialogDeletePreference().first()
-//                    assertThat(item2).isTrue()
-//                }
-//            }
-//        }
-//    }
+    @Test
+    fun testUserCheckDontShowAgainDeleteDialogAndDataSaved() {
+        ActivityScenario.launch(DummyHiltActivity::class.java).use { scenario ->
+            scenario.onActivity {
+                val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
+                val event = Event(
+                    id = 1,
+                    title = "Test Event",
+                    description = "Test Description",
+                    date = LocalDate.now()
+                )
+
+                runTest {
+                    viewModel.onEvent(UIEvent.ContextMenuOpen(event))
+                    viewModel.onEvent(UIEvent.ContextEventDelete(dontShowAgain = true))
+                    advanceUntilIdle()
+
+                    userPreferencesRepository.getShowDialogDeletePreference().test {
+                        skipItems(1) // Skip initial value
+
+                        assertThat(awaitItem()).isFalse() // Value is flipped in viewModel.onEvent
+
+                        viewModel.onEvent(UIEvent.ContextMenuOpen(event))
+                        viewModel.onEvent(UIEvent.ContextEventDelete(dontShowAgain = false))
+                        advanceUntilIdle()
+
+                        assertThat(awaitItem()).isTrue() // Value is flipped in viewModel.onEvent
+
+                        viewModel.onEvent(UIEvent.ContextMenuOpen(event))
+                        viewModel.onEvent(UIEvent.ContextEventDelete(dontShowAgain = false))
+                        advanceUntilIdle()
+
+                        expectNoEvents() // Flow should only emit when data changes
+
+                        cancelAndConsumeRemainingEvents()
+                    }
+                }
+            }
+        }
+    }
 
     @Test
     fun testUserSettingEventAsDone() {
