@@ -161,11 +161,10 @@ abstract class ModifyEventViewModel(
         }
     }
 
-    protected fun validateDescription(description: String): ValidationError? {
-        return when {
-            description.length > MAX_DESCRIPTION_LENGTH -> ValidationError.DESCRIPTION_TOO_LONG
-            else -> null
-        }
+    protected fun validateDescription(description: String?): ValidationError? {
+        return if ((description?.length ?: 0) > MAX_DESCRIPTION_LENGTH)
+            ValidationError.DESCRIPTION_TOO_LONG
+        else null
     }
 
     protected fun checkAndUpdateValidity() {
@@ -186,7 +185,7 @@ abstract class ModifyEventViewModel(
 
     data class UIState(
         val title: String = "",
-        val description: String = "",
+        val description: String? = null,
         val selectedDate: LocalDate = getTodayMidnight(),
         val selectedDateEnd: LocalDate? = null,
         val selectedTime: LocalTime? = null,

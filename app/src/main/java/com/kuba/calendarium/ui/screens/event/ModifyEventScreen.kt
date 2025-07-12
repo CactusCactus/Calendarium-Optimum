@@ -171,24 +171,26 @@ private fun MainColumn(
 
         StandardSpacer()
 
-        OutlinedTextField(
-            value = uiState.description,
-            onValueChange = { onEvent(UIEvent.DescriptionChanged(it)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = descriptionMinHeight),
-            placeholder = { Text(stringResource(R.string.input_description_placeholder)) },
-            isError = uiState.descriptionError != null,
-            supportingText = {
-                uiState.descriptionError?.let {
-                    Text(
-                        text = it.toLocalizedString(LocalContext.current),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
-        )
+        if (uiState.description != null) {
+            OutlinedTextField(
+                value = uiState.description,
+                onValueChange = { onEvent(UIEvent.DescriptionChanged(it)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = descriptionMinHeight),
+                placeholder = { Text(stringResource(R.string.input_description_placeholder)) },
+                isError = uiState.descriptionError != null,
+                supportingText = {
+                    uiState.descriptionError?.let {
+                        Text(
+                            text = it.toLocalizedString(LocalContext.current),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
+            )
+        }
 
         StandardSpacer()
 

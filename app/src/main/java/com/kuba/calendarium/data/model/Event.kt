@@ -12,7 +12,7 @@ import java.time.format.DateTimeFormatter
 data class Event(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     @ColumnInfo(name = "title") val title: String,
-    @ColumnInfo(name = "description") val description: String,
+    @ColumnInfo(name = "description") val description: String?,
     @ColumnInfo(name = "date") val date: LocalDate,
     @ColumnInfo(name = "time") val time: LocalTime? = null,
     @ColumnInfo(name = "date_end") val dateEnd: LocalDate? = null,

@@ -316,7 +316,7 @@ private fun EventRow(
                     }
                 }
 
-                if (event.description.isNotBlank()) {
+                if (event.description != null && event.description.isNotBlank()) {
                     StandardQuarterSpacer()
 
                     Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
