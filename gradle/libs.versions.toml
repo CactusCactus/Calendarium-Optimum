@@ -19,6 +19,7 @@ mockk = "1.14.2"
 mockkAgentJvm = "1.14.2"
 navigationCompose = "2.9.1"
 orchestratorVersion = "1.5.1"
+reorderable = "2.5.1"
 roomRuntime = "2.7.2"
 timber = "5.0.1"
 truth = "1.1.5"
@@ -64,6 +65,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-agent-jvm = { module = "io.mockk:mockk-agent-jvm", version.ref = "mockkAgentJvm" }
 orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestratorVersion" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

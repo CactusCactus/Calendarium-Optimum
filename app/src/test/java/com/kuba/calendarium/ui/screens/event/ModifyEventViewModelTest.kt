@@ -67,7 +67,7 @@ class ModifyEventViewModelTest {
         val uiState = viewModel.uiState.value
 
         assert(uiState.title.isEmpty())
-        assert(uiState.description.isEmpty())
+        assert(uiState.description.isNullOrEmpty())
         assert(uiState.titleError == null)
         assert(uiState.descriptionError == null)
 
@@ -92,7 +92,7 @@ class ModifyEventViewModelTest {
     @Test
     fun `User enters only description - form is invalid`() {
         assert(viewModel.uiState.value.title.isEmpty())
-        assert(viewModel.uiState.value.description.isEmpty())
+        assert(viewModel.uiState.value.description.isNullOrEmpty())
         assert(viewModel.uiState.value.titleError == null)
         assert(viewModel.uiState.value.descriptionError == null)
         assert(viewModel.uiState.value.isValid.not())
@@ -110,7 +110,7 @@ class ModifyEventViewModelTest {
     @Test
     fun `User enters both title and description - form is valid`() {
         assert(viewModel.uiState.value.title.isEmpty())
-        assert(viewModel.uiState.value.description.isEmpty())
+        assert(viewModel.uiState.value.description.isNullOrEmpty())
         assert(viewModel.uiState.value.titleError == null)
         assert(viewModel.uiState.value.descriptionError == null)
         assert(viewModel.uiState.value.isValid.not())
@@ -142,7 +142,7 @@ class ModifyEventViewModelTest {
     @Test
     fun `User enters valid title but too long description - form is invalid`() {
         assert(viewModel.uiState.value.title.isEmpty())
-        assert(viewModel.uiState.value.description.isEmpty())
+        assert(viewModel.uiState.value.description.isNullOrEmpty())
         assert(viewModel.uiState.value.titleError == null)
         assert(viewModel.uiState.value.descriptionError == null)
         assert(viewModel.uiState.value.isValid.not())

@@ -2,6 +2,7 @@ package com.kuba.calendarium.ui.screens.event
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
@@ -30,6 +32,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -45,7 +48,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -71,6 +76,8 @@ import com.kuba.calendarium.util.standardDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.toLocalizedString
 import kotlinx.coroutines.flow.collectLatest
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -157,10 +164,6 @@ private fun MainColumn(
             .fillMaxSize()
             .padding(standardPadding)
     ) {
-//        Text(
-//            text = stringResource(R.string.add_event_information_label),
-//            style = MaterialTheme.typography.titleLarge
-//        )
         StandardSpacer()
 
         OutlinedTextField(
@@ -170,8 +173,8 @@ private fun MainColumn(
             placeholder = { Text(stringResource(R.string.input_title_placeholder)) },
             maxLines = 1,
             isError = uiState.titleError != null,
-            supportingText = {
-                uiState.titleError?.let {
+            supportingText = uiState.titleError?.let {
+                {
                     Text(
                         text = it.toLocalizedString(LocalContext.current),
                         color = MaterialTheme.colorScheme.error
@@ -198,6 +201,9 @@ private fun MainColumn(
             },
             onTaskChanged = { id, task ->
                 onEvent(UIEvent.UpdateTask(id, task.title))
+            },
+            onTaskOrderChanged = { indexFrom, indexTo ->
+                onEvent(UIEvent.TaskOrderChanged(indexFrom, indexTo))
             },
             onTaskRemoved = {
                 onEvent(UIEvent.RemoveTask(it))
@@ -299,20 +305,29 @@ private fun TaskListRow(
     taskList: List<EventTask>,
     onTaskAdded: (EventTask) -> Unit,
     onTaskChanged: (Int, EventTask) -> Unit,
+    onTaskOrderChanged: (Int, Int) -> Unit,
     onTaskRemoved: (Int) -> Unit
 ) {
-    val newTextFieldFocusRequester = remember { FocusRequester() }
-    var previousTaskListSize by remember { mutableIntStateOf(taskList.size) }
-
-    LaunchedEffect(taskList.size) {
-        if (taskList.size > previousTaskListSize && taskList.isNotEmpty()) {
-            newTextFieldFocusRequester.requestFocus()
-        }
-        previousTaskListSize = taskList.size
-    }
-
     if (taskList.isNotEmpty()) {
+        val newTextFieldFocusRequester = remember { FocusRequester() }
+        var previousTaskListSize by remember { mutableIntStateOf(taskList.size) }
+
+        LaunchedEffect(taskList.size) {
+            if (taskList.size > previousTaskListSize && taskList.isNotEmpty()) {
+                newTextFieldFocusRequester.requestFocus()
+            }
+            previousTaskListSize = taskList.size
+        }
+        val hapticFeedback = LocalHapticFeedback.current
+        val lazyListState = rememberLazyListState()
+        val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+            // -1 to account for the header
+            onTaskOrderChanged(from.index - 1, to.index - 1)
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
+
         LazyColumn(
+            state = lazyListState,
             modifier = Modifier
                 .fillMaxWidth()
                 .outlineBorder()
@@ -327,7 +342,7 @@ private fun TaskListRow(
                 )
             }
 
-            itemsIndexed(taskList) { index, task ->
+            itemsIndexed(taskList, key = { _, task -> task.id }) { index, task ->
                 val modifier =
                     if (index == taskList.lastIndex && taskList.size > previousTaskListSize) {
                         Modifier.focusRequester(newTextFieldFocusRequester)
@@ -335,24 +350,51 @@ private fun TaskListRow(
                         Modifier
                     }
 
-                TextField(
-                    value = task.title,
-                    onValueChange = { onTaskChanged(index, EventTask(title = it)) },
-                    maxLines = 1,
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    trailingIcon = {
-                        IconButton(onClick = { onTaskRemoved(index) }) {
-                            Icon(painterResource(R.drawable.ic_close_24), "Clear task button")
+                ReorderableItem(state = reorderableLazyListState, key = task.id) { isDragging ->
+                    val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp)
+
+                    Surface(shadowElevation = elevation) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painterResource(R.drawable.ic_drag_handle_24),
+                                "Reorder icon",
+                                tint = LocalContentColor.current.copy(alpha = 0.5f),
+                                modifier = Modifier
+                                    .padding(start = standardPadding)
+                                    .draggableHandle(
+                                        onDragStarted = {
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                        },
+                                        onDragStopped = {
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                        }
+                                    )
+                            )
+
+                            StandardHalfSpacer()
+
+                            TextField(
+                                value = task.title,
+                                onValueChange = { onTaskChanged(index, EventTask(title = it)) },
+                                maxLines = 1,
+                                colors = TextFieldDefaults.colors(
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                trailingIcon = {
+                                    IconButton(onClick = { onTaskRemoved(index) }) {
+                                        Icon(
+                                            painterResource(R.drawable.ic_close_24),
+                                            "Clear task button"
+                                        )
+                                    }
+                                },
+                                placeholder = { Text(stringResource(R.string.new_task_field_placeholder)) },
+                                modifier = modifier.fillMaxWidth()
+                            )
                         }
-                    },
-                    placeholder = { Text(stringResource(R.string.new_task_field_placeholder)) },
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .padding(start = standardPadding)
-                )
+                    }
+                }
             }
 
             item {
@@ -360,6 +402,7 @@ private fun TaskListRow(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .clickable { onTaskAdded(EventTask(title = "")) }
+                        .fillMaxWidth()
                         .padding(horizontal = standardPadding, vertical = standardHalfPadding)
                 ) {
                     Icon(

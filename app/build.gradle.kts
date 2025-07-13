@@ -106,6 +106,9 @@ dependencies {
     // Calendar Kizitonwose
     implementation(libs.calendar.compose)
 
+    // Reorderable
+    implementation(libs.reorderable)
+
     // Tests
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
