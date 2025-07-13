@@ -30,11 +30,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -151,11 +156,10 @@ private fun MainColumn(
             .fillMaxSize()
             .padding(standardPadding)
     ) {
-        Text(
-            text = stringResource(R.string.add_event_information_label),
-            style = MaterialTheme.typography.titleMedium
-        )
-
+//        Text(
+//            text = stringResource(R.string.add_event_information_label),
+//            style = MaterialTheme.typography.titleLarge
+//        )
         StandardSpacer()
 
         OutlinedTextField(
@@ -198,7 +202,7 @@ private fun MainColumn(
                 onEvent(UIEvent.RemoveTask(it))
             })
 
-        StandardHalfSpacer()
+        StandardSpacer()
 
         DateTimeHeaderRow(isTimeSet = uiState.selectedTime != null) { checked ->
             if (checked) {
@@ -296,33 +300,59 @@ private fun TaskListRow(
     onTaskChanged: (Int, EventTask) -> Unit,
     onTaskRemoved: (Int) -> Unit
 ) {
+    val newTextFieldFocusRequester = remember { FocusRequester() }
+    var previousTaskListSize by remember { mutableIntStateOf(taskList.size) }
+
+    LaunchedEffect(taskList.size) {
+        if (taskList.size > previousTaskListSize && taskList.isNotEmpty()) {
+            newTextFieldFocusRequester.requestFocus()
+        }
+        previousTaskListSize = taskList.size
+    }
+
     if (taskList.isNotEmpty()) {
         LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .outlineBorder()
+                .padding(standardPadding),
             verticalArrangement = Arrangement.spacedBy(standardHalfPadding)
         ) {
             item {
                 Text(
                     text = stringResource(R.string.task_list_header_label),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleLarge
                 )
             }
 
             itemsIndexed(taskList) { index, task ->
-                OutlinedTextField(
+                val modifier =
+                    if (index == taskList.lastIndex && taskList.size > previousTaskListSize) {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = standardPadding)
+                            .focusRequester(newTextFieldFocusRequester)
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = standardPadding)
+                    }
+
+                TextField(
                     value = task.title,
-                    onValueChange = {
-                        onTaskChanged(index, EventTask(title = it))
-                    },
+                    onValueChange = { onTaskChanged(index, EventTask(title = it)) },
+                    maxLines = 1,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
                     trailingIcon = {
                         IconButton(onClick = { onTaskRemoved(index) }) {
                             Icon(painterResource(R.drawable.ic_close_24), "Clear task button")
                         }
                     },
                     placeholder = { Text(stringResource(R.string.new_task_field_placeholder)) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = standardPadding)
+                    modifier = modifier
                 )
             }
 
@@ -330,9 +360,7 @@ private fun TaskListRow(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clickable {
-                            onTaskAdded(EventTask(title = ""))
-                        }
+                        .clickable { onTaskAdded(EventTask(title = "")) }
                         .padding(horizontal = standardPadding, vertical = standardHalfPadding)
                 ) {
                     Icon(
