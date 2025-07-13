@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
@@ -48,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -200,7 +202,7 @@ private fun MainColumn(
                 onEvent(UIEvent.AddTask(it.title))
             },
             onTaskChanged = { id, task ->
-                onEvent(UIEvent.UpdateTask(id, task.title))
+                onEvent(UIEvent.UpdateTask(id, task))
             },
             onTaskOrderChanged = { indexFrom, indexTo ->
                 onEvent(UIEvent.TaskOrderChanged(indexFrom, indexTo))
@@ -308,18 +310,21 @@ private fun TaskListRow(
     onTaskOrderChanged: (Int, Int) -> Unit,
     onTaskRemoved: (Int) -> Unit
 ) {
-    if (taskList.isNotEmpty()) {
-        val newTextFieldFocusRequester = remember { FocusRequester() }
-        var previousTaskListSize by remember { mutableIntStateOf(taskList.size) }
+    val newTextFieldFocusRequester = remember { FocusRequester() }
+    var previousTaskListSize by remember { mutableIntStateOf(taskList.size) }
 
-        LaunchedEffect(taskList.size) {
-            if (taskList.size > previousTaskListSize && taskList.isNotEmpty()) {
-                newTextFieldFocusRequester.requestFocus()
-            }
-            previousTaskListSize = taskList.size
+    LaunchedEffect(taskList.size) {
+        if (taskList.size > previousTaskListSize && taskList.isNotEmpty()) {
+            newTextFieldFocusRequester.requestFocus()
         }
+        previousTaskListSize = taskList.size
+    }
+
+    if (taskList.isNotEmpty()) {
+
         val hapticFeedback = LocalHapticFeedback.current
         val lazyListState = rememberLazyListState()
+
         val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
             // -1 to account for the header
             onTaskOrderChanged(from.index - 1, to.index - 1)
@@ -375,11 +380,11 @@ private fun TaskListRow(
 
                             TextField(
                                 value = task.title,
-                                onValueChange = { onTaskChanged(index, EventTask(title = it)) },
+                                onValueChange = { onTaskChanged(index, task.copy(title = it)) },
                                 maxLines = 1,
                                 colors = TextFieldDefaults.colors(
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    focusedContainerColor = MaterialTheme.colorScheme.surface
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedContainerColor = Color.Transparent
                                 ),
                                 trailingIcon = {
                                     IconButton(onClick = { onTaskRemoved(index) }) {
@@ -389,7 +394,17 @@ private fun TaskListRow(
                                         )
                                     }
                                 },
-                                placeholder = { Text(stringResource(R.string.new_task_field_placeholder)) },
+                                placeholder = {
+                                    Text(stringResource(R.string.new_task_field_placeholder))
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction =
+                                        if (index == taskList.lastIndex) ImeAction.Next
+                                        else ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(onNext = {
+                                    onTaskAdded(EventTask(title = ""))
+                                }),
                                 modifier = modifier.fillMaxWidth()
                             )
                         }

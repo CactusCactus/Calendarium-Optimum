@@ -161,7 +161,7 @@ abstract class ModifyEventViewModel(
 
             is UIEvent.UpdateTask -> _uiState.update {
                 it.copy(taskMap = it.taskMap.apply {
-                    set(event.index, EventTask(title = event.title))
+                    set(event.index, event.task)
                 })
             }
 
@@ -239,7 +239,7 @@ abstract class ModifyEventViewModel(
         data class DatePickerOpened(val mode: DateTimeMode) : UIEvent()
         data class TimePickerOpened(val mode: DateTimeMode) : UIEvent()
         data class AddTask(val title: String) : UIEvent()
-        data class UpdateTask(val index: Int, val title: String) : UIEvent()
+        data class UpdateTask(val index: Int, val task: EventTask) : UIEvent()
         data class RemoveTask(val index: Int) : UIEvent()
         data class TaskOrderChanged(val fromIndex: Int, val toIndex: Int) : UIEvent()
         object ClearTime : UIEvent()
