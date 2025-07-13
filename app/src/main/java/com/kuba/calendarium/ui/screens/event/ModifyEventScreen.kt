@@ -1,6 +1,7 @@
 package com.kuba.calendarium.ui.screens.event
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -315,7 +316,8 @@ private fun TaskListRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .outlineBorder()
-                .padding(standardPadding),
+                .padding(standardPadding)
+                .animateContentSize(),
             verticalArrangement = Arrangement.spacedBy(standardHalfPadding)
         ) {
             item {
@@ -328,14 +330,9 @@ private fun TaskListRow(
             itemsIndexed(taskList) { index, task ->
                 val modifier =
                     if (index == taskList.lastIndex && taskList.size > previousTaskListSize) {
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(start = standardPadding)
-                            .focusRequester(newTextFieldFocusRequester)
+                        Modifier.focusRequester(newTextFieldFocusRequester)
                     } else {
                         Modifier
-                            .fillMaxWidth()
-                            .padding(start = standardPadding)
                     }
 
                 TextField(
@@ -353,6 +350,8 @@ private fun TaskListRow(
                     },
                     placeholder = { Text(stringResource(R.string.new_task_field_placeholder)) },
                     modifier = modifier
+                        .fillMaxWidth()
+                        .padding(start = standardPadding)
                 )
             }
 
@@ -381,7 +380,8 @@ private fun TaskListRow(
             text = stringResource(R.string.new_task_list_placeholder),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onTaskAdded(EventTask(title = "")) })
+                .clickable { onTaskAdded(EventTask(title = "")) }
+                .animateContentSize())
     }
 }
 
