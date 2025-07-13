@@ -193,7 +193,7 @@ class RoomEventsRepositoryTest {
         repository.getEventById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent).isEqualTo(updatedEvent)
-            assertThat(emittedEvent?.id).isEqualTo(originalEvent.id)
+            assertThat(emittedEvent?.event?.id).isEqualTo(originalEvent.id)
 
             expectNoEvents()
             cancelAndConsumeRemainingEvents()

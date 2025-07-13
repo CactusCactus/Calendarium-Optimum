@@ -46,6 +46,7 @@ import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.ui.common.AnimatedText
 import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.ConfirmDialog
@@ -233,7 +234,7 @@ private fun EventsList(
         viewModel.getEventsForDate(date)
     }.collectAsState(initial = emptyList())
 
-    val firstDoneIndex = events.indexOfFirst { it.done }
+    val firstDoneIndex = events.indexOfFirst { it.event.done }
 
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -243,7 +244,7 @@ private fun EventsList(
         if (events.isNotEmpty()) {
             itemsIndexed(
                 items = events,
-                key = { i: Int, event: Event -> event.id }) { i: Int, event: Event ->
+                key = { i: Int, et: EventTasks -> et.event.id }) { i: Int, et: EventTasks ->
 
                 if (i == firstDoneIndex) {
                     LineWithText(stringResource(R.string.done))
@@ -252,12 +253,12 @@ private fun EventsList(
                 StandardHalfSpacer()
 
                 EventRow(
-                    event = event,
+                    event = et.event,
                     onLongClick = {
-                        viewModel.onEvent(UIEvent.ContextMenuOpen(event))
+                        viewModel.onEvent(UIEvent.ContextMenuOpen(et.event))
                     },
                     onCheckedChange = {
-                        viewModel.onEvent(UIEvent.DoneChanged(event, it))
+                        viewModel.onEvent(UIEvent.DoneChanged(et.event, it))
                     },
                     modifier = Modifier
                         .fillMaxSize()

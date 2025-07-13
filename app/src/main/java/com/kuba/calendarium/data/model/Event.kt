@@ -1,8 +1,10 @@
 package com.kuba.calendarium.data.model
 
 import androidx.room.ColumnInfo
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.Relation
 import androidx.room.TypeConverter
 import java.time.LocalDate
 import java.time.LocalTime
@@ -10,14 +12,14 @@ import java.time.format.DateTimeFormatter
 
 @Entity
 data class Event(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "event_id") val id: Long = 0,
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "description") val description: String?,
     @ColumnInfo(name = "date") val date: LocalDate,
     @ColumnInfo(name = "time") val time: LocalTime? = null,
     @ColumnInfo(name = "date_end") val dateEnd: LocalDate? = null,
     @ColumnInfo(name = "time_end") val timeEnd: LocalTime? = null,
-    @ColumnInfo(name = "is_done") val done: Boolean = false
+    @ColumnInfo(name = "is_done") val done: Boolean = false,
 )
 
 class TimeConverters {
@@ -43,6 +45,15 @@ class TimeConverters {
         return time?.toNanoOfDay()
     }
 }
+
+data class EventTasks(
+    @Embedded val event: Event,
+    @Relation(
+        parentColumn = "event_id",
+        entityColumn = "task_id"
+    )
+    val tasks: List<Task>
+)
 
 
 

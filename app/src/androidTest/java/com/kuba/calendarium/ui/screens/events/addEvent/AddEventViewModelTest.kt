@@ -81,9 +81,9 @@ class AddEventViewModelTest {
                         val event1 = events.firstOrNull()
 
                         assertThat(event1).isNotNull()
-                        assertThat(event1?.title).isEqualTo("Test Title")
-                        assertThat(event1?.description).isEqualTo("Test Description")
-                        assertThat(event1?.date).isEqualTo(date)
+                        assertThat(event1?.event?.title).isEqualTo("Test Title")
+                        assertThat(event1?.event?.description).isEqualTo("Test Description")
+                        assertThat(event1?.event?.date).isEqualTo(date)
 
                         cancelAndConsumeRemainingEvents()
                     }
@@ -120,8 +120,8 @@ class AddEventViewModelTest {
                         val event = awaitItem().firstOrNull()
 
                         assertThat(event).isNotNull()
-                        assertThat(event?.time).isNotNull()
-                        assertThat(event?.timeEnd).isNull()
+                        assertThat(event?.event?.time).isNotNull()
+                        assertThat(event?.event?.timeEnd).isNull()
                     }
                 }
             }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.NavEvent.EditEvent
@@ -79,7 +80,7 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun getEventsForDate(date: LocalDate): Flow<List<Event>> =
+    fun getEventsForDate(date: LocalDate): Flow<List<EventTasks>> =
         eventsRepository.getEventsForDate(date)
 
     fun onEvent(event: UIEvent) {

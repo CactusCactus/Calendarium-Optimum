@@ -1,5 +1,6 @@
 package com.kuba.calendarium.ui.screens.event.editEvent
 
+import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.model.Event
@@ -30,17 +31,19 @@ class EditEventViewModel @Inject constructor(
             viewModelScope.launch { _navEvent.send(NavEvent.Finish(getTodayMidnight())) }
         } else {
             viewModelScope.launch {
-                eventsRepository.getEventById(eventId).filterNotNull().collect { event ->
+                eventsRepository.getEventById(eventId).filterNotNull().collect { et ->
                     _uiState.update {
                         _uiState.value.copy(
-                            title = event.title,
-                            description = event.description,
-                            selectedDate = event.date,
-                            selectedTime = event.time,
-                            selectedDateEnd = event.dateEnd,
-                            selectedTimeEnd = event.timeEnd
+                            title = et.event.title,
+                            description = et.event.description,
+                            selectedDate = et.event.date,
+                            selectedTime = et.event.time,
+                            selectedDateEnd = et.event.dateEnd,
+                            selectedTimeEnd = et.event.timeEnd,
+                            taskMap = et.tasks.map { it.toTaskInternal() }.toMutableStateList()
                         )
                     }
+
                     checkAndUpdateValidity()
                 }
             }

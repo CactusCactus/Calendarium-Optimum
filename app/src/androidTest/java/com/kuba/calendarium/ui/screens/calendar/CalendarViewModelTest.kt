@@ -263,7 +263,7 @@ class CalendarViewModelTest {
                     eventsRepository.getEventById(eventId).test {
                         val event = awaitItem()
 
-                        assertThat(event?.done).isTrue()
+                        assertThat(event?.event?.done).isTrue()
                         cancelAndConsumeRemainingEvents()
                     }
                 }

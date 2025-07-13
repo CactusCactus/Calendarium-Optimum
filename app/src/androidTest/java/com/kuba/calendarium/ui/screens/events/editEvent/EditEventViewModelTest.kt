@@ -89,7 +89,7 @@ class EditEventViewModelTest {
                         val event = awaitItem()
 
                         assertThat(event).isNotNull()
-                        assertThat(event?.title).isEqualTo("New Title")
+                        assertThat(event?.event?.title).isEqualTo("New Title")
 
                         cancelAndConsumeRemainingEvents()
                     }
