@@ -187,9 +187,12 @@ private fun MainColumn(
         StandardSpacer()
 
         TaskListRow(
-            taskList = uiState.taskMap.values.toList(),
+            taskList = uiState.taskMap,
+            onTaskAdded = {
+                onEvent(UIEvent.AddTask(it.title))
+            },
             onTaskChanged = { id, task ->
-                onEvent(UIEvent.AddUpdateTask(id, task.title))
+                onEvent(UIEvent.UpdateTask(id, task.title))
             },
             onTaskRemoved = {
                 onEvent(UIEvent.RemoveTask(it))
@@ -289,6 +292,7 @@ private fun DescriptionRow(
 @Composable
 private fun TaskListRow(
     taskList: List<EventTask>,
+    onTaskAdded: (EventTask) -> Unit,
     onTaskChanged: (Int, EventTask) -> Unit,
     onTaskRemoved: (Int) -> Unit
 ) {
@@ -327,7 +331,7 @@ private fun TaskListRow(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .clickable {
-                            onTaskChanged(taskList.size, EventTask(title = ""))
+                            onTaskAdded(EventTask(title = ""))
                         }
                         .padding(horizontal = standardPadding, vertical = standardHalfPadding)
                 ) {
@@ -349,7 +353,7 @@ private fun TaskListRow(
             text = stringResource(R.string.new_task_list_placeholder),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onTaskChanged(0, EventTask(title = "")) })
+                .clickable { onTaskAdded(EventTask(title = "")) })
     }
 }
 
