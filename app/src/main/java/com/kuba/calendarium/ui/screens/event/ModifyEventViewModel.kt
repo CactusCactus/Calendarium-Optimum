@@ -5,7 +5,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kuba.calendarium.data.model.internal.TaskInternal
+import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
 import com.kuba.calendarium.util.getTodayMidnight
@@ -156,7 +156,7 @@ abstract class ModifyEventViewModel(
 
             is UIEvent.AddTask -> _uiState.update {
                 it.copy(taskMap = it.taskMap.apply {
-                    add(TaskInternal(title = event.title))
+                    add(TaskCreationData(title = event.title))
                 })
             }
 
@@ -216,7 +216,7 @@ abstract class ModifyEventViewModel(
     data class UIState(
         val title: String = "",
         val description: String? = null,
-        val taskMap: SnapshotStateList<TaskInternal> = mutableStateListOf(),
+        val taskMap: SnapshotStateList<TaskCreationData> = mutableStateListOf(),
         val selectedDate: LocalDate = getTodayMidnight(),
         val selectedDateEnd: LocalDate? = null,
         val selectedTime: LocalTime? = null,
@@ -240,7 +240,7 @@ abstract class ModifyEventViewModel(
         data class DatePickerOpened(val mode: DateTimeMode) : UIEvent()
         data class TimePickerOpened(val mode: DateTimeMode) : UIEvent()
         data class AddTask(val title: String) : UIEvent()
-        data class UpdateTask(val index: Int, val task: TaskInternal) : UIEvent()
+        data class UpdateTask(val index: Int, val task: TaskCreationData) : UIEvent()
         data class RemoveTask(val index: Int) : UIEvent()
         data class TaskOrderChanged(val fromIndex: Int, val toIndex: Int) : UIEvent()
         object ClearTime : UIEvent()

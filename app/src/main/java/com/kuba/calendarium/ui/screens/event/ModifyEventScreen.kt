@@ -58,7 +58,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
-import com.kuba.calendarium.data.model.internal.TaskInternal
+import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.ui.common.DatePickerModal
 import com.kuba.calendarium.ui.common.OutlinedText
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
@@ -304,9 +304,9 @@ private fun DescriptionRow(
 
 @Composable
 private fun TaskListRow(
-    taskList: List<TaskInternal>,
-    onTaskAdded: (TaskInternal) -> Unit,
-    onTaskChanged: (Int, TaskInternal) -> Unit,
+    taskList: List<TaskCreationData>,
+    onTaskAdded: (TaskCreationData) -> Unit,
+    onTaskChanged: (Int, TaskCreationData) -> Unit,
     onTaskOrderChanged: (Int, Int) -> Unit,
     onTaskRemoved: (Int) -> Unit
 ) {
@@ -321,7 +321,6 @@ private fun TaskListRow(
     }
 
     if (taskList.isNotEmpty()) {
-
         val hapticFeedback = LocalHapticFeedback.current
         val lazyListState = rememberLazyListState()
 
@@ -403,7 +402,7 @@ private fun TaskListRow(
                                         else ImeAction.Done
                                 ),
                                 keyboardActions = KeyboardActions(onNext = {
-                                    onTaskAdded(TaskInternal(title = ""))
+                                    onTaskAdded(TaskCreationData(title = ""))
                                 }),
                                 modifier = modifier.fillMaxWidth()
                             )
@@ -416,7 +415,7 @@ private fun TaskListRow(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clickable { onTaskAdded(TaskInternal(title = "")) }
+                        .clickable { onTaskAdded(TaskCreationData(title = "")) }
                         .fillMaxWidth()
                         .padding(horizontal = standardPadding, vertical = standardHalfPadding)
                 ) {
@@ -438,7 +437,7 @@ private fun TaskListRow(
             text = stringResource(R.string.new_task_list_placeholder),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onTaskAdded(TaskInternal(title = "")) }
+                .clickable { onTaskAdded(TaskCreationData(title = "")) }
                 .animateContentSize())
     }
 }

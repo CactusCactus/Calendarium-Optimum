@@ -5,8 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.kuba.calendarium.data.model.internal.TaskInternal
-import java.util.UUID
+import com.kuba.calendarium.data.model.internal.TaskCreationData
 
 @Entity(
     foreignKeys = [
@@ -21,9 +20,9 @@ import java.util.UUID
 )
 data class Task(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "task_id") val id: Long = 0,
-    val eventIdRef: Long,
+    val eventIdRef: Long = 0,
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "done") val done: Boolean = false
 ) {
-    fun toTaskInternal() = TaskInternal(UUID.fromString(id.toString()), title, done)
+    fun toTaskInternal() = TaskCreationData(id, title, done)
 }

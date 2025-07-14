@@ -2,6 +2,7 @@ package com.kuba.calendarium.ui.screens.event.addEvent
 
 import androidx.lifecycle.SavedStateHandle
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_EPOCH_DAY
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
@@ -21,7 +22,9 @@ class AddEventViewModel @Inject constructor(
             && _uiState.value.selectedDateEnd == _uiState.value.selectedDate
         ) null else _uiState.value.selectedTimeEnd
 
-        eventsRepository.insertEvent(
+        val tasks = _uiState.value.taskMap.map { Task(title = it.title) }
+
+        eventsRepository.insertEventWithTasks(
             Event(
                 title = _uiState.value.title,
                 description = _uiState.value.description,
@@ -29,7 +32,8 @@ class AddEventViewModel @Inject constructor(
                 time = _uiState.value.selectedTime,
                 dateEnd = _uiState.value.selectedDateEnd,
                 timeEnd = endTime
-            )
+            ),
+            tasks
         )
     }
 

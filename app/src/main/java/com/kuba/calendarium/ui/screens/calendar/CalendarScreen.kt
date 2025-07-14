@@ -5,15 +5,18 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -21,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -41,12 +45,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kuba.calendarium.R
-import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.EventTasks
+import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.ui.common.AnimatedText
 import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.ConfirmDialog
@@ -58,6 +63,7 @@ import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
+import com.kuba.calendarium.ui.common.standardQuarterPadding
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.CalendarDisplayMode
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import com.kuba.calendarium.util.isSameDay
@@ -253,7 +259,7 @@ private fun EventsList(
                 StandardHalfSpacer()
 
                 EventRow(
-                    event = et.event,
+                    eventTasks = et,
                     onLongClick = {
                         viewModel.onEvent(UIEvent.ContextMenuOpen(et.event))
                     },
@@ -281,11 +287,14 @@ private fun EventsList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EventRow(
-    event: Event,
+    eventTasks: EventTasks,
     onLongClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val event = eventTasks.event
+    val tasks = eventTasks.tasks
+
     Card(
         modifier = modifier.combinedClickable(
             onClick = { /* NO-OP */ },
@@ -326,6 +335,22 @@ private fun EventRow(
 
                     Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
                 }
+
+                if (tasks.isNotEmpty()) {
+                    StandardHalfSpacer()
+
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(standardQuarterPadding),
+                        userScrollEnabled = false,
+                        modifier = Modifier
+                            .heightIn(max = 100.dp)
+                            .padding(start = standardHalfPadding)
+                    ) {
+                        items(tasks) {
+                            TaskRow(it)
+                        }
+                    }
+                }
             }
 
             if (event.done) {
@@ -336,6 +361,25 @@ private fun EventRow(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun TaskRow(task: Task) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        CheckboxNoPadding(
+            checked = task.done,
+            onCheckedChange = {
+                // Update task
+            },
+            colors = CheckboxDefaults.colors(
+                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        )
+
+        StandardQuarterSpacer()
+
+        Text(task.title)
     }
 }
 

@@ -56,7 +56,7 @@ class EditEventViewModel @Inject constructor(
             && _uiState.value.selectedDateEnd == _uiState.value.selectedDate
         ) null else _uiState.value.selectedTimeEnd
 
-        eventsRepository.updateEvent(
+        eventsRepository.updateEventWithTasks(
             Event(
                 id = eventId,
                 title = _uiState.value.title,
@@ -65,7 +65,8 @@ class EditEventViewModel @Inject constructor(
                 time = _uiState.value.selectedTime,
                 dateEnd = _uiState.value.selectedDateEnd,
                 timeEnd = endTime
-            )
+            ),
+            _uiState.value.taskMap.map { it.toTask() }
         )
     }
 

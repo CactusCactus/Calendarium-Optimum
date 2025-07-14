@@ -22,8 +22,23 @@ interface EventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(eventTask: Task): Long
 
+    @Transaction
+    suspend fun insertEventWithTasks(event: Event, tasks: List<Task>) {
+        val eventId = insert(event)
+        tasks.forEach { task -> insertTask(task.copy(eventIdRef = eventId)) }
+    }
+
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun update(event: Event)
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateTask(eventTask: Task)
+
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun updateEventWithTasks(event: Event, tasks: List<Task>) {
+        update(event)
+        tasks.forEach { task -> updateTask(task.copy(eventIdRef = event.id)) }
+    }
 
     @Delete
     suspend fun delete(event: Event)
@@ -61,10 +76,4 @@ interface EventDao {
     @Transaction
     @Query("SELECT * FROM event WHERE event_id = :id")
     fun getEventById(id: Long): Flow<EventTasks?>
-
-    @Transaction
-    suspend fun insertEventWithTasks(event: Event, tasks: List<Task>) {
-        val eventId = insert(event)
-        tasks.forEach { task -> insertTask(task.copy(eventIdRef = eventId)) }
-    }
 }

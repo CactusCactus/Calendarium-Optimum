@@ -22,6 +22,16 @@ data class Event(
     @ColumnInfo(name = "is_done") val done: Boolean = false,
 )
 
+data class EventTasks(
+    @Embedded val event: Event,
+    @Relation(
+        parentColumn = "event_id",
+        entityColumn = "eventIdRef",
+        entity = Task::class
+    )
+    val tasks: List<Task>
+)
+
 class TimeConverters {
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE
 
@@ -45,15 +55,3 @@ class TimeConverters {
         return time?.toNanoOfDay()
     }
 }
-
-data class EventTasks(
-    @Embedded val event: Event,
-    @Relation(
-        parentColumn = "event_id",
-        entityColumn = "task_id"
-    )
-    val tasks: List<Task>
-)
-
-
-

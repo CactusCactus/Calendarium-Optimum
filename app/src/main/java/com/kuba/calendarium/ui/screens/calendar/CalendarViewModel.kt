@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -81,7 +82,11 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun getEventsForDate(date: LocalDate): Flow<List<EventTasks>> =
-        eventsRepository.getEventsForDate(date)
+        eventsRepository.getEventsForDate(date).onEach {
+            it.forEach {
+                Timber.d("Event: ${it.event.title}, Tasks: ${it.tasks.map { it.title }}")
+            }
+        }
 
     fun onEvent(event: UIEvent) {
         when (event) {

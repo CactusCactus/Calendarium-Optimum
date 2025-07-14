@@ -2,6 +2,7 @@ package com.kuba.calendarium.data.repo
 
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.util.standardDateFormat
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -28,9 +29,19 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
         Timber.d("Inserted event: ${event.title} with id: $it")
     }
 
+    suspend fun insertEventWithTasks(event: Event, tasks: List<Task>) =
+        dao.insertEventWithTasks(event, tasks).also {
+            Timber.d("Inserted event: ${event.title} with id: ${event.id} and tasks $tasks")
+        }
+
     suspend fun updateEvent(event: Event) = dao.update(event).also {
         Timber.d("Updated event: ${event.title} with id: ${event.id}")
     }
+
+    suspend fun updateEventWithTasks(event: Event, tasks: List<Task>) =
+        dao.updateEventWithTasks(event, tasks).also {
+            Timber.d("Updated event: ${event.title} with id: ${event.id} and tasks: $tasks")
+        }
 
     suspend fun deleteEvent(event: Event) = dao.delete(event).also {
         Timber.d("Deleted event: ${event.title} with id: ${event.id}")
