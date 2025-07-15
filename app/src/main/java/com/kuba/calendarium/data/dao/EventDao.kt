@@ -58,7 +58,7 @@ interface EventDao {
                 ") " +
                 "SELECT " +
                 "    ds.generated_date AS eventDate, " +
-                "    COUNT(e.event_id) AS eventCount " + // COUNT(e.id) is correct as it only counts non-NULL event IDs
+                "    COUNT(e.event_id) AS eventCount " + // COUNT(e.event_id) is correct as it only counts non-NULL event IDs
                 "FROM DateSeries ds " +
                 "LEFT JOIN event e ON " +
                 // Condition for events that span multiple days

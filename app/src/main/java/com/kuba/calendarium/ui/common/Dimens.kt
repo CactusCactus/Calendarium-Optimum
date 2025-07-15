@@ -20,9 +20,9 @@ val fabContentPadding = 4.dp
 val standardIconSize = 28.dp
 
 // Misc
-val descriptionMinHeight = 128.dp
-
 val dateTimeRowPrefixLabelWidth = 48.dp
 
 val dialogMinWidth = 280.dp
+
+val taskListMaxHeight = 128.dp
 

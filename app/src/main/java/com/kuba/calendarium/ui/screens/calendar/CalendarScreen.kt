@@ -45,7 +45,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
@@ -60,10 +59,12 @@ import com.kuba.calendarium.ui.common.LineWithText
 import com.kuba.calendarium.ui.common.MonthYearPickerModal
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
+import com.kuba.calendarium.ui.common.TextPrimaryBody
+import com.kuba.calendarium.ui.common.TextSecondaryBody
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
-import com.kuba.calendarium.ui.common.standardQuarterPadding
+import com.kuba.calendarium.ui.common.taskListMaxHeight
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.CalendarDisplayMode
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import com.kuba.calendarium.util.isSameDay
@@ -311,11 +312,7 @@ private fun EventRow(
 
                     StandardHalfSpacer()
 
-                    Text(
-                        text = event.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.weight(1f)
-                    )
+                    TextPrimaryBody(text = event.title, modifier = Modifier.weight(1f))
 
                     event.time?.let {
                         StandardQuarterSpacer()
@@ -333,17 +330,16 @@ private fun EventRow(
                 if (event.description != null && event.description.isNotBlank()) {
                     StandardQuarterSpacer()
 
-                    Text(text = event.description, style = MaterialTheme.typography.bodyMedium)
+                    TextSecondaryBody(text = event.description)
                 }
 
                 if (tasks.isNotEmpty()) {
                     StandardHalfSpacer()
 
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(standardQuarterPadding),
-                        userScrollEnabled = false,
+                        verticalArrangement = Arrangement.spacedBy(standardHalfPadding),
                         modifier = Modifier
-                            .heightIn(max = 100.dp)
+                            .heightIn(max = taskListMaxHeight)
                             .padding(start = standardHalfPadding)
                     ) {
                         items(tasks) {
@@ -377,9 +373,9 @@ private fun TaskRow(task: Task) {
             )
         )
 
-        StandardQuarterSpacer()
+        StandardHalfSpacer()
 
-        Text(task.title)
+        TextSecondaryBody(task.title)
     }
 }
 
