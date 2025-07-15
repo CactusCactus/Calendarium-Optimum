@@ -253,7 +253,7 @@ private fun EventsList(
                 items = events,
                 key = { i: Int, et: EventTasks -> et.event.id }) { i: Int, et: EventTasks ->
 
-                if (i == firstDoneIndex) {
+                AnimatedVisibility(i == firstDoneIndex) {
                     LineWithText(stringResource(R.string.done))
                 }
 
@@ -266,6 +266,9 @@ private fun EventsList(
                     },
                     onCheckedChange = {
                         viewModel.onEvent(UIEvent.DoneChanged(et.event, it))
+                    },
+                    onTaskDoneChanged = { task, done ->
+                        viewModel.onEvent(UIEvent.OnTaskDoneChanged(task, done))
                     },
                     modifier = Modifier
                         .fillMaxSize()
@@ -291,6 +294,7 @@ private fun EventRow(
     eventTasks: EventTasks,
     onLongClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
+    onTaskDoneChanged: (Task, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val event = eventTasks.event
@@ -342,8 +346,10 @@ private fun EventRow(
                             .heightIn(max = taskListMaxHeight)
                             .padding(start = standardHalfPadding)
                     ) {
-                        items(tasks) {
-                            TaskRow(it)
+                        items(tasks) { task ->
+                            TaskRow(task = task, onTaskDoneChanged = {
+                                onTaskDoneChanged(task, it)
+                            })
                         }
                     }
                 }
@@ -361,13 +367,11 @@ private fun EventRow(
 }
 
 @Composable
-private fun TaskRow(task: Task) {
+private fun TaskRow(task: Task, onTaskDoneChanged: (Boolean) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         CheckboxNoPadding(
             checked = task.done,
-            onCheckedChange = {
-                // Update task
-            },
+            onCheckedChange = onTaskDoneChanged,
             colors = CheckboxDefaults.colors(
                 uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
             )

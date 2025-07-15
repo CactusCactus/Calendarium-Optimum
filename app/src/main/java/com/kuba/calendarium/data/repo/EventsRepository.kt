@@ -46,4 +46,9 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
     suspend fun deleteEvent(event: Event) = dao.delete(event).also {
         Timber.d("Deleted event: ${event.title} with id: ${event.id}")
     }
+
+    suspend fun updateTask(task: Task, done: Boolean) =
+        dao.updateTask(task.copy(done = done)).also {
+            Timber.d("Updated task: ${task.title} with id: ${task.id} to done: $done")
+        }
 }

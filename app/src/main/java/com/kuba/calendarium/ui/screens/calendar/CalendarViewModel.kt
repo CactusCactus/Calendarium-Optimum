@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.EventTasks
+import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.NavEvent.EditEvent
@@ -175,6 +176,10 @@ class CalendarViewModel @Inject constructor(
             is UIEvent.VisibleDatesChanged -> visibleDatesRange.update {
                 event.startDate to event.endDate
             }
+
+            is UIEvent.OnTaskDoneChanged -> viewModelScope.launch {
+                eventsRepository.updateTask(event.task, event.checked)
+            }
         }
     }
 
@@ -204,6 +209,7 @@ class CalendarViewModel @Inject constructor(
         data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         data class VisibleDatesChanged(val startDate: LocalDate, val endDate: LocalDate) : UIEvent()
+        data class OnTaskDoneChanged(val task: Task, val checked: Boolean) : UIEvent()
         object SettingsClicked : UIEvent()
         object CalendarModeClicked : UIEvent()
         object ShowMonthYearPickerDialog : UIEvent()
