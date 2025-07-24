@@ -37,11 +37,16 @@ interface EventDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateEventWithTasks(event: Event, tasks: List<Task>) {
         update(event)
-        tasks.forEach { task -> updateTask(task.copy(eventIdRef = event.id)) }
+        deleteTasksByEventId(event.id)
+        tasks.forEach { task -> insertTask(task.copy(eventIdRef = event.id)) }
     }
 
     @Delete
     suspend fun delete(event: Event)
+
+    @Query("DELETE FROM task WHERE event_id_ref = :eventId")
+    suspend fun deleteTasksByEventId(eventId: Long)
+
 
     @Transaction
     @Query(

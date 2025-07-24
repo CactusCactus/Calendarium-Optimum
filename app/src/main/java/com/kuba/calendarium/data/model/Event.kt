@@ -26,7 +26,7 @@ data class EventTasks(
     @Embedded val event: Event,
     @Relation(
         parentColumn = "event_id",
-        entityColumn = "eventIdRef",
+        entityColumn = "event_id_ref",
         entity = Task::class
     )
     val tasks: List<Task>

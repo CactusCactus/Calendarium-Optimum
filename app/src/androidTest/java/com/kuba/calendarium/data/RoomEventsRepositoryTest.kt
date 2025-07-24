@@ -8,6 +8,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.data.repo.EventsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -310,6 +311,114 @@ class RoomEventsRepositoryTest {
                 dateMiddle, 2,
                 dateEnd, 1
             )
+
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
+    fun insertEventWithTasks() = runTest {
+        val eventId = "insertEventWithTasks".hashCode().toLong()
+        val event = Event(
+            id = eventId,
+            title = "Test Event",
+            description = "This is a test event",
+            date = LocalDate.now()
+        )
+
+        val taskList = listOf<Task>(
+            Task(id = 1, title = "Test Task 1"), Task(id = 2, title = "Test Task 2")
+        )
+
+        repository.insertEventWithTasks(event, taskList)
+
+        repository.getEventById(eventId).test {
+            val emittedEvent = awaitItem()
+            assertThat(emittedEvent).isNotNull()
+            assertThat(emittedEvent?.event).isEqualTo(event)
+            assertThat(emittedEvent?.tasks).hasSize(taskList.size)
+            assertThat(emittedEvent?.tasks?.firstOrNull()?.eventIdRef).isEqualTo(eventId)
+
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
+    fun editEventTasks() = runTest {
+        val eventId = "editEventTasks".hashCode().toLong()
+        val event = Event(
+            id = eventId,
+            title = "Test Event",
+            description = "This is a test event",
+            date = LocalDate.now()
+        )
+
+        val taskList = listOf<Task>(
+            Task(id = 1, title = "Test Task 1"), Task(id = 2, title = "Test Task 2")
+        )
+
+        repository.insertEventWithTasks(event, taskList)
+
+        repository.getEventById(eventId).test {
+            val emittedEvent = awaitItem()
+            assertThat(emittedEvent?.tasks).hasSize(taskList.size)
+
+            cancelAndConsumeRemainingEvents()
+        }
+
+        val newTaskList = taskList.toMutableList().apply {
+            removeLast()
+            set(0, taskList[0].copy(title = "Changed Task"))
+        }
+
+        repository.updateEventWithTasks(event, newTaskList)
+
+        repository.getEventById(eventId).test {
+            val emittedEvent = awaitItem()
+            assertThat(emittedEvent?.tasks).hasSize(newTaskList.size)
+            assertThat(emittedEvent?.tasks?.firstOrNull()?.title).isEqualTo("Changed Task")
+
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
+    fun updateDoneStatusOfAnInsertedTask() = runTest {
+        val eventId = "updateDoneStatusOfAnInsertedTask".hashCode().toLong()
+        val event = Event(
+            id = eventId,
+            title = "Test Event",
+            description = "This is a test event",
+            date = LocalDate.now()
+        )
+        val taskList = listOf<Task>(
+            Task(id = 1, title = "Test Task 1"), Task(id = 2, title = "Test Task 2")
+        )
+
+        repository.insertEventWithTasks(event, taskList)
+        var fetchedTasks = emptyList<Task>()
+
+        repository.getEventById(eventId).test {
+            val emittedEvent = awaitItem()
+
+            emittedEvent?.tasks?.forEach {
+                assertThat(it.done).isFalse()
+            }
+
+            fetchedTasks = emittedEvent?.tasks ?: emptyList()
+
+            cancelAndConsumeRemainingEvents()
+        }
+
+        repository.updateTask(fetchedTasks[0], true)
+        repository.updateTask(fetchedTasks[1], true)
+
+        repository.getEventById(eventId).test {
+            val emittedEvent = awaitItem()
+
+            emittedEvent?.tasks?.forEach {
+                assertThat(it.done).isTrue()
+            }
 
             cancelAndConsumeRemainingEvents()
         }

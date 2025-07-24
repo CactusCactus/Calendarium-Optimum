@@ -12,15 +12,15 @@ import com.kuba.calendarium.data.model.internal.TaskCreationData
         ForeignKey(
             entity = Event::class,
             parentColumns = ["event_id"],
-            childColumns = ["eventIdRef"],
+            childColumns = ["event_id_ref"],
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["eventIdRef"])]
+    indices = [Index(value = ["event_id_ref"])]
 )
 data class Task(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "task_id") val id: Long = 0,
-    val eventIdRef: Long = 0,
+    @ColumnInfo(name = "event_id_ref") val eventIdRef: Long = 0,
     @ColumnInfo(name = "title") val title: String,
     @ColumnInfo(name = "done") val done: Boolean = false
 ) {
