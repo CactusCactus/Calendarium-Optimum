@@ -31,7 +31,7 @@ class EditEventViewModel @Inject constructor(
             viewModelScope.launch { _navEvent.send(NavEvent.Finish(getTodayMidnight())) }
         } else {
             viewModelScope.launch {
-                eventsRepository.getEventById(eventId).filterNotNull().collect { et ->
+                eventsRepository.getEventTasksById(eventId).filterNotNull().collect { et ->
                     _uiState.update {
                         _uiState.value.copy(
                             title = et.event.title,

@@ -53,7 +53,13 @@ interface EventDao {
         "SELECT * FROM event WHERE (date_end IS NOT NULL AND :date BETWEEN date AND date_end) " +
                 "OR :date == date ORDER BY is_done ASC, time ASC"
     )
-    fun getEventsForDate(date: LocalDate): Flow<List<EventTasks>>
+    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>>
+
+    @Query(
+        "SELECT * FROM event WHERE (date_end IS NOT NULL AND :date BETWEEN date AND date_end) " +
+                "OR :date == date ORDER BY is_done ASC, time ASC"
+    )
+    fun getEventsForDate(date: LocalDate): Flow<List<Event>>
 
     @Query(
         "WITH RECURSIVE DateSeries(generated_date) AS ( " +
@@ -80,5 +86,8 @@ interface EventDao {
 
     @Transaction
     @Query("SELECT * FROM event WHERE event_id = :id")
-    fun getEventById(id: Long): Flow<EventTasks?>
+    fun getEventTasksById(id: Long): Flow<EventTasks?>
+
+    @Query("SELECT * FROM event WHERE event_id = :id")
+    fun getEventById(id: Long): Flow<Event?>
 }

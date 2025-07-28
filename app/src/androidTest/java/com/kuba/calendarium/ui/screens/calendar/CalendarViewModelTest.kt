@@ -146,7 +146,7 @@ class CalendarViewModelTest {
                     viewModel.onEvent(UIEvent.ContextEventDelete(false))
                     advanceUntilIdle()
 
-                    eventsRepository.getEventById(event.id).test {
+                    eventsRepository.getEventTasksById(event.id).test {
                         val events = awaitItem()
                         assertThat(events).isNull()
 
@@ -187,7 +187,7 @@ class CalendarViewModelTest {
 
                     viewModel.onEvent(UIEvent.DeleteDialogDismiss)
 
-                    eventsRepository.getEventById(event.id).test {
+                    eventsRepository.getEventTasksById(event.id).test {
                         val events = awaitItem()
                         assertThat(events).isNotNull()
                         cancelAndConsumeRemainingEvents()
@@ -260,7 +260,7 @@ class CalendarViewModelTest {
                     viewModel.onEvent(UIEvent.DoneChanged(event, true))
                     advanceUntilIdle()
 
-                    eventsRepository.getEventById(eventId).test {
+                    eventsRepository.getEventTasksById(eventId).test {
                         val event = awaitItem()
 
                         assertThat(event?.event?.done).isTrue()
@@ -278,9 +278,7 @@ class CalendarViewModelTest {
                 val viewModel = ViewModelProvider(it)[CalendarViewModel::class.java]
 
                 val date = LocalDate.of(2025, 2, 19)
-                val dateSameMonthBefore = date.minusDays(10)
                 val dateMonthBefore = date.minusMonths(1)
-                val dateOverMonthBefore = date.minusMonths(1).minusDays(10)
 
                 val event = Event(
                     id = 1,
@@ -306,14 +304,24 @@ class CalendarViewModelTest {
                     viewModel.eventCountMap.test {
                         skipItems(1) // Skip initial value
 
-                        viewModel.onEvent(UIEvent.DateSelected(date))
+                        viewModel.onEvent(
+                            UIEvent.VisibleDatesChanged(date.minusDays(15), date.plusDays(15))
+                        )
                         assertThat(awaitItem()).containsExactly(date, 1)
 
-                        viewModel.onEvent(UIEvent.DateSelected(dateSameMonthBefore))
-                        expectNoEvents()
-
-                        viewModel.onEvent(UIEvent.DateSelected(dateOverMonthBefore))
+                        viewModel.onEvent(
+                            UIEvent.VisibleDatesChanged(
+                                dateMonthBefore.minusDays(15),
+                                dateMonthBefore.plusDays(15)
+                            )
+                        )
                         assertThat(awaitItem()).containsExactly(dateMonthBefore, 1)
+
+                        viewModel.onEvent(
+                            UIEvent.VisibleDatesChanged(date.minusDays(20), date.minusDays(10))
+                        )
+
+                        assertThat(awaitItem()).isEmpty()
 
                         cancelAndConsumeRemainingEvents()
                     }

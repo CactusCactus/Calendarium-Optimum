@@ -22,7 +22,7 @@ data class Task(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "task_id") val id: Long = 0,
     @ColumnInfo(name = "event_id_ref") val eventIdRef: Long = 0,
     @ColumnInfo(name = "title") val title: String,
-    @ColumnInfo(name = "position") val position: Int,
+    @ColumnInfo(name = "position") val position: Int = 0,
     @ColumnInfo(name = "done") val done: Boolean = false
 ) {
     fun toTaskInternal() = TaskCreationData(id, title, done)

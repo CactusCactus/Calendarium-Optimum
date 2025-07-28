@@ -72,7 +72,7 @@ class RoomEventsRepositoryTest {
     fun retrieveNonExistentEvent() = runTest {
         val nonExistentEventId = 2137L
 
-        val retrievedEvent = eventDao.getEventById(nonExistentEventId).first()
+        val retrievedEvent = eventDao.getEventTasksById(nonExistentEventId).first()
 
         assertThat(retrievedEvent).isNull()
     }
@@ -194,7 +194,7 @@ class RoomEventsRepositoryTest {
         repository.getEventById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent).isEqualTo(updatedEvent)
-            assertThat(emittedEvent?.event?.id).isEqualTo(originalEvent.id)
+            assertThat(emittedEvent?.id).isEqualTo(originalEvent.id)
 
             expectNoEvents()
             cancelAndConsumeRemainingEvents()
@@ -332,7 +332,7 @@ class RoomEventsRepositoryTest {
 
         repository.insertEventWithTasks(event, taskList)
 
-        repository.getEventById(eventId).test {
+        repository.getEventTasksById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent).isNotNull()
             assertThat(emittedEvent?.event).isEqualTo(event)
@@ -359,7 +359,7 @@ class RoomEventsRepositoryTest {
 
         repository.insertEventWithTasks(event, taskList)
 
-        repository.getEventById(eventId).test {
+        repository.getEventTasksById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent?.tasks).hasSize(taskList.size)
 
@@ -373,7 +373,7 @@ class RoomEventsRepositoryTest {
 
         repository.updateEventWithTasks(event, newTaskList)
 
-        repository.getEventById(eventId).test {
+        repository.getEventTasksById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent?.tasks).hasSize(newTaskList.size)
             assertThat(emittedEvent?.tasks?.firstOrNull()?.title).isEqualTo("Changed Task")
@@ -398,7 +398,7 @@ class RoomEventsRepositoryTest {
         repository.insertEventWithTasks(event, taskList)
         var fetchedTasks = emptyList<Task>()
 
-        repository.getEventById(eventId).test {
+        repository.getEventTasksById(eventId).test {
             val emittedEvent = awaitItem()
 
             emittedEvent?.tasks?.forEach {
@@ -413,7 +413,7 @@ class RoomEventsRepositoryTest {
         repository.updateTask(fetchedTasks[0], true)
         repository.updateTask(fetchedTasks[1], true)
 
-        repository.getEventById(eventId).test {
+        repository.getEventTasksById(eventId).test {
             val emittedEvent = awaitItem()
 
             emittedEvent?.tasks?.forEach {

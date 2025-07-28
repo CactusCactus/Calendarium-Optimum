@@ -2,24 +2,36 @@ package com.kuba.calendarium.data.repo
 
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.util.standardDateFormat
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.time.LocalDate
 import javax.inject.Inject
 
 class EventsRepository @Inject constructor(private val dao: EventDao) {
-    fun getEventsForDate(date: LocalDate) = dao.getEventsForDate(date).map { eventList ->
-        eventList.map { event -> event.copy(tasks = event.tasks.sortedBy { it.position }) }
+    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>> =
+        dao.getEventTasksListForDate(date).map { eventList ->
+            eventList.map { event -> event.copy(tasks = event.tasks.sortedBy { it.position }) }
 
-    }.also {
-        Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
-    }
+        }.also {
+            Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
+        }
 
-    fun getEventById(id: Long) = dao.getEventById(id).map {
+    fun getEventsForDate(date: LocalDate): Flow<List<Event>> =
+        dao.getEventsForDate(date).also {
+            Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
+        }
+
+    fun getEventTasksById(id: Long): Flow<EventTasks?> = dao.getEventTasksById(id).map {
         it?.copy(tasks = it.tasks.sortedBy { it.position })
     }.also {
+        Timber.d("Fetched Event flow for id: $id")
+    }
+
+    fun getEventById(id: Long): Flow<Event?> = dao.getEventById(id).also {
         Timber.d("Fetched Event flow for id: $id")
     }
 

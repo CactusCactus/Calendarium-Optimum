@@ -74,7 +74,7 @@ class AddEventViewModelTest {
                     viewModel.onEvent(UIEvent.DoneClicked)
                     advanceUntilIdle()
 
-                    viewModel.eventsRepository.getEventsForDate(date).test {
+                    viewModel.eventsRepository.getEventTasksListForDate(date).test {
                         val events = awaitItem()
                         assertThat(events).hasSize(1)
 
@@ -116,12 +116,14 @@ class AddEventViewModelTest {
                 viewModel.onEvent(UIEvent.DoneClicked)
 
                 runTest {
-                    repository.getEventsForDate(date).test {
+                    repository.getEventTasksListForDate(date).test {
                         val event = awaitItem().firstOrNull()
 
                         assertThat(event).isNotNull()
                         assertThat(event?.event?.time).isNotNull()
                         assertThat(event?.event?.timeEnd).isNull()
+
+                        cancelAndConsumeRemainingEvents()
                     }
                 }
             }

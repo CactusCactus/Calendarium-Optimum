@@ -83,7 +83,7 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun getEventsForDate(date: LocalDate): Flow<List<EventTasks>> =
-        eventsRepository.getEventsForDate(date).onEach {
+        eventsRepository.getEventTasksListForDate(date).onEach {
             it.forEach {
                 Timber.d("Event: ${it.event.title}, Tasks: ${it.tasks.map { it.title }}")
             }
