@@ -12,6 +12,20 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
 }
 
+val commitCount by project.extra {
+    execCommand("git rev-list --count HEAD")?.toInt()
+        ?: throw GradleException("Unable to get number of commits. Make sure git is initialized.")
+}
+
+val latestTag by project.extra {
+    execCommand("git describe")
+        ?: throw GradleException(
+            "Unable to get version name using git describe.\n" +
+                    "Make sure you have at least one annotated tag and git is initialized.\n" +
+                    "You can create an annotated tag with: git tag -a 1.0 -m \"1.0\""
+        )
+}
+
 android {
     namespace = "com.kuba.calendarium"
     compileSdk = 35
@@ -20,8 +34,8 @@ android {
         applicationId = "com.kuba.calendarium"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = commitCount
+        versionName = latestTag
 
         testInstrumentationRunner = "com.kuba.calendarium.HiltTestRunner"
         testInstrumentationRunnerArguments["clearPackageData"] = "true"
@@ -136,4 +150,12 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.mockk.agent.jvm)
 
+}
+
+fun execCommand(command: String): String? {
+    val cmd = command.split(" ").toTypedArray()
+    val process = ProcessBuilder(*cmd)
+        .redirectOutput(ProcessBuilder.Redirect.PIPE)
+        .start()
+    return process.inputStream.bufferedReader().readLine()?.trim()
 }
