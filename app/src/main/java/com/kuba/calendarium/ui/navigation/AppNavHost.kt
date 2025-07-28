@@ -36,7 +36,7 @@ fun AppNavHost() {
             calendarNavGraph(this)
             addEventNavGraph(this)
             editEventNavGraph(this)
-            settingsNavGraph(this)
+            settingsNavGraph()
         }
     }
 }
