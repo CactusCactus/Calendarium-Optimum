@@ -39,6 +39,10 @@ import kotlinx.coroutines.delay
 import java.text.BreakIterator
 import java.text.StringCharacterIterator
 
+private const val ANIMATED_TEXT_DELAY = 20L
+
+private const val ANIMATED_INITIAL_TEXT_DELAY = 20L
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckboxNoPadding(
@@ -103,20 +107,19 @@ fun AnimatedText(
     style: TextStyle = LocalTextStyle.current
 ) {
     val breakIterator = remember(text) { BreakIterator.getCharacterInstance() }
-    val typingDelayInMs = 20L
 
     var substringText by remember {
         mutableStateOf("")
     }
     LaunchedEffect(text) {
-        delay(50L)
+        delay(ANIMATED_INITIAL_TEXT_DELAY)
         breakIterator.text = StringCharacterIterator(text)
 
         var nextIndex = breakIterator.next()
         while (nextIndex != BreakIterator.DONE) {
             substringText = text.subSequence(0, nextIndex).toString()
             nextIndex = breakIterator.next()
-            delay(typingDelayInMs)
+            delay(ANIMATED_TEXT_DELAY)
         }
     }
 

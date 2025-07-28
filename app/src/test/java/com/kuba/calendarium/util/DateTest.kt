@@ -5,7 +5,6 @@ import org.junit.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.util.TimeZone
 
 class DateTest {
     @Test
@@ -43,5 +42,4 @@ class DateTest {
 
         assertThat(date1.isSameDay(date3)).isFalse()
     }
-
 }

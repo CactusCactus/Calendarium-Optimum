@@ -53,12 +53,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Dialog
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
+import com.kuba.calendarium.util.MONTH_PICKER_ROWS
 import com.kuba.calendarium.util.getMonthNames
 import com.kuba.calendarium.util.toLocalDate
 import com.kuba.calendarium.util.toMillis
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.LocalTime
+
+private const val MONTH_BUTTON_ASPECT_RATIO = 1.5f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -195,7 +198,7 @@ fun MonthYearPickerModal(
 
                 // Month picker
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
+                    columns = GridCells.Fixed(MONTH_PICKER_ROWS),
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalArrangement = Arrangement.spacedBy(standardHalfPadding)
                 ) {
@@ -205,12 +208,16 @@ fun MonthYearPickerModal(
                         Button(
                             onClick = { onDatePicked(localDate.withMonth(index + 1)) },
                             modifier = Modifier
-                                .aspectRatio(1.5f)
+                                .aspectRatio(MONTH_BUTTON_ASPECT_RATIO)
                                 .fillMaxWidth(),
                             shape = MaterialTheme.shapes.large,
                             colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                                contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                containerColor = if (selected)
+                                    MaterialTheme.colorScheme.primaryContainer
+                                else Color.Transparent,
+                                contentColor = if (selected)
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                else MaterialTheme.colorScheme.onSurface
                             )
                         ) {
                             Text(text = monthName, style = MaterialTheme.typography.bodyLarge)

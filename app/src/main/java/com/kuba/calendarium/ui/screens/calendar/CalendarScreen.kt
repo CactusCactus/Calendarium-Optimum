@@ -67,6 +67,7 @@ import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.common.taskListMaxHeight
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.CalendarDisplayMode
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
+import com.kuba.calendarium.util.CALENDAR_MAX_OFFSET_YEARS
 import com.kuba.calendarium.util.isSameDay
 import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
@@ -430,8 +431,8 @@ private fun CalendarMonthPicker(
     modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth.minusMonths(100) }
-    val endMonth = remember { currentMonth.plusMonths(100) }
+    val startMonth = remember { currentMonth.minusYears(CALENDAR_MAX_OFFSET_YEARS) }
+    val endMonth = remember { currentMonth.plusYears(CALENDAR_MAX_OFFSET_YEARS) }
     val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
 
     val state = rememberCalendarState(
@@ -466,8 +467,8 @@ private fun CalendarWeekPicker(
     modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { LocalDate.now() }
-    val startMonth = remember { currentMonth.minusMonths(100) }
-    val endMonth = remember { currentMonth.plusMonths(100) }
+    val startMonth = remember { currentMonth.minusYears(CALENDAR_MAX_OFFSET_YEARS) }
+    val endMonth = remember { currentMonth.plusYears(CALENDAR_MAX_OFFSET_YEARS) }
     val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
 
     val state = rememberWeekCalendarState(

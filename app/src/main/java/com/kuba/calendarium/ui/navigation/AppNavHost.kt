@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,76 +32,91 @@ fun AppNavHost() {
         startDestination = ScreenRoute.Calendar.route,
         modifier = Modifier.fillMaxSize()
     ) {
-        composable(route = ScreenRoute.Calendar.route) { backStackEntry ->
-            val viewModel = hiltViewModel<CalendarViewModel>()
+        with(navController) {
+            calendarNavGraph(this)
+            addEventNavGraph(this)
+            editEventNavGraph(this)
+            settingsNavGraph(this)
+        }
+    }
+}
 
-            val newEventDate =
-                backStackEntry.savedStateHandle.get<LocalDate>(KEY_RESULT_EVENT_DATE_MS)
+private fun NavGraphBuilder.calendarNavGraph(navController: NavController) {
+    composable(route = ScreenRoute.Calendar.route) { backStackEntry ->
+        val viewModel = hiltViewModel<CalendarViewModel>()
 
-            LaunchedEffect(newEventDate) {
-                if (newEventDate != null) {
-                    viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(newEventDate))
-                    backStackEntry.savedStateHandle.remove<LocalDate>(KEY_RESULT_EVENT_DATE_MS)
-                }
+        val newEventDate =
+            backStackEntry.savedStateHandle.get<LocalDate>(KEY_RESULT_EVENT_DATE_MS)
+
+        LaunchedEffect(newEventDate) {
+            if (newEventDate != null) {
+                viewModel.onEvent(CalendarViewModel.UIEvent.DateSelected(newEventDate))
+                backStackEntry.savedStateHandle.remove<LocalDate>(KEY_RESULT_EVENT_DATE_MS)
             }
-
-            CalendarScreen(
-                viewModel = viewModel,
-                onNavigateToAddEvent = {
-                    navController.navigate(ScreenRoute.AddEvent.createRoute(it.toEpochDay()))
-                },
-                onNavigateToEditEvent = {
-                    navController.navigate(ScreenRoute.EditEvent.createRoute(it))
-                },
-                onNavigateToSettings = {
-                    navController.navigate(ScreenRoute.Settings.route)
-                })
-
         }
 
-        composable(
-            route = ScreenRoute.AddEvent.route,
-            arguments = listOf(navArgument(ARG_SELECTED_DATE_EPOCH_DAY) {
-                type = NavType.LongType
-            }),
-            enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
-            exitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
-        ) {
-            AddEventScreen(
-                viewModel = hiltViewModel(),
-                onNavigateUp = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        KEY_RESULT_EVENT_DATE_MS,
-                        it
-                    )
-                    navController.popBackStack()
-                }
-            )
-        }
+        CalendarScreen(
+            viewModel = viewModel,
+            onNavigateToAddEvent = {
+                navController.navigate(ScreenRoute.AddEvent.createRoute(it.toEpochDay()))
+            },
+            onNavigateToEditEvent = {
+                navController.navigate(ScreenRoute.EditEvent.createRoute(it))
+            },
+            onNavigateToSettings = {
+                navController.navigate(ScreenRoute.Settings.route)
+            })
 
-        composable(
-            route = ScreenRoute.EditEvent.route,
-            arguments = listOf(navArgument(ARG_EVENT_ID) { type = NavType.LongType }),
-            enterTransition = { slideInVertically(initialOffsetY = { it }) },
-            exitTransition = { slideOutVertically(targetOffsetY = { it }) }
-        ) {
-            EditEvenScreen(
-                viewModel = hiltViewModel(),
-                onNavigateUp = {
-                    navController.previousBackStackEntry?.savedStateHandle?.set(
-                        KEY_RESULT_EVENT_DATE_MS,
-                        it
-                    )
-                    navController.popBackStack()
-                }
-            )
-        }
+    }
+}
 
-        composable(
-            route = ScreenRoute.Settings.route,
-            enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
-            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }) {
-            SettingsScreen(viewModel = hiltViewModel())
-        }
+private fun NavGraphBuilder.addEventNavGraph(navController: NavController) {
+    composable(
+        route = ScreenRoute.AddEvent.route,
+        arguments = listOf(navArgument(ARG_SELECTED_DATE_EPOCH_DAY) {
+            type = NavType.LongType
+        }),
+        enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+        exitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
+    ) {
+        AddEventScreen(
+            viewModel = hiltViewModel(),
+            onNavigateUp = {
+                navController.previousBackStackEntry?.savedStateHandle?.set(
+                    KEY_RESULT_EVENT_DATE_MS,
+                    it
+                )
+                navController.popBackStack()
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.editEventNavGraph(navController: NavController) {
+    composable(
+        route = ScreenRoute.EditEvent.route,
+        arguments = listOf(navArgument(ARG_EVENT_ID) { type = NavType.LongType }),
+        enterTransition = { slideInVertically(initialOffsetY = { it }) },
+        exitTransition = { slideOutVertically(targetOffsetY = { it }) }
+    ) {
+        EditEvenScreen(
+            viewModel = hiltViewModel(),
+            onNavigateUp = {
+                navController.previousBackStackEntry?.savedStateHandle?.set(
+                    KEY_RESULT_EVENT_DATE_MS,
+                    it
+                )
+                navController.popBackStack()
+            }
+        )
+    }
+}
+
+private fun NavGraphBuilder.settingsNavGraph() {
+    composable(
+        route = ScreenRoute.Settings.route,
+        enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
+        exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }) {
+        SettingsScreen(viewModel = hiltViewModel())
     }
 }

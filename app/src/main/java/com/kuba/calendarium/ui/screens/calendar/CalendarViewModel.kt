@@ -94,26 +94,7 @@ class CalendarViewModel @Inject constructor(
             // Event manipulation events
             is UIEvent.DateSelected -> _selectedDate.update { event.date }
 
-            is ContextEventDelete -> {
-                _uiState.update {
-                    _uiState.value.copy(
-                        contextMenuOpen = false,
-                        deleteDialogShowing = false,
-                        showDialogDelete = !event.dontShowAgain
-                    )
-                }
-
-                viewModelScope.launch {
-                    contextMenuEvent?.let {
-                        eventsRepository.deleteEvent(it)
-                        contextMenuEvent = null
-                    } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
-                }
-
-                viewModelScope.launch {
-                    userPreferencesRepository.setShowDialogDeletePreference(!event.dontShowAgain)
-                }
-            }
+            is ContextEventDelete -> deleteEvent(event)
 
             is UIEvent.DoneChanged -> viewModelScope.launch {
                 eventsRepository.updateEvent(event.event.copy(done = event.checked))
@@ -131,21 +112,7 @@ class CalendarViewModel @Inject constructor(
                 _uiState.value.copy(contextMenuOpen = false)
             }
 
-            is UIEvent.ContextMenuOptionSelected -> when (event.option) {
-                ContextMenuOption.DELETE -> if (_uiState.value.showDialogDelete) {
-                    _uiState.update { _uiState.value.copy(deleteDialogShowing = true) }
-                } else {
-                    onEvent(ContextEventDelete(dontShowAgain = true))
-                }
-
-                ContextMenuOption.EDIT -> {
-                    _uiState.update { _uiState.value.copy(contextMenuOpen = false) }
-
-                    contextMenuEvent?.let {
-                        viewModelScope.launch { _navEvent.send(EditEvent(it.id)) }
-                    } ?: Timber.e("ContextMenuEvent is null and cannot be edited")
-                }
-            }
+            is UIEvent.ContextMenuOptionSelected -> contextMenuOptionSelected(event)
 
             // Dialog events
             UIEvent.ShowMonthYearPickerDialog -> _uiState.update {
@@ -161,14 +128,7 @@ class CalendarViewModel @Inject constructor(
             }
 
             // Toolbar events
-            UIEvent.CalendarModeClicked -> viewModelScope.launch {
-                val newDisplayMode =
-                    if (_uiState.value.calendarDisplayMode == CalendarDisplayMode.WEEK)
-                        CalendarDisplayMode.MONTH
-                    else CalendarDisplayMode.WEEK
-                userPreferencesRepository.setCalendarModePreference(newDisplayMode)
-                _uiState.update { _uiState.value.copy(calendarDisplayMode = newDisplayMode) }
-            }
+            UIEvent.CalendarModeClicked -> calendarModeChanged()
 
             UIEvent.SettingsClicked -> viewModelScope.launch { _navEvent.send(NavEvent.Settings) }
 
@@ -192,6 +152,56 @@ class CalendarViewModel @Inject constructor(
 
     fun pageIndexToLocalDate(pageIndex: Int): LocalDate =
         getTodayMidnight().plusDays(pageIndex - PAGER_INITIAL_OFFSET_DAYS)
+
+    private fun calendarModeChanged() {
+        viewModelScope.launch {
+            val newDisplayMode =
+                if (_uiState.value.calendarDisplayMode == CalendarDisplayMode.WEEK)
+                    CalendarDisplayMode.MONTH
+                else CalendarDisplayMode.WEEK
+            userPreferencesRepository.setCalendarModePreference(newDisplayMode)
+            _uiState.update { _uiState.value.copy(calendarDisplayMode = newDisplayMode) }
+        }
+    }
+
+    private fun contextMenuOptionSelected(event: UIEvent.ContextMenuOptionSelected) {
+        when (event.option) {
+            ContextMenuOption.DELETE -> if (_uiState.value.showDialogDelete) {
+                _uiState.update { _uiState.value.copy(deleteDialogShowing = true) }
+            } else {
+                onEvent(ContextEventDelete(dontShowAgain = true))
+            }
+
+            ContextMenuOption.EDIT -> {
+                _uiState.update { _uiState.value.copy(contextMenuOpen = false) }
+
+                contextMenuEvent?.let {
+                    viewModelScope.launch { _navEvent.send(EditEvent(it.id)) }
+                } ?: Timber.e("ContextMenuEvent is null and cannot be edited")
+            }
+        }
+    }
+
+    private fun deleteEvent(event: ContextEventDelete) {
+        _uiState.update {
+            _uiState.value.copy(
+                contextMenuOpen = false,
+                deleteDialogShowing = false,
+                showDialogDelete = !event.dontShowAgain
+            )
+        }
+
+        viewModelScope.launch {
+            contextMenuEvent?.let {
+                eventsRepository.deleteEvent(it)
+                contextMenuEvent = null
+            } ?: Timber.e("ContextMenuEvent is null and cannot be deleted")
+        }
+
+        viewModelScope.launch {
+            userPreferencesRepository.setShowDialogDeletePreference(!event.dontShowAgain)
+        }
+    }
 
     data class UIState(
         var contextMenuOpen: Boolean = false,

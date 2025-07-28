@@ -8,6 +8,8 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
 }
 
 android {

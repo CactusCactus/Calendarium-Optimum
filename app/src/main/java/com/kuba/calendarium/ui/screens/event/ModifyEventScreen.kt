@@ -208,7 +208,7 @@ private fun MainColumn(
                 onEvent(UIEvent.UpdateTask(id, task))
             },
             onTaskOrderChanged = { indexFrom, indexTo ->
-                onEvent(UIEvent.TaskOrderChanged(indexFrom, indexTo))
+                onEvent(UIEvent.ReorderTask(indexFrom, indexTo))
             },
             onTaskRemoved = {
                 onEvent(UIEvent.RemoveTask(it))
@@ -371,10 +371,14 @@ private fun TaskListRow(
                                     .padding(start = standardPadding)
                                     .draggableHandle(
                                         onDragStarted = {
-                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                            hapticFeedback.performHapticFeedback(
+                                                HapticFeedbackType.GestureThresholdActivate
+                                            )
                                         },
                                         onDragStopped = {
-                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.GestureEnd)
+                                            hapticFeedback.performHapticFeedback(
+                                                HapticFeedbackType.GestureEnd
+                                            )
                                         }
                                     )
                             )

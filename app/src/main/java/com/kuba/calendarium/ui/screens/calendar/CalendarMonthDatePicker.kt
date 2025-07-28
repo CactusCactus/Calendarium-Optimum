@@ -42,6 +42,10 @@ import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
 
+private const val DAY_TEXT_ALPHA_OTHER_MONTH = 0.25f
+
+private const val WEEK_BOX_ASPECT_RATIO = 0.8f
+
 @Composable
 fun CalendarMonthDatePicker(
     state: CalendarState,
@@ -129,7 +133,7 @@ private fun WeekDayBox(
 
     Column(
         modifier = Modifier
-            .aspectRatio(0.8f)
+            .aspectRatio(WEEK_BOX_ASPECT_RATIO)
             .padding(standardQuarterPadding)
             .background(
                 color = if (selected) selectedColor else Color.Transparent,
@@ -199,7 +203,8 @@ private fun DayBox(
             .clickable(onClick = { onSelected(day) }),
         contentAlignment = Alignment.Center
     ) {
-        val alphaText = if (day.position == DayPosition.MonthDate) 1f else 0.25f
+        val alphaText =
+            if (day.position == DayPosition.MonthDate) 1f else DAY_TEXT_ALPHA_OTHER_MONTH
         val textColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else
             MaterialTheme.colorScheme.onBackground
 

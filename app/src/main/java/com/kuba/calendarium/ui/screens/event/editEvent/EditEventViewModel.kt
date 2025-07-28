@@ -66,8 +66,8 @@ class EditEventViewModel @Inject constructor(
                 dateEnd = _uiState.value.selectedDateEnd,
                 timeEnd = endTime
             ),
-            _uiState.value.taskList.mapIndexed { index, it ->
-                it.toTask(index)
+            _uiState.value.taskList.mapIndexed { index, taskData ->
+                taskData.toTask(index)
             }
         )
     }
