@@ -22,7 +22,7 @@ class AddEventViewModel @Inject constructor(
             && _uiState.value.selectedDateEnd == _uiState.value.selectedDate
         ) null else _uiState.value.selectedTimeEnd
 
-        val tasks = _uiState.value.taskMap.map { Task(title = it.title) }
+        val tasks = _uiState.value.taskList.map { Task(title = it.title) }
 
         eventsRepository.insertEventWithTasks(
             Event(

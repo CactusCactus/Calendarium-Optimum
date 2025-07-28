@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -197,7 +199,8 @@ private fun MainColumn(
         StandardSpacer()
 
         TaskListRow(
-            taskList = uiState.taskMap,
+            taskList = uiState.taskList,
+            errorList = uiState.taskError,
             onTaskAdded = {
                 onEvent(UIEvent.AddTask(it.title))
             },
@@ -305,6 +308,7 @@ private fun DescriptionRow(
 @Composable
 private fun TaskListRow(
     taskList: List<TaskCreationData>,
+    errorList: List<ModifyEventViewModel.ValidationError?>,
     onTaskAdded: (TaskCreationData) -> Unit,
     onTaskChanged: (Int, TaskCreationData) -> Unit,
     onTaskOrderChanged: (Int, Int) -> Unit,
@@ -377,14 +381,28 @@ private fun TaskListRow(
 
                             StandardHalfSpacer()
 
+                            val interactionSource = remember { MutableInteractionSource() }
+                            val error = errorList.getOrNull(index)
+                            val isFocused by interactionSource.collectIsFocusedAsState()
+
                             TextField(
                                 value = task.title,
                                 onValueChange = { onTaskChanged(index, task.copy(title = it)) },
+                                interactionSource = interactionSource,
                                 maxLines = 1,
                                 colors = TextFieldDefaults.colors(
                                     unfocusedContainerColor = Color.Transparent,
                                     focusedContainerColor = Color.Transparent
                                 ),
+                                isError = error != null && !isFocused,
+                                supportingText = if (error != null && !isFocused) {
+                                    {
+                                        Text(
+                                            text = error.toLocalizedString(LocalContext.current),
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                } else null,
                                 trailingIcon = {
                                     IconButton(onClick = { onTaskRemoved(index) }) {
                                         Icon(

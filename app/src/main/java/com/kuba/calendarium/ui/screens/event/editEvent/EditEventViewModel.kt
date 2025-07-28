@@ -40,7 +40,7 @@ class EditEventViewModel @Inject constructor(
                             selectedTime = et.event.time,
                             selectedDateEnd = et.event.dateEnd,
                             selectedTimeEnd = et.event.timeEnd,
-                            taskMap = et.tasks.map { it.toTaskInternal() }.toMutableStateList()
+                            taskList = et.tasks.map { it.toTaskInternal() }.toMutableStateList()
                         )
                     }
 
@@ -66,7 +66,7 @@ class EditEventViewModel @Inject constructor(
                 dateEnd = _uiState.value.selectedDateEnd,
                 timeEnd = endTime
             ),
-            _uiState.value.taskMap.map { it.toTask() }
+            _uiState.value.taskList.map { it.toTask() }
         )
     }
 

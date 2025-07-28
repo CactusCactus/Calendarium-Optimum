@@ -2,6 +2,7 @@ package com.kuba.calendarium.ui.screens.event
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,6 +36,8 @@ abstract class ModifyEventViewModel(
         const val MAX_TITLE_LENGTH = 100
 
         const val MAX_DESCRIPTION_LENGTH = 2000
+
+        const val MAX_TASK_LENGTH = 80
     }
 
     protected abstract suspend fun databaseWriteOperation()
@@ -154,28 +157,37 @@ abstract class ModifyEventViewModel(
                 _uiState.value.copy(timePickerOpen = false)
             }
 
-            is UIEvent.AddTask -> _uiState.update {
-                it.copy(taskMap = it.taskMap.apply {
-                    add(TaskCreationData(title = event.title))
-                })
+            is UIEvent.AddTask -> {
+                _uiState.update {
+                    it.copy(taskList = it.taskList.apply {
+                        add(TaskCreationData(title = event.title))
+                    })
+                }
+                checkAndUpdateValidity()
             }
 
-            is UIEvent.UpdateTask -> _uiState.update {
-                it.copy(taskMap = it.taskMap.apply {
-                    set(event.index, event.task)
-                })
+            is UIEvent.UpdateTask -> {
+                _uiState.update {
+                    it.copy(taskList = it.taskList.apply {
+                        set(event.index, event.task)
+                    })
+                }
+                checkAndUpdateValidity()
             }
 
-            is UIEvent.RemoveTask -> _uiState.update {
-                if (it.taskMap.size == 1) {
-                    it.copy(taskMap = mutableStateListOf())
-                } else
-                    it.copy(taskMap = it.taskMap.apply { removeAt(event.index) })
+            is UIEvent.RemoveTask -> {
+                _uiState.update {
+                    if (it.taskList.size == 1) {
+                        it.copy(taskList = mutableStateListOf())
+                    } else
+                        it.copy(taskList = it.taskList.apply { removeAt(event.index) })
+                }
+                checkAndUpdateValidity()
             }
 
             is UIEvent.TaskOrderChanged -> {
                 _uiState.update {
-                    it.copy(taskMap = it.taskMap.apply {
+                    it.copy(taskList = it.taskList.apply {
                         add(event.toIndex, removeAt(event.fromIndex))
                     })
                 }
@@ -197,6 +209,14 @@ abstract class ModifyEventViewModel(
         else null
     }
 
+    protected fun validateTasks(text: String): ValidationError? {
+        return when {
+            text.isBlank() -> ValidationError.TASK_EMPTY
+            text.length > MAX_TASK_LENGTH -> ValidationError.TASK_TOO_LONG
+            else -> null
+        }
+    }
+
     protected fun checkAndUpdateValidity() {
         _uiState.update {
             _uiState.value.copy(
@@ -205,10 +225,17 @@ abstract class ModifyEventViewModel(
             )
         }
 
+        val taskErrors = _uiState.value.taskList.map { validateTasks(it.title) }
+
+        _uiState.update {
+            _uiState.value.copy(taskError = taskErrors.toMutableStateList())
+        }
+
         _uiState.update {
             _uiState.value.copy(
                 isValid = _uiState.value.titleError == null &&
-                        _uiState.value.descriptionError == null
+                        _uiState.value.descriptionError == null &&
+                        _uiState.value.taskError.filterNotNull().isEmpty()
             )
         }
     }
@@ -216,7 +243,7 @@ abstract class ModifyEventViewModel(
     data class UIState(
         val title: String = "",
         val description: String? = null,
-        val taskMap: SnapshotStateList<TaskCreationData> = mutableStateListOf(),
+        val taskList: SnapshotStateList<TaskCreationData> = mutableStateListOf(),
         val selectedDate: LocalDate = getTodayMidnight(),
         val selectedDateEnd: LocalDate? = null,
         val selectedTime: LocalTime? = null,
@@ -227,6 +254,7 @@ abstract class ModifyEventViewModel(
 
         // Validation
         val titleError: ValidationError? = null,
+        val taskError: SnapshotStateList<ValidationError?> = mutableStateListOf(),
         val descriptionError: ValidationError? = null,
         val isValid: Boolean = false
     )
@@ -254,7 +282,7 @@ abstract class ModifyEventViewModel(
     }
 
     enum class ValidationError {
-        TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG
+        TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG, TASK_EMPTY, TASK_TOO_LONG
     }
 }
 
