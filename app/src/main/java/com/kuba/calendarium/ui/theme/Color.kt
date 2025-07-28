@@ -1,4 +1,7 @@
+@file:Suppress("MagicNumber")
+
 package com.kuba.calendarium.ui.theme
+
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF365E9D)
@@ -71,4 +74,4 @@ val surfaceContainerLowestDark = Color(0xFF0E0E0E)
 val surfaceContainerLowDark = Color(0xFF1B1B1B)
 val surfaceContainerDark = Color(0xFF1F1F1F)
 val surfaceContainerHighDark = Color(0xFF2A2A2A)
-val surfaceContainerHighestDark = Color(0xFF353535)
+val surfaceContainerHighestDark = Color(0xFF2B2B2B)

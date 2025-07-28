@@ -23,4 +23,13 @@
     <string name="set_end_date_and_time_text">Set end date and time</string>
     <string name="set_time_label">Set time</string>
     <string name="done">Done</string>
+    <string name="date_time_row_date_label">Date</string>
+    <string name="date_time_row_time_label">Time</string>
+    <string name="new_task_list_placeholder">Task list</string>
+    <string name="new_task_field_placeholder">New task…</string>
+    <string name="add_task_label">Add task</string>
+    <string name="task_list_header_label">Task list</string>
+    <string name="error_event_task_empty">Task is empty</string>
+    <string name="error_event_task_too_long">Task cannot be longer than %1$d characters</string>
+    <string name="error_event_task_too_many">Max number of tasks is %1$d.</string>
 </resources>

@@ -1,5 +1,6 @@
 [versions]
 agp = "8.10.1"
+composeVersion = "2.7.0"
 datastorePreferences = "1.1.7"
 firebaseBom = "33.16.0"
 hiltAndroid = "2.56.2"
@@ -18,6 +19,7 @@ mockk = "1.14.2"
 mockkAgentJvm = "1.14.2"
 navigationCompose = "2.9.1"
 orchestratorVersion = "1.5.1"
+reorderable = "2.5.1"
 roomRuntime = "2.7.2"
 timber = "5.0.1"
 truth = "1.1.5"
@@ -38,6 +40,7 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomRuntime" }
+calendar-compose = { module = "com.kizitonwose.calendar:compose", version.ref = "composeVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-crashlytics-ndk = { module = "com.google.firebase:firebase-crashlytics-ndk" }
@@ -62,6 +65,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mockk-agent-jvm = { module = "io.mockk:mockk-agent-jvm", version.ref = "mockkAgentJvm" }
 orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestratorVersion" }
+reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

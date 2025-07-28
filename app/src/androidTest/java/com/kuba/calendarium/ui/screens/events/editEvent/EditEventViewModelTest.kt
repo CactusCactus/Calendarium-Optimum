@@ -13,14 +13,21 @@ import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
 import com.kuba.calendarium.ui.screens.event.editEvent.EditEventViewModel
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDate
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltAndroidTest
 class EditEventViewModelTest {
     @get:Rule
@@ -28,7 +35,13 @@ class EditEventViewModelTest {
 
     @Before
     fun setUp() {
+        Dispatchers.setMain(StandardTestDispatcher())
         hiltRule.inject()
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -57,7 +70,6 @@ class EditEventViewModelTest {
         ActivityScenario.launch<DummyHiltActivity>(intent).use { scenario ->
             scenario.onActivity {
                 val viewModel = ViewModelProvider(it)[EditEventViewModel::class.java]
-                val date = System.currentTimeMillis()
 
                 runTest {
                     viewModel.eventsRepository.insertEvent(
@@ -65,7 +77,7 @@ class EditEventViewModelTest {
                             id = testEventId,
                             title = "Test Title",
                             description = "Test Description",
-                            date = date
+                            date = LocalDate.now()
                         )
                     )
                     viewModel.onEvent(ModifyEventViewModel.UIEvent.TitleChanged("New Title"))
@@ -73,11 +85,11 @@ class EditEventViewModelTest {
 
                     advanceUntilIdle()
 
-                    viewModel.eventsRepository.getEventById(testEventId).test {
+                    viewModel.eventsRepository.getEventTasksById(testEventId).test {
                         val event = awaitItem()
 
                         assertThat(event).isNotNull()
-                        assertThat(event?.title).isEqualTo("New Title")
+                        assertThat(event?.event?.title).isEqualTo("New Title")
 
                         cancelAndConsumeRemainingEvents()
                     }

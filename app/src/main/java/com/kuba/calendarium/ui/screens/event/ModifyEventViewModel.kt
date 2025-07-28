@@ -1,18 +1,23 @@
 package com.kuba.calendarium.ui.screens.event
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
 import com.kuba.calendarium.util.getTodayMidnight
-import com.kuba.calendarium.util.resetToMidnight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
 
 // TODO eventsRepository should be protected but it's gonna break tests
 abstract class ModifyEventViewModel(
@@ -31,6 +36,10 @@ abstract class ModifyEventViewModel(
         const val MAX_TITLE_LENGTH = 100
 
         const val MAX_DESCRIPTION_LENGTH = 2000
+
+        const val MAX_TASK_LENGTH = 80
+
+        const val MAX_TASK_COUNT = 3
     }
 
     protected abstract suspend fun databaseWriteOperation()
@@ -49,86 +58,9 @@ abstract class ModifyEventViewModel(
                 checkAndUpdateValidity()
             }
 
-            is UIEvent.DateSelected -> _uiState.update {
-                when (_uiState.value.currentDateTimeMode) {
-                    DateTimeMode.FROM -> {
-                        var dateEnd = _uiState.value.selectedDateEnd
-
-                        if (dateEnd != null && dateEnd < event.date) {
-                            dateEnd = event.date
-                        }
-
-                        _uiState.value.copy(
-                            selectedDate = event.date.resetToMidnight(),
-                            selectedDateEnd = dateEnd?.resetToMidnight()
-                        )
-                    }
-
-                    DateTimeMode.TO -> {
-                        var dateStart = _uiState.value.selectedDate
-
-                        if (dateStart > event.date) {
-                            dateStart = event.date
-                        }
-
-                        // If not set set as selectedTime (or null if selectedTime not set)
-                        val selectedTime =
-                            _uiState.value.selectedTimeEnd ?: _uiState.value.selectedTime
-
-                        _uiState.value.copy(
-                            selectedDate = dateStart.resetToMidnight(),
-                            selectedDateEnd = event.date.resetToMidnight(),
-                            selectedTimeEnd = selectedTime
-                        )
-                    }
-                }
-            }
-
-            is UIEvent.TimeSelected -> _uiState.update {
-                when (_uiState.value.currentDateTimeMode) {
-                    DateTimeMode.FROM -> {
-                        val timeStart = _uiState.value.selectedDate + event.time // Add date to time
-                        var timeEnd = if (_uiState.value.selectedDateEnd != null) {
-                            val selectedDate =
-                                _uiState.value.selectedDateEnd ?: _uiState.value.selectedDate
-
-                            selectedDate + event.time
-                        } else null // Set end time only when end date is set
-
-                        if (timeEnd != null && timeEnd < timeStart) {
-                            timeEnd = timeStart
-                        }
-
-                        _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = timeEnd)
-                    }
-
-                    DateTimeMode.TO -> {
-                        val timeEnd =
-                            (_uiState.value.selectedDateEnd ?: _uiState.value.selectedDate) +
-                                    event.time // Add date to time
-                        var timeStart = _uiState.value.selectedTime
-
-                        if (timeStart != null && timeStart > timeEnd) {
-                            timeStart = timeEnd
-                        }
-
-                        _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = timeEnd)
-                    }
-                }
-            }
-
-            is UIEvent.ClearDateAndTime -> _uiState.update {
-                when (event.mode) {
-                    DateTimeMode.FROM -> _uiState.value.copy(
-                        selectedDate = getTodayMidnight(),
-                        selectedTime = null
-                    ) // Can't be fully cleared
-                    DateTimeMode.TO -> _uiState.value.copy(
-                        selectedDateEnd = null,
-                        selectedTimeEnd = null
-                    )
-                }
-            }
+            is UIEvent.DateSelected -> dateSelected(event)
+            is UIEvent.TimeSelected -> timeSelected(event)
+            is UIEvent.ClearDateAndTime -> clearDateAndTime(event)
 
             is UIEvent.ClearTime -> _uiState.update {
                 _uiState.value.copy(selectedTime = null, selectedTimeEnd = null)
@@ -154,6 +86,11 @@ abstract class ModifyEventViewModel(
             UIEvent.TimePickerDismissed -> _uiState.update {
                 _uiState.value.copy(timePickerOpen = false)
             }
+
+            is UIEvent.AddTask -> addTask(event)
+            is UIEvent.UpdateTask -> updateTask(event)
+            is UIEvent.RemoveTask -> removeTask(event)
+            is UIEvent.ReorderTask -> reorderTask(event)
         }
     }
 
@@ -165,9 +102,17 @@ abstract class ModifyEventViewModel(
         }
     }
 
-    protected fun validateDescription(description: String): ValidationError? {
+    protected fun validateDescription(description: String?): ValidationError? {
+        return if ((description?.length ?: 0) > MAX_DESCRIPTION_LENGTH)
+            ValidationError.DESCRIPTION_TOO_LONG
+        else null
+    }
+
+    protected fun validateTask(text: String, index: Int): ValidationError? {
         return when {
-            description.length > MAX_DESCRIPTION_LENGTH -> ValidationError.DESCRIPTION_TOO_LONG
+            index >= MAX_TASK_COUNT -> ValidationError.TASK_TOO_MANY
+            text.isBlank() -> ValidationError.TASK_EMPTY
+            text.length > MAX_TASK_LENGTH -> ValidationError.TASK_TOO_LONG
             else -> null
         }
     }
@@ -180,51 +125,184 @@ abstract class ModifyEventViewModel(
             )
         }
 
+        val taskErrors = _uiState.value.taskList.mapIndexed { index, task ->
+            validateTask(task.title, index)
+        }
+
+        _uiState.update {
+            _uiState.value.copy(taskError = taskErrors.toMutableStateList())
+        }
+
         _uiState.update {
             _uiState.value.copy(
                 isValid = _uiState.value.titleError == null &&
-                        _uiState.value.descriptionError == null
+                        _uiState.value.descriptionError == null &&
+                        _uiState.value.taskError.filterNotNull().isEmpty()
             )
+        }
+    }
+
+    private fun clearDateAndTime(event: UIEvent.ClearDateAndTime) {
+        _uiState.update {
+            when (event.mode) {
+                DateTimeMode.FROM -> _uiState.value.copy(
+                    selectedDate = getTodayMidnight(),
+                    selectedTime = null
+                ) // Can't be fully cleared
+                DateTimeMode.TO -> _uiState.value.copy(
+                    selectedDateEnd = null,
+                    selectedTimeEnd = null
+                )
+            }
+        }
+    }
+
+    private fun dateSelected(event: UIEvent.DateSelected) {
+        _uiState.update {
+            when (_uiState.value.currentDateTimeMode) {
+                DateTimeMode.FROM -> {
+                    var dateEnd = _uiState.value.selectedDateEnd
+
+                    if (dateEnd != null && dateEnd < event.date) {
+                        dateEnd = event.date
+                    }
+
+                    _uiState.value.copy(
+                        selectedDate = event.date,
+                        selectedDateEnd = dateEnd
+                    )
+                }
+
+                DateTimeMode.TO -> {
+                    var dateStart = _uiState.value.selectedDate
+
+                    if (dateStart > event.date) {
+                        dateStart = event.date
+                    }
+
+                    // If not set set as selectedTime (or null if selectedTime not set)
+                    val selectedTime =
+                        _uiState.value.selectedTimeEnd ?: _uiState.value.selectedTime
+
+                    _uiState.value.copy(
+                        selectedDate = dateStart,
+                        selectedDateEnd = event.date,
+                        selectedTimeEnd = selectedTime
+                    )
+                }
+            }
+        }
+    }
+
+    private fun timeSelected(event: UIEvent.TimeSelected) {
+        _uiState.update {
+            when (_uiState.value.currentDateTimeMode) {
+                DateTimeMode.FROM -> {
+                    val timeStart = event.time
+                    var timeEnd = if (_uiState.value.selectedDateEnd != null) {
+                        event.time
+                    } else null // Set end time only when end date is set
+
+                    if (timeEnd != null && timeEnd < timeStart) {
+                        timeEnd = timeStart
+                    }
+
+                    _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = timeEnd)
+                }
+
+                DateTimeMode.TO -> {
+                    val timeEnd = event.time
+                    var timeStart = _uiState.value.selectedTime
+
+                    if (timeStart != null && timeStart > timeEnd) {
+                        timeStart = timeEnd
+                    }
+
+                    _uiState.value.copy(selectedTime = timeStart, selectedTimeEnd = timeEnd)
+                }
+            }
+        }
+    }
+
+    private fun addTask(event: UIEvent.AddTask) {
+        _uiState.update {
+            it.copy(taskList = it.taskList.apply {
+                add(TaskCreationData(title = event.title))
+            })
+        }
+        checkAndUpdateValidity()
+    }
+
+    private fun updateTask(event: UIEvent.UpdateTask) {
+        _uiState.update {
+            it.copy(taskList = it.taskList.apply {
+                set(event.index, event.task)
+            })
+        }
+        checkAndUpdateValidity()
+    }
+
+    private fun removeTask(event: UIEvent.RemoveTask) {
+        _uiState.update {
+            if (it.taskList.size == 1) {
+                it.copy(taskList = mutableStateListOf())
+            } else
+                it.copy(taskList = it.taskList.apply { removeAt(event.index) })
+        }
+        checkAndUpdateValidity()
+    }
+
+    private fun reorderTask(event: UIEvent.ReorderTask) {
+        _uiState.update {
+            it.copy(taskList = it.taskList.apply {
+                add(event.toIndex, removeAt(event.fromIndex))
+            })
         }
     }
 
     data class UIState(
         val title: String = "",
-        val description: String = "",
-        val selectedDate: Long = getTodayMidnight(),
-        val selectedDateEnd: Long? = null,
-        val selectedTime: Long? = null,
-        val selectedTimeEnd: Long? = null,
+        val description: String? = null,
+        val taskList: SnapshotStateList<TaskCreationData> = mutableStateListOf(),
+        val selectedDate: LocalDate = getTodayMidnight(),
+        val selectedDateEnd: LocalDate? = null,
+        val selectedTime: LocalTime? = null,
+        val selectedTimeEnd: LocalTime? = null,
         val datePickerOpen: Boolean = false,
         val timePickerOpen: Boolean = false,
         val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
 
         // Validation
         val titleError: ValidationError? = null,
+        val taskError: SnapshotStateList<ValidationError?> = mutableStateListOf(),
         val descriptionError: ValidationError? = null,
         val isValid: Boolean = false
     )
 
     sealed class UIEvent {
         data class TitleChanged(val title: String) : UIEvent()
-        data class DescriptionChanged(val description: String) : UIEvent()
-        data class DateSelected(val date: Long) : UIEvent()
-        data class TimeSelected(val time: Long) : UIEvent()
-        object ClearTime : UIEvent()
+        data class DescriptionChanged(val description: String?) : UIEvent()
+        data class DateSelected(val date: LocalDate) : UIEvent()
+        data class TimeSelected(val time: LocalTime) : UIEvent()
         data class ClearDateAndTime(val mode: DateTimeMode) : UIEvent()
-        object DoneClicked : UIEvent()
         data class DatePickerOpened(val mode: DateTimeMode) : UIEvent()
         data class TimePickerOpened(val mode: DateTimeMode) : UIEvent()
+        data class AddTask(val title: String) : UIEvent()
+        data class UpdateTask(val index: Int, val task: TaskCreationData) : UIEvent()
+        data class RemoveTask(val index: Int) : UIEvent()
+        data class ReorderTask(val fromIndex: Int, val toIndex: Int) : UIEvent()
+        object ClearTime : UIEvent()
+        object DoneClicked : UIEvent()
         object DatePickerDismissed : UIEvent()
         object TimePickerDismissed : UIEvent()
     }
 
     sealed class NavEvent {
-        data class Finish(val eventDate: Long) : NavEvent()
+        data class Finish(val eventDate: LocalDate) : NavEvent()
     }
 
     enum class ValidationError {
-        TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG
+        TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG, TASK_EMPTY, TASK_TOO_LONG, TASK_TOO_MANY
     }
 }
 

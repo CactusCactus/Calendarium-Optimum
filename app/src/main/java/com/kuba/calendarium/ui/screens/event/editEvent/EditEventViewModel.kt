@@ -1,5 +1,6 @@
 package com.kuba.calendarium.ui.screens.event.editEvent
 
+import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.model.Event
@@ -30,17 +31,19 @@ class EditEventViewModel @Inject constructor(
             viewModelScope.launch { _navEvent.send(NavEvent.Finish(getTodayMidnight())) }
         } else {
             viewModelScope.launch {
-                eventsRepository.getEventById(eventId).filterNotNull().collect { event ->
+                eventsRepository.getEventTasksById(eventId).filterNotNull().collect { et ->
                     _uiState.update {
                         _uiState.value.copy(
-                            title = event.title,
-                            description = event.description,
-                            selectedDate = event.date,
-                            selectedTime = event.time,
-                            selectedDateEnd = event.dateEnd,
-                            selectedTimeEnd = event.timeEnd
+                            title = et.event.title,
+                            description = et.event.description,
+                            selectedDate = et.event.date,
+                            selectedTime = et.event.time,
+                            selectedDateEnd = et.event.dateEnd,
+                            selectedTimeEnd = et.event.timeEnd,
+                            taskList = et.tasks.map { it.toTaskInternal() }.toMutableStateList()
                         )
                     }
+
                     checkAndUpdateValidity()
                 }
             }
@@ -48,7 +51,12 @@ class EditEventViewModel @Inject constructor(
     }
 
     override suspend fun databaseWriteOperation() {
-        eventsRepository.updateEvent(
+        // Nullify endTime if it's exact same as time (on the same day)
+        val endTime = if (_uiState.value.selectedTimeEnd == _uiState.value.selectedTime
+            && _uiState.value.selectedDateEnd == _uiState.value.selectedDate
+        ) null else _uiState.value.selectedTimeEnd
+
+        eventsRepository.updateEventWithTasks(
             Event(
                 id = eventId,
                 title = _uiState.value.title,
@@ -56,8 +64,11 @@ class EditEventViewModel @Inject constructor(
                 date = _uiState.value.selectedDate,
                 time = _uiState.value.selectedTime,
                 dateEnd = _uiState.value.selectedDateEnd,
-                timeEnd = _uiState.value.selectedTimeEnd
-            )
+                timeEnd = endTime
+            ),
+            _uiState.value.taskList.mapIndexed { index, taskData ->
+                taskData.toTask(index)
+            }
         )
     }
 

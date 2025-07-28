@@ -2,11 +2,11 @@ package com.kuba.calendarium.ui.screens.event.addEvent
 
 import androidx.lifecycle.SavedStateHandle
 import com.kuba.calendarium.data.repo.EventsRepository
-import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_MS
+import com.kuba.calendarium.ui.navigation.ARG_SELECTED_DATE_EPOCH_DAY
 import io.mockk.mockk
 import org.junit.Before
 import org.junit.Test
-import java.util.Calendar
+import java.time.LocalDate
 
 class AddEventViewModelTest {
     private lateinit var mockEventsRepository: EventsRepository
@@ -25,16 +25,13 @@ class AddEventViewModelTest {
 
     @Test
     fun `Date is passed in the SavedStateHandle - state is updated`() {
-        val date = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 21)
-            set(Calendar.MINUTE, 37)
-        }.time
+        val date = LocalDate.of(1995, 2, 19)
 
         val mockSavedStateHandle = SavedStateHandle().apply {
-            set(ARG_SELECTED_DATE_MS, date.time)
+            set(ARG_SELECTED_DATE_EPOCH_DAY, date.toEpochDay())
         }
 
         val viewModel = AddEventViewModel(mockEventsRepository, mockSavedStateHandle)
-        assert(viewModel.uiState.value.selectedDate == date.time)
+        assert(viewModel.uiState.value.selectedDate == date)
     }
 }

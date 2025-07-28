@@ -8,6 +8,8 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
 }
 
 android {
@@ -102,6 +104,12 @@ dependencies {
 
     implementation(libs.firebase.crashlytics.ndk)
     implementation(libs.firebase.analytics)
+
+    // Calendar Kizitonwose
+    implementation(libs.calendar.compose)
+
+    // Reorderable
+    implementation(libs.reorderable)
 
     // Tests
     androidTestImplementation(libs.androidx.junit)
