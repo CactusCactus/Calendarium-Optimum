@@ -392,7 +392,9 @@ private fun TaskListRow(
                                 maxLines = 1,
                                 colors = TextFieldDefaults.colors(
                                     unfocusedContainerColor = Color.Transparent,
-                                    focusedContainerColor = Color.Transparent
+                                    focusedContainerColor = Color.Transparent,
+                                    errorContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent
                                 ),
                                 isError = error != null && !isFocused,
                                 supportingText = if (error != null && !isFocused) {
@@ -433,7 +435,9 @@ private fun TaskListRow(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clickable { onTaskAdded(TaskCreationData(title = "")) }
+                        .clickable(enabled = taskList.size <= ModifyEventViewModel.MAX_TASK_COUNT) {
+                            onTaskAdded(TaskCreationData(title = ""))
+                        }
                         .fillMaxWidth()
                         .padding(horizontal = standardPadding, vertical = standardHalfPadding)
                 ) {

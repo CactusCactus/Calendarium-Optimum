@@ -21,6 +21,11 @@ fun ModifyEventViewModel.ValidationError.toLocalizedString(context: Context): St
         R.string.error_event_task_too_long,
         ModifyEventViewModel.MAX_TASK_LENGTH
     )
+
+    ModifyEventViewModel.ValidationError.TASK_TOO_MANY -> context.getString(
+        R.string.error_event_task_too_many,
+        ModifyEventViewModel.MAX_TASK_COUNT
+    )
 }
 
 inline fun <reified T : Enum<T>> valueOfOrNull(type: String): T? {

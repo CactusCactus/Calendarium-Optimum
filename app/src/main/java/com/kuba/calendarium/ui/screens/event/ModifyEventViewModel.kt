@@ -38,6 +38,8 @@ abstract class ModifyEventViewModel(
         const val MAX_DESCRIPTION_LENGTH = 2000
 
         const val MAX_TASK_LENGTH = 80
+
+        const val MAX_TASK_COUNT = 3
     }
 
     protected abstract suspend fun databaseWriteOperation()
@@ -209,8 +211,9 @@ abstract class ModifyEventViewModel(
         else null
     }
 
-    protected fun validateTasks(text: String): ValidationError? {
+    protected fun validateTask(text: String, index: Int): ValidationError? {
         return when {
+            index >= MAX_TASK_COUNT -> ValidationError.TASK_TOO_MANY
             text.isBlank() -> ValidationError.TASK_EMPTY
             text.length > MAX_TASK_LENGTH -> ValidationError.TASK_TOO_LONG
             else -> null
@@ -225,7 +228,9 @@ abstract class ModifyEventViewModel(
             )
         }
 
-        val taskErrors = _uiState.value.taskList.map { validateTasks(it.title) }
+        val taskErrors = _uiState.value.taskList.mapIndexed { index, it ->
+            validateTask(it.title, index)
+        }
 
         _uiState.update {
             _uiState.value.copy(taskError = taskErrors.toMutableStateList())
@@ -282,7 +287,7 @@ abstract class ModifyEventViewModel(
     }
 
     enum class ValidationError {
-        TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG, TASK_EMPTY, TASK_TOO_LONG
+        TITLE_EMPTY, TITLE_TOO_LONG, DESCRIPTION_TOO_LONG, TASK_EMPTY, TASK_TOO_LONG, TASK_TOO_MANY
     }
 }
 

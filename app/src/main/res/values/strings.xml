@@ -31,4 +31,5 @@
     <string name="task_list_header_label">Task list</string>
     <string name="error_event_task_empty">Task is empty</string>
     <string name="error_event_task_too_long">Task cannot be longer than %1$d characters</string>
+    <string name="error_event_task_too_many">Max number of tasks is %1$d.</string>
 </resources>

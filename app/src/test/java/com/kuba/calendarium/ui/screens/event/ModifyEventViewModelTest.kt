@@ -371,4 +371,51 @@ class ModifyEventViewModelTest {
         assertThat(viewModel.uiState.value.selectedTime).isEqualTo(timeAfter)
         assertThat(viewModel.uiState.value.selectedTimeEnd).isEqualTo(timeAfter)
     }
+
+    @Test
+    fun `User adds an empty task - form is invalid`() {
+        viewModel.onEvent(UIEvent.TitleChanged("Test Title"))
+        viewModel.onEvent(UIEvent.AddTask(""))
+        assertThat(viewModel.uiState.value.isValid).isFalse()
+    }
+
+    @Test
+    fun `User adds too long task - form is invalid`() {
+        viewModel.onEvent(UIEvent.TitleChanged("Test Title"))
+        viewModel.onEvent(UIEvent.AddTask("a".repeat(ModifyEventViewModel.MAX_TASK_LENGTH + 1)))
+        assertThat(viewModel.uiState.value.isValid).isFalse()
+    }
+
+    @Test
+    fun `User adds many tasks and edit one to an empty task - form is invalid`() {
+        viewModel.onEvent(UIEvent.TitleChanged("Test Title"))
+        viewModel.onEvent(UIEvent.AddTask("Task 1"))
+        viewModel.onEvent(UIEvent.AddTask("Task 2"))
+        viewModel.onEvent(UIEvent.AddTask("Task 3"))
+        assertThat(viewModel.uiState.value.isValid).isTrue()
+
+        val task = viewModel.uiState.value.taskList[1]
+        viewModel.onEvent(UIEvent.UpdateTask(1, task.copy(title = "")))
+        assertThat(viewModel.uiState.value.isValid).isFalse()
+    }
+
+    @Test
+    fun `User adds tasks with one invalid - form is invalid, user removes task - form is valid`() {
+        viewModel.onEvent(UIEvent.TitleChanged("Test Title"))
+        viewModel.onEvent(UIEvent.AddTask("Task 1"))
+        viewModel.onEvent(UIEvent.AddTask(""))
+        assertThat(viewModel.uiState.value.isValid).isFalse()
+
+        viewModel.onEvent(UIEvent.RemoveTask(1))
+        assertThat(viewModel.uiState.value.isValid).isTrue()
+    }
+
+    @Test
+    fun `User adds too many tasks - form is invalid`() {
+        viewModel.onEvent(UIEvent.TitleChanged("Test Title"))
+        for (i in 1..ModifyEventViewModel.MAX_TASK_COUNT + 1) {
+            viewModel.onEvent(UIEvent.AddTask("Task $i"))
+        }
+        assertThat(viewModel.uiState.value.isValid).isFalse()
+    }
 }
