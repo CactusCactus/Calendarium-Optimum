@@ -16,6 +16,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.1
 
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
+
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
@@ -31,6 +34,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
+
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
 
       - name: Setup Java SDK
         uses: actions/setup-java@v4.0.0
@@ -56,6 +62,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
+
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
 
       - name: Setup Java SDK
         uses: actions/setup-java@v4.0.0
