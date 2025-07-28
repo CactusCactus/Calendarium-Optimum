@@ -8,5 +8,5 @@ data class TaskCreationData(
     val title: String,
     val done: Boolean = false
 ) {
-    fun toTask() = Task(id = id, title = title, done = done)
+    fun toTask(position : Int) = Task(id = id, title = title, position = position, done = done)
 }

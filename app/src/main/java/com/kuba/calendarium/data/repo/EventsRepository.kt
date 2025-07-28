@@ -10,8 +10,17 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 class EventsRepository @Inject constructor(private val dao: EventDao) {
-    fun getEventsForDate(date: LocalDate) = dao.getEventsForDate(date).also {
+    fun getEventsForDate(date: LocalDate) = dao.getEventsForDate(date).map { eventList ->
+        eventList.map { event -> event.copy(tasks = event.tasks.sortedBy { it.position }) }
+
+    }.also {
         Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
+    }
+
+    fun getEventById(id: Long) = dao.getEventById(id).map {
+        it?.copy(tasks = it.tasks.sortedBy { it.position })
+    }.also {
+        Timber.d("Fetched Event flow for id: $id")
     }
 
     fun getEventCountForDateRange(startDate: LocalDate, endDate: LocalDate) =
@@ -20,10 +29,6 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
         }.also {
             Timber.d("Fetched EventCount flow for date range: $startDate - $endDate")
         }
-
-    fun getEventById(id: Long) = dao.getEventById(id).also {
-        Timber.d("Fetched Event flow for id: $id")
-    }
 
     suspend fun insertEvent(event: Event) = dao.insert(event).also {
         Timber.d("Inserted event: ${event.title} with id: $it")
