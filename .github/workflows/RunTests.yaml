@@ -16,6 +16,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.1
 
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
+
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
