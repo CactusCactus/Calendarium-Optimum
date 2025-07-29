@@ -40,7 +40,8 @@ class EditEventViewModel @Inject constructor(
                             selectedTime = et.event.time,
                             selectedDateEnd = et.event.dateEnd,
                             selectedTimeEnd = et.event.timeEnd,
-                            taskList = et.tasks.map { it.toTaskInternal() }.toMutableStateList()
+                            taskList = et.tasks.map { it.toTaskInternal() }.toMutableStateList(),
+                            currentRepetition = et.event.repetition
                         )
                     }
 
