@@ -119,15 +119,15 @@ jobs:
           DATA: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: echo $DATA | base64 -di > app/google-services.json
 
-      - name: Create dir
-        run: |
-          mkdir release
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease
 
       - name: Sign app APK
         uses: r0adkll/sign-android-release@v1
+        # ID used to access action output
         id: sign_app
         with:
-          releaseDirectory: release
+          releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
