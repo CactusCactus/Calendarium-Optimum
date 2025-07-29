@@ -9,6 +9,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import java.time.temporal.WeekFields
 import java.util.Locale
 
 const val STANDARD_DATE_FORMAT = "dd/MM/yyyy"
@@ -40,6 +41,10 @@ fun Long.toLocalDate(): LocalDate =
     Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
 
 fun LocalDateTime.isSameDay(other: LocalDateTime) = this.toLocalDate() == other.toLocalDate()
+
+fun LocalDate.isSameWeek(other: LocalDate): Boolean =
+    this.get(WeekFields.ISO.weekOfYear()) == other.get(WeekFields.ISO.weekOfYear()) &&
+            this.year == other.year
 
 fun getMonthNames(textStyle: TextStyle = TextStyle.SHORT) = Month.entries.map { month ->
     month.getDisplayName(textStyle, Locale.getDefault())

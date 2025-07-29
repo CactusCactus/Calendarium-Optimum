@@ -9,9 +9,31 @@ fun Event.isRepeatingOnDate(selectedDate: LocalDate): Boolean {
 
     return when (repetition) {
         Repetition.DAILY -> true
-        Repetition.WEEKLY -> selectedDate.dayOfWeek == date.dayOfWeek
-        Repetition.MONTHLY -> selectedDate.dayOfMonth == date.dayOfMonth
-        Repetition.YEARLY -> selectedDate.month == date.month &&
-                selectedDate.dayOfMonth == date.dayOfMonth
+        Repetition.WEEKLY -> if (dateEnd == null) {
+            selectedDate.dayOfWeek == date.dayOfWeek
+        } else if (!dateEnd.isSameWeek(date)) {
+            selectedDate.dayOfWeek >= date.dayOfWeek ||
+                    selectedDate.dayOfWeek <= dateEnd.dayOfWeek
+        } else {
+            selectedDate.dayOfWeek >= date.dayOfWeek &&
+                    selectedDate.dayOfWeek <= dateEnd.dayOfWeek
+        }
+
+        Repetition.MONTHLY -> if (dateEnd == null) {
+            selectedDate.dayOfMonth == date.dayOfMonth
+        } else if (dateEnd.month != date.month) {
+            selectedDate.dayOfMonth >= date.dayOfMonth ||
+                    selectedDate.dayOfMonth <= dateEnd.dayOfMonth
+        } else {
+            selectedDate.dayOfMonth >= date.dayOfMonth &&
+                    selectedDate.dayOfMonth <= dateEnd.dayOfMonth
+
+        }
+
+        Repetition.YEARLY -> if (dateEnd == null) {
+            selectedDate.month == date.month && selectedDate.dayOfMonth == date.dayOfMonth
+        } else {
+            selectedDate.dayOfYear >= date.dayOfYear && selectedDate.dayOfYear <= dateEnd.dayOfYear
+        }
     }
 }

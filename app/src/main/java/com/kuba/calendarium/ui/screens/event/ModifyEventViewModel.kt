@@ -159,6 +159,8 @@ abstract class ModifyEventViewModel(
                 )
             }
         }
+
+        updatePossibleRepetitions()
     }
 
     private fun dateSelected(event: UIEvent.DateSelected) {
@@ -196,6 +198,8 @@ abstract class ModifyEventViewModel(
                 }
             }
         }
+
+        updatePossibleRepetitions()
     }
 
     private fun timeSelected(event: UIEvent.TimeSelected) {
@@ -264,6 +268,29 @@ abstract class ModifyEventViewModel(
         }
     }
 
+    private fun updatePossibleRepetitions() {
+        val startDate = _uiState.value.selectedDate
+        val endDate = _uiState.value.selectedDateEnd
+
+        if (endDate == null) {
+            _uiState.update { _uiState.value.copy(availableRepetitions = Repetition.entries) }
+
+            return
+        }
+
+        val weeklyPossible = startDate.toEpochDay() - endDate.toEpochDay() < 7
+        val monthlyPossible = startDate.toEpochDay() - endDate.toEpochDay() < 30
+        val yearlyPossible = startDate.toEpochDay() - endDate.toEpochDay() < 365
+
+        val possibleRepetitions = mutableListOf<Repetition>()
+
+        if (weeklyPossible) possibleRepetitions.add(Repetition.WEEKLY)
+        if (monthlyPossible) possibleRepetitions.add(Repetition.MONTHLY)
+        if (yearlyPossible) possibleRepetitions.add(Repetition.YEARLY)
+
+        _uiState.update { _uiState.value.copy(availableRepetitions = possibleRepetitions) }
+    }
+
     data class UIState(
         val title: String = "",
         val description: String? = null,
@@ -276,6 +303,7 @@ abstract class ModifyEventViewModel(
         val timePickerOpen: Boolean = false,
         val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
         val currentRepetition: Repetition? = null,
+        val availableRepetitions: List<Repetition> = Repetition.entries,
 
         // Validation
         val titleError: ValidationError? = null,

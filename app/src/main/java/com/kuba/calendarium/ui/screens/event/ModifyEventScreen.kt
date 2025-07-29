@@ -278,10 +278,12 @@ private fun MainColumn(
         AnimatedVisibility(visible = uiState.currentRepetition != null) {
             uiState.currentRepetition?.let {
                 RepetitionModeRow(
+                    availableRepetitions = uiState.availableRepetitions,
                     pickedRepetition = it,
                     onRepetitionChanged = { repetition ->
                         onEvent(UIEvent.RepetitionChanged(repetition))
-                    }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -604,17 +606,19 @@ private fun SetEndDateCheckbox(isEndDateSet: Boolean, onCheckedChange: (Boolean)
 
 @Composable
 private fun RepetitionModeRow(
+    availableRepetitions: List<Repetition>,
     pickedRepetition: Repetition,
-    onRepetitionChanged: (Repetition) -> Unit
+    onRepetitionChanged: (Repetition) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    SingleChoiceSegmentedButtonRow {
-        Repetition.entries.toTypedArray().forEachIndexed { index, repetition ->
+    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+        availableRepetitions.forEachIndexed { index, repetition ->
             SegmentedButton(
                 onClick = { onRepetitionChanged(repetition) },
                 selected = repetition == pickedRepetition,
                 shape = SegmentedButtonDefaults.itemShape(
                     index = index,
-                    count = Repetition.entries.size
+                    count = availableRepetitions.size
                 ),
                 label = { Text(repetition.toLocalizedString(LocalContext.current)) }
             )

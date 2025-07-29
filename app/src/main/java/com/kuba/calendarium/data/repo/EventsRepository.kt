@@ -26,7 +26,7 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
 
         return combine(dateEvents, pastEvents) { dateEvents, pastEvents ->
             dateEvents + pastEvents
-        }
+        }.map { it.distinctBy { it.event.id } }
     }
 
     fun getEventsForDate(date: LocalDate): Flow<List<Event>> =
