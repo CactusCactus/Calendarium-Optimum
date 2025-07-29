@@ -32,4 +32,9 @@
     <string name="error_event_task_empty">Task is empty</string>
     <string name="error_event_task_too_long">Task cannot be longer than %1$d characters</string>
     <string name="error_event_task_too_many">Max number of tasks is %1$d.</string>
+    <string name="set_event_repeating_text">Repeat</string>
+    <string name="repetition_daily">Daily</string>
+    <string name="repetition_weekly">Weekly</string>
+    <string name="repetition_monthly">Monthly</string>
+    <string name="repetition_yearly">Yearly</string>
 </resources>

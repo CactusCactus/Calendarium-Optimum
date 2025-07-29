@@ -6,6 +6,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuba.calendarium.data.model.internal.Repetition
 import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
@@ -91,6 +92,9 @@ abstract class ModifyEventViewModel(
             is UIEvent.UpdateTask -> updateTask(event)
             is UIEvent.RemoveTask -> removeTask(event)
             is UIEvent.ReorderTask -> reorderTask(event)
+            is UIEvent.RepetitionChanged -> _uiState.update {
+                _uiState.value.copy(currentRepetition = event.repetition)
+            }
         }
     }
 
@@ -271,6 +275,7 @@ abstract class ModifyEventViewModel(
         val datePickerOpen: Boolean = false,
         val timePickerOpen: Boolean = false,
         val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
+        val currentRepetition: Repetition? = null,
 
         // Validation
         val titleError: ValidationError? = null,
@@ -291,6 +296,7 @@ abstract class ModifyEventViewModel(
         data class UpdateTask(val index: Int, val task: TaskCreationData) : UIEvent()
         data class RemoveTask(val index: Int) : UIEvent()
         data class ReorderTask(val fromIndex: Int, val toIndex: Int) : UIEvent()
+        data class RepetitionChanged(val repetition: Repetition?) : UIEvent()
         object ClearTime : UIEvent()
         object DoneClicked : UIEvent()
         object DatePickerDismissed : UIEvent()

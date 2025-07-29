@@ -2,6 +2,7 @@ package com.kuba.calendarium.util
 
 import android.content.Context
 import com.kuba.calendarium.R
+import com.kuba.calendarium.data.model.internal.Repetition
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
 
 fun ModifyEventViewModel.ValidationError.toLocalizedString(context: Context): String = when (this) {
@@ -26,6 +27,13 @@ fun ModifyEventViewModel.ValidationError.toLocalizedString(context: Context): St
         R.string.error_event_task_too_many,
         ModifyEventViewModel.MAX_TASK_COUNT
     )
+}
+
+fun Repetition.toLocalizedString(context: Context): String = when (this) {
+    Repetition.DAILY -> context.getString(R.string.repetition_daily)
+    Repetition.WEEKLY -> context.getString(R.string.repetition_weekly)
+    Repetition.MONTHLY -> context.getString(R.string.repetition_monthly)
+    Repetition.YEARLY -> context.getString(R.string.repetition_yearly)
 }
 
 inline fun <reified T : Enum<T>> valueOfOrNull(type: String): T? {

@@ -26,7 +26,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -35,6 +34,9 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -60,9 +62,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
+import com.kuba.calendarium.data.model.internal.Repetition
 import com.kuba.calendarium.data.model.internal.TaskCreationData
+import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.DatePickerModal
 import com.kuba.calendarium.ui.common.OutlinedText
+import com.kuba.calendarium.ui.common.StandardDoubleSpacer
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
@@ -214,7 +219,7 @@ private fun MainColumn(
                 onEvent(UIEvent.RemoveTask(it))
             })
 
-        StandardSpacer()
+        StandardDoubleSpacer()
 
         DateTimeHeaderRow(isTimeSet = uiState.selectedTime != null) { checked ->
             if (checked) {
@@ -224,7 +229,7 @@ private fun MainColumn(
             }
         }
 
-        StandardHalfSpacer()
+        StandardSpacer()
 
         DateTimeRowFrom(
             selectedDate = uiState.selectedDate,
@@ -254,6 +259,32 @@ private fun MainColumn(
                 }
             }
         )
+
+        StandardSpacer()
+
+        SetRepeatingCheckbox(
+            repeating = uiState.currentRepetition != null,
+            onCheckedChange = {
+                if (it) {
+                    onEvent(UIEvent.RepetitionChanged(Repetition.DAILY))
+                } else {
+                    onEvent(UIEvent.RepetitionChanged(null))
+                }
+            }
+        )
+
+        StandardSpacer()
+
+        AnimatedVisibility(visible = uiState.currentRepetition != null) {
+            uiState.currentRepetition?.let {
+                RepetitionModeRow(
+                    pickedRepetition = it,
+                    onRepetitionChanged = { repetition ->
+                        onEvent(UIEvent.RepetitionChanged(repetition))
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -490,7 +521,9 @@ private fun DateTimeHeaderRow(
             color = LocalContentColor.current.copy(alpha = 0.7f)
         )
 
-        Checkbox(
+        StandardHalfSpacer()
+
+        CheckboxNoPadding(
             checked = isTimeSet,
             onCheckedChange = onSetTimeCheckedChanged
         )
@@ -560,11 +593,44 @@ private fun DateTimeRowTo(
 @Composable
 private fun SetEndDateCheckbox(isEndDateSet: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(
+        CheckboxNoPadding(
             checked = isEndDateSet,
             onCheckedChange = onCheckedChange,
         )
+        StandardHalfSpacer()
         Text(stringResource(R.string.set_end_date_and_time_text))
+    }
+}
+
+@Composable
+private fun RepetitionModeRow(
+    pickedRepetition: Repetition,
+    onRepetitionChanged: (Repetition) -> Unit
+) {
+    SingleChoiceSegmentedButtonRow {
+        Repetition.entries.toTypedArray().forEachIndexed { index, repetition ->
+            SegmentedButton(
+                onClick = { onRepetitionChanged(repetition) },
+                selected = repetition == pickedRepetition,
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = Repetition.entries.size
+                ),
+                label = { Text(repetition.toLocalizedString(LocalContext.current)) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SetRepeatingCheckbox(repeating: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        CheckboxNoPadding(
+            checked = repeating,
+            onCheckedChange = onCheckedChange,
+        )
+        StandardHalfSpacer()
+        Text(stringResource(R.string.set_event_repeating_text))
     }
 }
 
@@ -599,7 +665,9 @@ private fun DateTimeRow(
                 .weight(1f)
         )
 
-        StandardSpacer()
+        if (selectedTime != null) {
+            StandardSpacer()
+        }
 
         // Time
         AnimatedVisibility(selectedTime != null) {
