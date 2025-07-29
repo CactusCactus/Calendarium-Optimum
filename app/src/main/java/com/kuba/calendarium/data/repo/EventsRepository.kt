@@ -4,21 +4,30 @@ import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.data.model.Task
+import com.kuba.calendarium.util.isRepeatingOnDate
 import com.kuba.calendarium.util.standardDateFormat
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.time.LocalDate
 import javax.inject.Inject
 
 class EventsRepository @Inject constructor(private val dao: EventDao) {
-    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>> =
-        dao.getEventTasksListForDate(date).map { eventList ->
-            eventList.map { event -> event.copy(tasks = event.tasks.sortedBy { it.position }) }
-
-        }.also {
+    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>> {
+        val dateEvents = dao.getEventTasksListForDate(date).also {
             Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
         }
+        val pastEvents = dao.getPastRepeatingEventTasksList(date).map { eventList ->
+            eventList.filter { event -> event.event.isRepeatingOnDate(date) }
+        }.also {
+            Timber.d("Fetched Past Events flow for date: ${date.standardDateFormat()}")
+        }
+
+        return combine(dateEvents, pastEvents) { dateEvents, pastEvents ->
+            dateEvents + pastEvents
+        }
+    }
 
     fun getEventsForDate(date: LocalDate): Flow<List<Event>> =
         dao.getEventsForDate(date).also {

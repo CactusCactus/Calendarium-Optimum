@@ -55,6 +55,13 @@ interface EventDao {
     )
     fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>>
 
+    @Transaction
+    @Query(
+        "SELECT * FROM event WHERE repetition IS NOT NULL AND :date > date " +
+                "ORDER BY is_done ASC, time ASC"
+    )
+    fun getPastRepeatingEventTasksList(date: LocalDate): Flow<List<EventTasks>>
+
     @Query(
         "SELECT * FROM event WHERE (date_end IS NOT NULL AND :date BETWEEN date AND date_end) " +
                 "OR :date == date ORDER BY is_done ASC, time ASC"
