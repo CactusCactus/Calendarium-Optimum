@@ -10,7 +10,6 @@ import androidx.room.Update
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.data.model.Task
-import com.kuba.calendarium.data.model.internal.DateEventCount
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -55,6 +54,13 @@ interface EventDao {
     )
     fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>>
 
+    @Transaction
+    @Query(
+        "SELECT * FROM event WHERE repetition IS NOT NULL AND :date > date " +
+                "ORDER BY is_done ASC, time ASC"
+    )
+    fun getPastRepeatingEventTasksList(date: LocalDate): Flow<List<EventTasks>>
+
     @Query(
         "SELECT * FROM event WHERE (date_end IS NOT NULL AND :date BETWEEN date AND date_end) " +
                 "OR :date == date ORDER BY is_done ASC, time ASC"
@@ -62,28 +68,28 @@ interface EventDao {
     fun getEventsForDate(date: LocalDate): Flow<List<Event>>
 
     @Query(
-        "WITH RECURSIVE DateSeries(generated_date) AS ( " +
-                "  SELECT :dateStart " +
-                "  UNION ALL " +
-                "  SELECT date(generated_date, '+1 day') FROM DateSeries WHERE generated_date < :dateEnd" +
-                ") " +
-                "SELECT " +
-                "    ds.generated_date AS eventDate, " +
-                // COUNT(e.event_id) is correct as it only counts non-NULL event IDs
-                "    COUNT(e.event_id) AS eventCount " +
-                "FROM DateSeries ds " +
-                "LEFT JOIN event e ON " +
-                // Condition for events that span multiple days
-                "    (e.date_end IS NOT NULL AND ds.generated_date BETWEEN e.date AND e.date_end) " +
-                // Condition for single-day events (where date_end might be NULL or same as date)
-                "    OR (e.date_end IS NULL AND e.date = ds.generated_date) " +
-                "GROUP BY ds.generated_date " +
-                "HAVING COUNT(e.event_id) > 0"
+        "SELECT * FROM event WHERE " +
+                // Events that start and end within the range
+                "(:startDate IS NULL OR date >= :startDate) AND " +
+                "(:endDate IS NULL OR date_end <= :endDate) OR " +
+                // Events that start before the range and end within or after the range
+                "(:startDate IS NULL OR date < :startDate) AND " +
+                "(:endDate IS NULL OR date_end >= :startDate) OR " +
+                // Events that start within the range and end after the range
+                "(:startDate IS NULL OR date <= :endDate) AND " +
+                "(:endDate IS NULL OR date_end > :endDate) OR " +
+                // Events that start before and end after the range (enclosing the range)
+                "(:startDate IS NULL OR date < :startDate) AND " +
+                "(:endDate IS NULL OR date_end > :endDate) OR " +
+                // Single day events within the range (date_end is null)
+                "(:startDate IS NULL OR date >= :startDate) AND " +
+                "(:endDate IS NULL OR date <= :endDate) AND date_end IS NULL " +
+                "ORDER BY is_done ASC, time ASC"
     )
-    fun getEventCountForDateRange(
-        dateStart: LocalDate,
-        dateEnd: LocalDate
-    ): Flow<List<DateEventCount>>
+    fun getEventsForDateRange(
+        startDate: LocalDate?,
+        endDate: LocalDate?
+    ): Flow<List<Event>>
 
     @Transaction
     @Query("SELECT * FROM event WHERE event_id = :id")

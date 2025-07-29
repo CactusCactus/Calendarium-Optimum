@@ -6,9 +6,13 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kuba.calendarium.data.model.internal.Repetition
 import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
+import com.kuba.calendarium.util.MAX_DAYS_FOR_REPETITION_MONTHLY
+import com.kuba.calendarium.util.MAX_DAYS_FOR_REPETITION_WEEKLY
+import com.kuba.calendarium.util.MAX_DAYS_FOR_REPETITION_YEARLY
 import com.kuba.calendarium.util.getTodayMidnight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,6 +95,9 @@ abstract class ModifyEventViewModel(
             is UIEvent.UpdateTask -> updateTask(event)
             is UIEvent.RemoveTask -> removeTask(event)
             is UIEvent.ReorderTask -> reorderTask(event)
+            is UIEvent.RepetitionChanged -> _uiState.update {
+                _uiState.value.copy(currentRepetition = event.repetition)
+            }
         }
     }
 
@@ -155,6 +162,8 @@ abstract class ModifyEventViewModel(
                 )
             }
         }
+
+        updatePossibleRepetitions()
     }
 
     private fun dateSelected(event: UIEvent.DateSelected) {
@@ -192,6 +201,8 @@ abstract class ModifyEventViewModel(
                 }
             }
         }
+
+        updatePossibleRepetitions()
     }
 
     private fun timeSelected(event: UIEvent.TimeSelected) {
@@ -260,6 +271,32 @@ abstract class ModifyEventViewModel(
         }
     }
 
+    private fun updatePossibleRepetitions() {
+        val startDate = _uiState.value.selectedDate
+        val endDate = _uiState.value.selectedDateEnd
+
+        if (endDate == null) {
+            _uiState.update { _uiState.value.copy(availableRepetitions = Repetition.entries) }
+
+            return
+        }
+
+        val weeklyPossible =
+            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_WEEKLY
+        val monthlyPossible =
+            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_MONTHLY
+        val yearlyPossible =
+            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_YEARLY
+
+        val possibleRepetitions = mutableListOf<Repetition>()
+
+        if (weeklyPossible) possibleRepetitions.add(Repetition.WEEKLY)
+        if (monthlyPossible) possibleRepetitions.add(Repetition.MONTHLY)
+        if (yearlyPossible) possibleRepetitions.add(Repetition.YEARLY)
+
+        _uiState.update { _uiState.value.copy(availableRepetitions = possibleRepetitions) }
+    }
+
     data class UIState(
         val title: String = "",
         val description: String? = null,
@@ -271,6 +308,8 @@ abstract class ModifyEventViewModel(
         val datePickerOpen: Boolean = false,
         val timePickerOpen: Boolean = false,
         val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
+        val currentRepetition: Repetition? = null,
+        val availableRepetitions: List<Repetition> = Repetition.entries,
 
         // Validation
         val titleError: ValidationError? = null,
@@ -291,6 +330,7 @@ abstract class ModifyEventViewModel(
         data class UpdateTask(val index: Int, val task: TaskCreationData) : UIEvent()
         data class RemoveTask(val index: Int) : UIEvent()
         data class ReorderTask(val fromIndex: Int, val toIndex: Int) : UIEvent()
+        data class RepetitionChanged(val repetition: Repetition?) : UIEvent()
         object ClearTime : UIEvent()
         object DoneClicked : UIEvent()
         object DatePickerDismissed : UIEvent()

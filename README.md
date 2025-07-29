@@ -17,10 +17,10 @@
 <li>Jetpack DataStore</li>
 <li>Jetpack Navigation</li>
 <li>Hilt</li>
-<li>Jetpack Work Manager</li>
-<li>Vico Graphs</li>
 <li>Firebase</li>
 <li>Timber</li>
+<a href="https://github.com/kizitonwose/Calendar"><li>Calendar Kizitonwose</li></a>
+<a href="https://github.com/Calvin-LL/Reorderable"><li>Reorderable</li></a>
 </ul>
 <br><br>
 <p1>Used architecture: MVVM</p1>

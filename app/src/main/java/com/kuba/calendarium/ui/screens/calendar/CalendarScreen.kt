@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.kizitonwose.calendar.compose.rememberCalendarState
@@ -59,6 +60,7 @@ import com.kuba.calendarium.ui.common.LineWithText
 import com.kuba.calendarium.ui.common.MonthYearPickerModal
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
+import com.kuba.calendarium.ui.common.TextLabel
 import com.kuba.calendarium.ui.common.TextPrimaryBody
 import com.kuba.calendarium.ui.common.TextSecondaryBody
 import com.kuba.calendarium.ui.common.standardHalfPadding
@@ -72,6 +74,7 @@ import com.kuba.calendarium.util.isSameDay
 import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.titleDateFormat
+import com.kuba.calendarium.util.toLocalizedString
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -309,6 +312,11 @@ private fun EventRow(
     ) {
         Box {
             Column(modifier = Modifier.padding(standardPadding)) {
+                if (event.repetition != null) {
+                    TextLabel(event.repetition.toLocalizedString(LocalContext.current))
+                    StandardQuarterSpacer()
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CheckboxNoPadding(
                         checked = event.done,

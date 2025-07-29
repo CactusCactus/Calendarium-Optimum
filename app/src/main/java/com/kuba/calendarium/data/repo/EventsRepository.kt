@@ -4,21 +4,32 @@ import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.data.model.Task
+import com.kuba.calendarium.util.isHappeningOnDate
+import com.kuba.calendarium.util.isRepeatingOnDate
 import com.kuba.calendarium.util.standardDateFormat
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 class EventsRepository @Inject constructor(private val dao: EventDao) {
-    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>> =
-        dao.getEventTasksListForDate(date).map { eventList ->
-            eventList.map { event -> event.copy(tasks = event.tasks.sortedBy { it.position }) }
-
-        }.also {
+    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>> {
+        val dateEvents = dao.getEventTasksListForDate(date).also {
             Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
         }
+        val pastEvents = dao.getPastRepeatingEventTasksList(date).map { eventList ->
+            eventList.filter { event -> event.event.isRepeatingOnDate(date) }
+        }.also {
+            Timber.d("Fetched Past Events flow for date: ${date.standardDateFormat()}")
+        }
+
+        return combine(dateEvents, pastEvents) { dateEvents, pastEvents ->
+            dateEvents + pastEvents
+        }.map { it.distinctBy { it.event.id } }
+    }
 
     fun getEventsForDate(date: LocalDate): Flow<List<Event>> =
         dao.getEventsForDate(date).also {
@@ -35,12 +46,38 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
         Timber.d("Fetched Event flow for id: $id")
     }
 
-    fun getEventCountForDateRange(startDate: LocalDate, endDate: LocalDate) =
-        dao.getEventCountForDateRange(startDate, endDate).map {
-            it.associate { it.eventDate to it.eventCount }
-        }.also {
-            Timber.d("Fetched EventCount flow for date range: $startDate - $endDate")
+    fun getEventCountForDateRange(
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Flow<Map<LocalDate, Int>> {
+        val nonRepeatingEvents = dao.getEventsForDateRange(startDate, endDate).map {
+            it.filter { it.repetition == null }
         }
+        val repeatingEvents = dao.getEventsForDateRange(startDate = null, endDate = endDate).map {
+            it.filter { it.repetition != null }
+        }
+
+        return combine(nonRepeatingEvents, repeatingEvents) { nonRepeatingEvents, repeatingEvents ->
+            val daysToHandle = startDate.until(endDate, ChronoUnit.DAYS) + 1
+            val startDate = startDate.minusDays(1)
+            val dateEventCountList = mutableMapOf<LocalDate, Int>()
+
+            for (i in 0..daysToHandle) {
+                val currentDay = startDate.plusDays(i)
+
+                val repeatingCount = repeatingEvents.count { it.isRepeatingOnDate(currentDay) }
+                val currentCount = nonRepeatingEvents.count { it.isHappeningOnDate(currentDay) }
+
+                val count = currentCount + repeatingCount
+
+                if (count > 0) {
+                    dateEventCountList[currentDay] = count
+                }
+            }
+
+            dateEventCountList
+        }
+    }
 
     suspend fun insertEvent(event: Event) = dao.insert(event).also {
         Timber.d("Inserted event: ${event.title} with id: $it")
