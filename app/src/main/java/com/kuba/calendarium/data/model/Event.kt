@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import androidx.room.TypeConverter
+import com.kuba.calendarium.data.model.internal.Repetition
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -20,6 +21,7 @@ data class Event(
     @ColumnInfo(name = "date_end") val dateEnd: LocalDate? = null,
     @ColumnInfo(name = "time_end") val timeEnd: LocalTime? = null,
     @ColumnInfo(name = "is_done") val done: Boolean = false,
+    @ColumnInfo(name = "repetition") val repetition: Repetition? = null
 )
 
 data class EventTasks(

@@ -64,7 +64,8 @@ class EditEventViewModel @Inject constructor(
                 date = _uiState.value.selectedDate,
                 time = _uiState.value.selectedTime,
                 dateEnd = _uiState.value.selectedDateEnd,
-                timeEnd = endTime
+                timeEnd = endTime,
+                repetition = _uiState.value.currentRepetition
             ),
             _uiState.value.taskList.mapIndexed { index, taskData ->
                 taskData.toTask(index)
