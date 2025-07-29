@@ -10,6 +10,9 @@ import com.kuba.calendarium.data.model.internal.Repetition
 import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
+import com.kuba.calendarium.util.MAX_DAYS_FOR_REPETITION_MONTHLY
+import com.kuba.calendarium.util.MAX_DAYS_FOR_REPETITION_WEEKLY
+import com.kuba.calendarium.util.MAX_DAYS_FOR_REPETITION_YEARLY
 import com.kuba.calendarium.util.getTodayMidnight
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -278,9 +281,12 @@ abstract class ModifyEventViewModel(
             return
         }
 
-        val weeklyPossible = startDate.toEpochDay() - endDate.toEpochDay() < 7
-        val monthlyPossible = startDate.toEpochDay() - endDate.toEpochDay() < 30
-        val yearlyPossible = startDate.toEpochDay() - endDate.toEpochDay() < 365
+        val weeklyPossible =
+            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_WEEKLY
+        val monthlyPossible =
+            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_MONTHLY
+        val yearlyPossible =
+            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_YEARLY
 
         val possibleRepetitions = mutableListOf<Repetition>()
 

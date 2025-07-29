@@ -4,8 +4,14 @@ import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.internal.Repetition
 import java.time.LocalDate
 
+fun Event.isHappeningOnDate(selectedDate: LocalDate): Boolean = if (dateEnd == null) {
+    date == selectedDate
+} else {
+    selectedDate.isAfter(date) && selectedDate.isBefore(dateEnd)
+}
+
 fun Event.isRepeatingOnDate(selectedDate: LocalDate): Boolean {
-    if (date >= selectedDate || repetition == null) return false
+    if (date > selectedDate || repetition == null) return false
 
     return when (repetition) {
         Repetition.DAILY -> true
