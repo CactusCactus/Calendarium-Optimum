@@ -295,6 +295,12 @@ abstract class ModifyEventViewModel(
         if (yearlyPossible) possibleRepetitions.add(Repetition.YEARLY)
 
         _uiState.update { _uiState.value.copy(availableRepetitions = possibleRepetitions) }
+
+        if (!possibleRepetitions.contains(_uiState.value.currentRepetition)) {
+            _uiState.update {
+                _uiState.value.copy(currentRepetition = possibleRepetitions.firstOrNull())
+            }
+        }
     }
 
     data class UIState(
