@@ -68,7 +68,11 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
                 val repeatingCount = repeatingEvents.count { it.isRepeatingOnDate(currentDay) }
                 val currentCount = nonRepeatingEvents.count { it.isHappeningOnDate(currentDay) }
 
-                dateEventCountList[currentDay] = currentCount + repeatingCount
+                val count = currentCount + repeatingCount
+
+                if (count > 0) {
+                    dateEventCountList[currentDay] = count
+                }
             }
 
             dateEventCountList
