@@ -282,11 +282,11 @@ abstract class ModifyEventViewModel(
         }
 
         val weeklyPossible =
-            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_WEEKLY
+            endDate.toEpochDay() - startDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_WEEKLY
         val monthlyPossible =
-            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_MONTHLY
+            endDate.toEpochDay() - startDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_MONTHLY
         val yearlyPossible =
-            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_YEARLY
+            endDate.toEpochDay() - startDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_YEARLY
 
         val possibleRepetitions = mutableListOf<Repetition>()
 
