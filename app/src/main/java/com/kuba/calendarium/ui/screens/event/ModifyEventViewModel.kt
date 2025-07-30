@@ -43,7 +43,7 @@ abstract class ModifyEventViewModel(
 
         const val MAX_TASK_LENGTH = 80
 
-        const val MAX_TASK_COUNT = 3
+        const val MAX_TASK_COUNT = 20
     }
 
     protected abstract suspend fun databaseWriteOperation()
