@@ -70,14 +70,13 @@ import com.kuba.calendarium.ui.common.taskListMaxHeight
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.CalendarDisplayMode
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import com.kuba.calendarium.util.CALENDAR_MAX_OFFSET_YEARS
-import com.kuba.calendarium.util.isSameDay
 import com.kuba.calendarium.util.shortDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.titleDateFormat
 import com.kuba.calendarium.util.toLocalizedString
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.YearMonth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -327,16 +326,10 @@ private fun EventRow(
 
                     TextPrimaryBody(text = event.title, modifier = Modifier.weight(1f))
 
-                    event.time?.let {
+                    if (event.time != null || event.dateEnd != null) {
                         StandardQuarterSpacer()
 
-                        val timeEnd = if (event.dateEnd != null && event.timeEnd != null) {
-                            LocalDateTime.of(event.dateEnd, event.timeEnd)
-                        } else {
-                            null
-                        }
-
-                        TimeDisplay(LocalDateTime.of(event.date, event.time), timeEnd)
+                        DateRangeDisplay(event.date, event.dateEnd, event.time, event.timeEnd)
                     }
                 }
 
@@ -364,6 +357,7 @@ private fun EventRow(
                 }
             }
 
+            // Darkening overlay
             if (event.done) {
                 Box(
                     modifier = Modifier
@@ -393,37 +387,49 @@ private fun TaskRow(task: Task, onTaskDoneChanged: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun TimeDisplay(
-    timeStart: LocalDateTime,
-    timeEnd: LocalDateTime?,
+private fun DateRangeDisplay(
+    dateStart: LocalDate,
+    dateEnd: LocalDate?,
+    timeStart: LocalTime?,
+    timeEnd: LocalTime?,
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        val displayDates = timeEnd != null && !timeStart.isSameDay(timeEnd)
+        if (dateStart != dateEnd || timeStart != null) {
+            HourDateText(dateStart, timeStart)
+        }
 
-        HourDateText(timeStart, displayDates)
-
-        timeEnd?.let {
+        if (dateEnd != null || timeEnd != null) {
             Text(text = " — ", style = MaterialTheme.typography.bodyLarge)
 
-            HourDateText(it, displayDates)
+            HourDateText(dateEnd, timeEnd)
         }
     }
 }
 
 @Composable
-private fun HourDateText(time: LocalDateTime, showDate: Boolean, modifier: Modifier = Modifier) {
+private fun HourDateText(
+    date: LocalDate?,
+    time: LocalTime?,
+    modifier: Modifier = Modifier
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
-        Text(
-            time.toLocalTime().standardTimeFormat(),
-            style = MaterialTheme.typography.bodyLarge,
-            maxLines = 1
-        )
-
-        if (showDate) {
+        time?.let {
             Text(
-                time.toLocalDate().shortDateFormat(),
-                style = MaterialTheme.typography.labelSmall,
+                it.standardTimeFormat(),
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1
+            )
+        }
+
+        val dateStyle = if (time != null)
+            MaterialTheme.typography.labelSmall
+        else MaterialTheme.typography.bodyLarge
+
+        date?.let {
+            Text(
+                it.shortDateFormat(),
+                style = dateStyle,
                 maxLines = 1
             )
         }
