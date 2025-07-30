@@ -296,7 +296,9 @@ abstract class ModifyEventViewModel(
 
         _uiState.update { _uiState.value.copy(availableRepetitions = possibleRepetitions) }
 
-        if (!possibleRepetitions.contains(_uiState.value.currentRepetition)) {
+        val currentRepetition = _uiState.value.currentRepetition
+
+        if (currentRepetition != null && !possibleRepetitions.contains(currentRepetition)) {
             _uiState.update {
                 _uiState.value.copy(currentRepetition = possibleRepetitions.firstOrNull())
             }
