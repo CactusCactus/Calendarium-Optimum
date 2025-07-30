@@ -97,7 +97,7 @@ class CalendarViewModel @Inject constructor(
             is ContextEventDelete -> deleteEvent(event)
 
             is UIEvent.DoneChanged -> viewModelScope.launch {
-                eventsRepository.updateEvent(event.event.copy(done = event.checked))
+                eventsRepository.updateEventTasksDoneStatus(event.event, event.checked)
             }
 
             // Context menu events
@@ -138,7 +138,7 @@ class CalendarViewModel @Inject constructor(
             }
 
             is UIEvent.OnTaskDoneChanged -> viewModelScope.launch {
-                eventsRepository.updateTask(event.task, event.checked)
+                eventsRepository.updateTaskDoneStatus(event.parent, event.task, event.checked)
             }
         }
     }
@@ -215,11 +215,16 @@ class CalendarViewModel @Inject constructor(
     sealed class UIEvent {
         data class DateSelected(val date: LocalDate) : UIEvent()
         data class ContextMenuOpen(val event: Event) : UIEvent()
-        data class DoneChanged(val event: Event, val checked: Boolean) : UIEvent()
+        data class DoneChanged(val event: EventTasks, val checked: Boolean) : UIEvent()
         data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         data class VisibleDatesChanged(val startDate: LocalDate, val endDate: LocalDate) : UIEvent()
-        data class OnTaskDoneChanged(val task: Task, val checked: Boolean) : UIEvent()
+        data class OnTaskDoneChanged(
+            val parent: EventTasks,
+            val task: Task,
+            val checked: Boolean
+        ) : UIEvent()
+
         object SettingsClicked : UIEvent()
         object CalendarModeClicked : UIEvent()
         object ShowMonthYearPickerDialog : UIEvent()

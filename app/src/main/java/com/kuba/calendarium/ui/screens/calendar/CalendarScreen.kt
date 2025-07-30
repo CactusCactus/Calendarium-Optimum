@@ -268,10 +268,10 @@ private fun EventsList(
                         viewModel.onEvent(UIEvent.ContextMenuOpen(et.event))
                     },
                     onCheckedChange = {
-                        viewModel.onEvent(UIEvent.DoneChanged(et.event, it))
+                        viewModel.onEvent(UIEvent.DoneChanged(et, it))
                     },
                     onTaskDoneChanged = { task, done ->
-                        viewModel.onEvent(UIEvent.OnTaskDoneChanged(task, done))
+                        viewModel.onEvent(UIEvent.OnTaskDoneChanged(et, task, done))
                     },
                     modifier = Modifier
                         .fillMaxSize()

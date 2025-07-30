@@ -22,7 +22,9 @@ data class Event(
     @ColumnInfo(name = "time_end") val timeEnd: LocalTime? = null,
     @ColumnInfo(name = "is_done") val done: Boolean = false,
     @ColumnInfo(name = "repetition") val repetition: Repetition? = null
-)
+) {
+    fun toEventTasks() = EventTasks(this, emptyList())
+}
 
 data class EventTasks(
     @Embedded val event: Event,
