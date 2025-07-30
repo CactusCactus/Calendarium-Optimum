@@ -15,14 +15,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
@@ -73,12 +76,14 @@ import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TimePickerModal
 import com.kuba.calendarium.ui.common.dateTimeRowPrefixLabelWidth
+import com.kuba.calendarium.ui.common.descriptionFieldMaxHeight
 import com.kuba.calendarium.ui.common.fabContentPadding
 import com.kuba.calendarium.ui.common.fabSize
 import com.kuba.calendarium.ui.common.outlineBorder
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
+import com.kuba.calendarium.ui.common.taskListEditionMaxHeight
 import com.kuba.calendarium.ui.common.textFieldClickable
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.util.standardDateFormat
@@ -172,6 +177,7 @@ private fun MainColumn(
         modifier = modifier
             .fillMaxSize()
             .padding(standardPadding)
+            .verticalScroll(rememberScrollState())
     ) {
         StandardSpacer()
 
@@ -310,6 +316,7 @@ private fun DescriptionRow(
             onValueChange = { onDescriptionChanged(it) },
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = descriptionFieldMaxHeight)
                 .focusRequester(descriptionFocusRequester),
             placeholder = { Text(stringResource(R.string.input_description_placeholder)) },
             isError = descriptionError != null,
@@ -371,6 +378,7 @@ private fun TaskListRow(
             state = lazyListState,
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = taskListEditionMaxHeight)
                 .outlineBorder()
                 .padding(standardPadding)
                 .animateContentSize(),

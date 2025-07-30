@@ -26,3 +26,7 @@ val dialogMinWidth = 280.dp
 
 val taskListMaxHeight = 128.dp
 
+val taskListEditionMaxHeight = 428.dp
+
+val descriptionFieldMaxHeight = 428.dp
+
