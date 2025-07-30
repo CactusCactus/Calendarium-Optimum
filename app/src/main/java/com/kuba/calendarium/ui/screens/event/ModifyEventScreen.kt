@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.internal.Repetition
@@ -196,7 +197,10 @@ private fun MainColumn(
                     )
                 }
             },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Sentences
+            )
         )
 
         StandardHalfSpacer()
@@ -333,7 +337,10 @@ private fun DescriptionRow(
                     Icon(painterResource(R.drawable.ic_close_24), "Clear button")
                 }
             },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Default,
+                capitalization = KeyboardCapitalization.Sentences
+            )
         )
     } else {
         DataPlaceholder(
@@ -461,10 +468,11 @@ private fun TaskListRow(
                                 placeholder = {
                                     Text(stringResource(R.string.new_task_field_placeholder))
                                 },
-                                keyboardOptions = KeyboardOptions(
+                                keyboardOptions = KeyboardOptions.Default.copy(
                                     imeAction =
                                         if (index == taskList.lastIndex) ImeAction.Next
-                                        else ImeAction.Done
+                                        else ImeAction.Done,
+                                    capitalization = KeyboardCapitalization.Sentences
                                 ),
                                 keyboardActions = KeyboardActions(onNext = {
                                     onTaskAdded(TaskCreationData(title = ""))
