@@ -395,9 +395,7 @@ private fun DateRangeDisplay(
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
-        if (dateStart != dateEnd || timeStart != null) {
-            HourDateText(dateStart, timeStart)
-        }
+        HourDateText(dateStart, timeStart)
 
         if (dateEnd != null || timeEnd != null) {
             Text(text = " — ", style = MaterialTheme.typography.bodyLarge)
