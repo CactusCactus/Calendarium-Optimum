@@ -1,3 +1,4 @@
+
 package com.kuba.calendarium.ui.theme
 
 import androidx.compose.material3.Typography
@@ -28,7 +29,7 @@ val titleFontFamily = FontFamily(
 
 val displayFontFamily = FontFamily(
     Font(
-        googleFont = GoogleFont("Cinzel Decorative"),
+        googleFont = GoogleFont("Cinzel"),
         fontProvider = provider,
     )
 )
