@@ -184,8 +184,6 @@ private fun MainColumn(
             .padding(standardPadding)
             .verticalScroll(rememberScrollState())
     ) {
-        StandardSpacer()
-
         OutlinedTextField(
             value = uiState.title,
             onValueChange = { onEvent(UIEvent.TitleChanged(it)) },
