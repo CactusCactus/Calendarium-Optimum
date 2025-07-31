@@ -69,6 +69,16 @@ android {
 
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
+
+    applicationVariants.all {
+        val variant = this
+
+        variant.outputs.map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
+            .forEach {
+                it.outputFileName =
+                    "Calendarium_Optimum_${variant.buildType.name}_${variant.versionName}.apk"
+            }
+    }
 }
 
 dependencies {
