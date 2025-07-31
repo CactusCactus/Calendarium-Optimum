@@ -222,7 +222,7 @@ private fun MainColumn(
             }
         }
 
-        StandardHalfSpacer()
+        StandardSpacer()
 
         DescriptionRow(
             description = uiState.description,
