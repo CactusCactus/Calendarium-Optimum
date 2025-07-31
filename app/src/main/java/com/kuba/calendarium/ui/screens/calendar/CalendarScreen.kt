@@ -178,7 +178,12 @@ fun CalendarScreen(
                     .weight(1f),
                 verticalAlignment = Alignment.Top
             ) { page ->
-                EventsList(viewModel, viewModel.pageIndexToLocalDate(page))
+                EventsList(
+                    viewModel = viewModel,
+                    date = viewModel.pageIndexToLocalDate(page),
+                    onAddEventClicked = {
+                        onNavigateToAddEvent(viewModel.selectedDate.value)
+                    })
             }
         }
 
@@ -238,6 +243,7 @@ private fun AppBar(
 private fun EventsList(
     viewModel: CalendarViewModel,
     date: LocalDate,
+    onAddEventClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val events by remember(date) {
@@ -282,9 +288,10 @@ private fun EventsList(
             }
         } else {
             item {
-                Text(
-                    text = stringResource(R.string.event_list_empty_label),
-                    style = MaterialTheme.typography.bodyLarge
+                EmptyListPlaceholder(
+                    modifier = Modifier
+                        .clickable(onClick = onAddEventClicked)
+                        .padding(standardHalfPadding)
                 )
             }
         }
@@ -501,6 +508,24 @@ private fun CalendarWeekPicker(
         eventsMap = eventsMap,
         modifier = modifier
     )
+}
+
+@Composable
+private fun EmptyListPlaceholder(modifier: Modifier = Modifier) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        Icon(
+            painterResource(R.drawable.ic_add_24),
+            "Add new event",
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        StandardQuarterSpacer()
+
+        Text(
+            text = stringResource(R.string.event_list_empty_label),
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
 }
 
 @Composable
