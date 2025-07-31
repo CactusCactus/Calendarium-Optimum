@@ -269,14 +269,9 @@ private fun MainColumn(
                 onDatePickerOpen = { onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO)) },
                 onTimePickerOpen = { onEvent(UIEvent.TimePickerOpened(DateTimeMode.TO)) }
             )
-        } ?: SetEndDateCheckbox(
-            isEndDateSet = uiState.selectedDateEnd != null,
-            onCheckedChange = { checked ->
-                if (checked) {
-                    onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
-                } else {
-                    onEvent(UIEvent.ClearDateAndTime(DateTimeMode.TO))
-                }
+        } ?: SetEndDatePlaceholder(
+            onClick = {
+                onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
             }
         )
 
@@ -619,15 +614,13 @@ private fun DateTimeRowTo(
 }
 
 @Composable
-private fun SetEndDateCheckbox(isEndDateSet: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        CheckboxNoPadding(
-            checked = isEndDateSet,
-            onCheckedChange = onCheckedChange,
-        )
-        StandardHalfSpacer()
-        Text(stringResource(R.string.set_end_date_and_time_text))
-    }
+private fun SetEndDatePlaceholder(onClick: () -> Unit) {
+    DataPlaceholder(
+        text = stringResource(R.string.set_end_date_and_time_text),
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .fillMaxWidth()
+    )
 }
 
 @Composable
@@ -654,7 +647,14 @@ private fun RepetitionModeRow(
 
 @Composable
 private fun SetRepeatingCheckbox(repeating: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .outlineBorder()
+            .clickable { onCheckedChange(!repeating) }
+            .padding(standardPadding)
+    ) {
         CheckboxNoPadding(
             checked = repeating,
             onCheckedChange = onCheckedChange,
