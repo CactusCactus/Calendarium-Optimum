@@ -277,29 +277,36 @@ private fun MainColumn(
 
         StandardSpacer()
 
-        SetRepeatingCheckbox(
-            repeating = uiState.currentRepetition != null,
-            onCheckedChange = {
-                if (it) {
-                    onEvent(UIEvent.RepetitionChanged(Repetition.DAILY))
-                } else {
-                    onEvent(UIEvent.RepetitionChanged(null))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .outlineBorder()
+        ) {
+            SetRepeatingCheckbox(
+                repeating = uiState.currentRepetition != null,
+                onCheckedChange = {
+                    if (it) {
+                        onEvent(UIEvent.RepetitionChanged(Repetition.DAILY))
+                    } else {
+                        onEvent(UIEvent.RepetitionChanged(null))
+                    }
                 }
-            }
-        )
+            )
 
-        StandardSpacer()
-
-        AnimatedVisibility(visible = uiState.currentRepetition != null) {
-            uiState.currentRepetition?.let {
-                RepetitionModeRow(
-                    availableRepetitions = uiState.availableRepetitions,
-                    pickedRepetition = it,
-                    onRepetitionChanged = { repetition ->
-                        onEvent(UIEvent.RepetitionChanged(repetition))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
+            AnimatedVisibility(
+                visible = uiState.currentRepetition != null,
+                modifier = Modifier.padding(all = standardPadding)
+            ) {
+                uiState.currentRepetition?.let {
+                    RepetitionModeRow(
+                        availableRepetitions = uiState.availableRepetitions,
+                        pickedRepetition = it,
+                        onRepetitionChanged = { repetition ->
+                            onEvent(UIEvent.RepetitionChanged(repetition))
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -651,13 +658,12 @@ private fun SetRepeatingCheckbox(repeating: Boolean, onCheckedChange: (Boolean) 
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .outlineBorder()
             .clickable { onCheckedChange(!repeating) }
             .padding(standardPadding)
     ) {
         CheckboxNoPadding(
             checked = repeating,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = onCheckedChange
         )
         StandardHalfSpacer()
         Text(stringResource(R.string.set_event_repeating_text))
