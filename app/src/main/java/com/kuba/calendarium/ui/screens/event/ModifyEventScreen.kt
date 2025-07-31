@@ -3,6 +3,8 @@ package com.kuba.calendarium.ui.screens.event
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -75,6 +77,7 @@ import com.kuba.calendarium.ui.common.DatePickerModal
 import com.kuba.calendarium.ui.common.OutlinedText
 import com.kuba.calendarium.ui.common.StandardDoubleSpacer
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
+import com.kuba.calendarium.ui.common.StandardQuadrupleSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TextPrimaryTitle
@@ -142,7 +145,8 @@ fun ModifyEventScreen(
             uiState = viewModel.uiState.collectAsState().value,
             focusTitleOnStart = viewModel.focusTitleOnStart,
             onEvent = viewModel::onEvent,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
         )
 
         if (viewModel.uiState.collectAsState().value.datePickerOpen) {
@@ -294,6 +298,9 @@ private fun MainColumn(
             reminderList = uiState.reminders,
             onAddReminder = { onEvent(UIEvent.AddReminder(it)) },
             onRemoveReminder = { onEvent(UIEvent.RemoveReminder(it)) })
+
+
+        StandardQuadrupleSpacer()
     }
 }
 
@@ -368,7 +375,11 @@ private fun TaskListRow(
         previousTaskListSize = taskList.size
     }
 
-    if (taskList.isNotEmpty()) {
+    AnimatedVisibility(
+        taskList.isNotEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
         val hapticFeedback = LocalHapticFeedback.current
         val lazyListState = rememberLazyListState()
 
@@ -501,7 +512,9 @@ private fun TaskListRow(
                 }
             }
         }
-    } else {
+    }
+
+    if (taskList.isEmpty()) {
         DataPlaceholder(
             text = stringResource(R.string.new_task_list_placeholder),
             modifier = Modifier
@@ -756,7 +769,13 @@ private fun RemindersLayout(
                 .fillMaxWidth()
                 .clickable { onAddReminder(Reminder.default) }
         )
-    } else {
+    }
+
+    AnimatedVisibility(
+        reminderList.isNotEmpty(),
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
         LazyColumn(
             modifier = Modifier
                 .heightIn(max = remindersListMaxHeight)

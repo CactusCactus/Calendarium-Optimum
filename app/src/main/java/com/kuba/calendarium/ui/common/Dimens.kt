@@ -3,6 +3,8 @@ package com.kuba.calendarium.ui.common
 import androidx.compose.ui.unit.dp
 
 // Padding
+val standardQuadruplePadding = 64.dp
+
 val standardDoublePadding = 32.dp
 
 val standardPadding = 16.dp
