@@ -7,8 +7,11 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import androidx.room.TypeConverter
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalUnit
 
 @Entity
 data class Event(
@@ -23,6 +26,38 @@ data class Event(
     @ColumnInfo(name = "repetition") val repetition: Repetition? = null
 ) {
     fun toEventTasks() = EventDetailed(this, emptyList(), emptyList())
+
+    fun getNextOccurrence(from: LocalDateTime = LocalDateTime.now()): LocalDateTime? {
+        val localDateTask = LocalDateTime.of(date, time ?: LocalTime.MIDNIGHT)
+        val timeFromNow = from.until(localDateTask, ChronoUnit.MILLIS)
+
+        return if (timeFromNow > 0) {
+            localDateTask
+        } else if (repetition != null) {
+            val unitInPast = localDateTask.until(from, repetition.toChronoUnit())
+
+            localDateTask.plus(unitInPast + 1, repetition.toChronoUnit())
+        } else {
+            null
+        }
+    }
+
+    fun getNextOccurrenceEnd(from: LocalDateTime = LocalDateTime.now()): LocalDateTime? {
+        if (dateEnd == null) return null
+
+        val localDateTask = LocalDateTime.of(dateEnd, timeEnd ?: LocalTime.MIDNIGHT)
+        val timeFromNow = from.until(localDateTask, ChronoUnit.MILLIS)
+
+        return if (timeFromNow > 0) {
+            localDateTask
+        } else if (repetition != null) {
+            val unitInPast = localDateTask.until(from, repetition.toChronoUnit())
+
+            localDateTask.plus(unitInPast + 1, repetition.toChronoUnit())
+        } else {
+            null
+        }
+    }
 }
 
 data class EventDetailed(

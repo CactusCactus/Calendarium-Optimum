@@ -274,6 +274,7 @@ private fun EventsList(
 
                 EventRow(
                     eventDetailed = et,
+                    selectedDate = viewModel.selectedDate.collectAsState().value,
                     onLongClick = {
                         viewModel.onEvent(UIEvent.ContextMenuOpen(et.event))
                     },
@@ -305,6 +306,7 @@ private fun EventsList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EventRow(
+    selectedDate: LocalDate,
     eventDetailed: EventDetailed,
     onLongClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
@@ -325,7 +327,7 @@ private fun EventRow(
                 modifier = Modifier.padding(standardPadding),
                 verticalArrangement = Arrangement.spacedBy(standardHalfPadding)
             ) {
-                EventExtrasRow(eventDetailed)
+                EventExtrasRow(selectedDate, eventDetailed)
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CheckboxNoPadding(
@@ -339,8 +341,21 @@ private fun EventRow(
 
                     if (event.time != null || event.dateEnd != null) {
                         StandardQuarterSpacer()
+                        val nextEventDate = event.getNextOccurrence(
+                            LocalDateTime.of(selectedDate, LocalTime.MIDNIGHT)
+                        )
+                        val nextEventDateEnd = event.getNextOccurrenceEnd(
+                            LocalDateTime.of(selectedDate, LocalTime.MIDNIGHT)
+                        )
 
-                        DateRangeDisplay(event.date, event.dateEnd, event.time, event.timeEnd)
+                        nextEventDate?.let { dateTime ->
+                            DateRangeDisplay(
+                                dateTime.toLocalDate(),
+                                nextEventDateEnd?.toLocalDate(),
+                                dateTime.toLocalTime(),
+                                nextEventDateEnd?.toLocalTime()
+                            )
+                        }
                     }
                 }
 
@@ -381,48 +396,50 @@ private fun EventRow(
 }
 
 @Composable
-private fun EventExtrasRow(eventDetailed: EventDetailed) {
+private fun EventExtrasRow(selectedDate: LocalDate, eventDetailed: EventDetailed) {
     val event = eventDetailed.event
 
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val localTime = LocalDateTime.of(event.date, event.time)
+        val localTime = event.getNextOccurrence(LocalDateTime.of(selectedDate, LocalTime.MIDNIGHT))
 
-        val nextReminder = eventDetailed.reminders.filter {
-            localTime.minus(it.value, it.unit) > LocalDateTime.now()
-        }.minByOrNull {
-            it.value * it.unit.duration.seconds
-        }
+        if (localTime != null) {
+            val nextReminder = eventDetailed.reminders.filter {
+                localTime.minus(it.value, it.unit) > LocalDateTime.now()
+            }.minByOrNull {
+                it.value * it.unit.duration.seconds
+            }
 
-        if (nextReminder != null) {
-            Icon(
-                painter = painterResource(R.drawable.ic_notifications_active_24),
-                contentDescription = "Reminder icon",
-                tint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.size(tinyIconSize)
-            )
+            if (nextReminder != null) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_notifications_active_24),
+                    contentDescription = "Reminder icon",
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(tinyIconSize)
+                )
 
 
-            val reminderTime = nextReminder.getReminderTime(
-                localTime
-            )
+                val reminderTime = nextReminder.getReminderTime(
+                    localTime
+                )
 
-            val zoneOffset = ZoneId.systemDefault().rules.getOffset(reminderTime)
+                val zoneOffset = ZoneId.systemDefault().rules.getOffset(reminderTime)
 
-            val relativeTime = DateUtils.getRelativeDateTimeString(
-                LocalContext.current,
-                reminderTime.toInstant(zoneOffset).toEpochMilli(),
-                DateUtils.MINUTE_IN_MILLIS,
-                DateUtils.WEEK_IN_MILLIS,
-                0,
-            )
+                val relativeTime = DateUtils.getRelativeDateTimeString(
+                    LocalContext.current,
+                    reminderTime.toInstant(zoneOffset).toEpochMilli(),
+                    DateUtils.MINUTE_IN_MILLIS,
+                    DateUtils.WEEK_IN_MILLIS,
+                    0,
+                )
 
-            StandardQuarterSpacer()
+                StandardQuarterSpacer()
 
-            TextLabel(relativeTime.toString())
+                TextLabel(relativeTime.toString())
 
-            StandardHalfSpacer()
+                StandardHalfSpacer()
+            }
         }
 
         if (event.repetition != null) {
@@ -466,6 +483,7 @@ private fun DateRangeDisplay(
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        val dateStart = if (dateEnd != null && dateEnd != dateStart) dateStart else null
         HourDateText(dateStart, timeStart)
 
         if (dateEnd != null || timeEnd != null) {
