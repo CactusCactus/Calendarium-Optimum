@@ -28,6 +28,8 @@ abstract class ModifyEventViewModel(
     internal val eventsRepository: EventsRepository,
     protected val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    open val focusTitleOnStart: Boolean = true
+
     protected val _uiState = initUIState()
 
     protected val _navEvent = Channel<NavEvent>()
@@ -37,13 +39,13 @@ abstract class ModifyEventViewModel(
     val navEvent = _navEvent.receiveAsFlow()
 
     companion object {
+
         const val MAX_TITLE_LENGTH = 100
 
         const val MAX_DESCRIPTION_LENGTH = 2000
 
         const val MAX_TASK_LENGTH = 80
-
-        const val MAX_TASK_COUNT = 3
+        const val MAX_TASK_COUNT = 20
     }
 
     protected abstract suspend fun databaseWriteOperation()
@@ -282,11 +284,11 @@ abstract class ModifyEventViewModel(
         }
 
         val weeklyPossible =
-            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_WEEKLY
+            endDate.toEpochDay() - startDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_WEEKLY
         val monthlyPossible =
-            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_MONTHLY
+            endDate.toEpochDay() - startDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_MONTHLY
         val yearlyPossible =
-            startDate.toEpochDay() - endDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_YEARLY
+            endDate.toEpochDay() - startDate.toEpochDay() < MAX_DAYS_FOR_REPETITION_YEARLY
 
         val possibleRepetitions = mutableListOf<Repetition>()
 
@@ -296,7 +298,9 @@ abstract class ModifyEventViewModel(
 
         _uiState.update { _uiState.value.copy(availableRepetitions = possibleRepetitions) }
 
-        if (!possibleRepetitions.contains(_uiState.value.currentRepetition)) {
+        val currentRepetition = _uiState.value.currentRepetition
+
+        if (currentRepetition != null && !possibleRepetitions.contains(currentRepetition)) {
             _uiState.update {
                 _uiState.value.copy(currentRepetition = possibleRepetitions.firstOrNull())
             }
@@ -316,6 +320,7 @@ abstract class ModifyEventViewModel(
         val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
         val currentRepetition: Repetition? = null,
         val availableRepetitions: List<Repetition> = Repetition.entries,
+        val isDone: Boolean = false,
 
         // Validation
         val titleError: ValidationError? = null,

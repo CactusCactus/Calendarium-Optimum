@@ -8,7 +8,9 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
+import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.data.model.Task
+import com.kuba.calendarium.data.model.internal.Repetition
 import com.kuba.calendarium.data.repo.EventsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -396,22 +398,23 @@ class RoomEventsRepositoryTest {
         )
 
         repository.insertEventWithTasks(event, taskList)
+        var fetchedEventTask: EventTasks? = null
         var fetchedTasks = emptyList<Task>()
 
         repository.getEventTasksById(eventId).test {
-            val emittedEvent = awaitItem()
+            fetchedEventTask = awaitItem()
 
-            emittedEvent?.tasks?.forEach {
+            fetchedEventTask?.tasks?.forEach {
                 assertThat(it.done).isFalse()
             }
-
-            fetchedTasks = emittedEvent?.tasks ?: emptyList()
 
             cancelAndConsumeRemainingEvents()
         }
 
-        repository.updateTask(fetchedTasks[0], true)
-        repository.updateTask(fetchedTasks[1], true)
+        fetchedEventTask?.let { eventTask ->
+            repository.updateTaskDoneStatus(eventTask, eventTask.tasks[0], true)
+            repository.updateTaskDoneStatus(eventTask, eventTask.tasks[1], true)
+        }
 
         repository.getEventTasksById(eventId).test {
             val emittedEvent = awaitItem()
@@ -419,6 +422,29 @@ class RoomEventsRepositoryTest {
             emittedEvent?.tasks?.forEach {
                 assertThat(it.done).isTrue()
             }
+
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
+    fun insertARepeatingEventCheckForItInTheFuture() = runTest {
+        val eventId = "insertARepeatingEventCheckForItInTheFuture".hashCode().toLong()
+        val date = LocalDate.now()
+        val dateInAWeek = date.plusDays(7)
+
+        val event = Event(
+            id = eventId,
+            title = "Test Event",
+            description = "This is a test event",
+            date = date,
+            repetition = Repetition.WEEKLY
+        )
+
+        repository.insertEvent(event)
+        repository.getEventTasksListForDate(dateInAWeek).test {
+            val emittedEvents = awaitItem()
+            assertThat(emittedEvents.map { it.event }).containsExactly(event)
 
             cancelAndConsumeRemainingEvents()
         }

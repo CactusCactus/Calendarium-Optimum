@@ -56,7 +56,7 @@ fun CalendarMonthDatePicker(
 ) {
     var selectedDate by remember(initialSelectedDate) { mutableStateOf(initialSelectedDate) }
 
-    LaunchedEffect(selectedDate.month) {
+    LaunchedEffect(selectedDate) {
         state.animateScrollToMonth(YearMonth.of(selectedDate.year, selectedDate.month))
     }
 

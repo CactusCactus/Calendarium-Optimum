@@ -3,6 +3,7 @@ package com.kuba.calendarium.ui.screens.event
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.kuba.calendarium.data.model.internal.Repetition
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel
@@ -42,8 +43,8 @@ class ModifyEventViewModelTest {
         val date = LocalDate.of(1995, 2, 19)
 
         coEvery { mockEventsRepository.insertEventWithTasks(any(), any()) } returns
-        // Set date of the Event (other fields are not important in this case)
-        viewModel.onEvent(UIEvent.DateSelected(date))
+                // Set date of the Event (other fields are not important in this case)
+                viewModel.onEvent(UIEvent.DateSelected(date))
 
         viewModel.navEvent.test {
             viewModel.onEvent(UIEvent.DoneClicked)
@@ -417,5 +418,54 @@ class ModifyEventViewModelTest {
             viewModel.onEvent(UIEvent.AddTask("Task $i"))
         }
         assertThat(viewModel.uiState.value.isValid).isFalse()
+    }
+
+    @Test
+    fun `User checks and unchecks repeat checkbox - repetition changes`() {
+        assertThat(viewModel.uiState.value.currentRepetition).isNull()
+        assertThat(viewModel.uiState.value.availableRepetitions)
+            .containsExactly(*Repetition.entries.toTypedArray())
+
+        viewModel.onEvent(UIEvent.RepetitionChanged(Repetition.DAILY))
+        assertThat(viewModel.uiState.value.currentRepetition).isEqualTo(Repetition.DAILY)
+
+        viewModel.onEvent(UIEvent.RepetitionChanged(null))
+        assertThat(viewModel.uiState.value.currentRepetition).isEqualTo(null)
+
+        assertThat(viewModel.uiState.value.availableRepetitions)
+            .containsExactly(*Repetition.entries.toTypedArray())
+    }
+
+    @Test
+    fun `User changes the dates - available repetitions change`() {
+        val dateNow = LocalDate.now()
+        val dateTomorrow = dateNow.plusDays(1)
+        val dateTwoWeeks = dateNow.plusWeeks(2)
+        val dateTwoMonths = dateNow.plusMonths(2)
+
+        viewModel.onEvent(UIEvent.RepetitionChanged(Repetition.DAILY))
+        assertThat(viewModel.uiState.value.currentRepetition).isEqualTo(Repetition.DAILY)
+        assertThat(viewModel.uiState.value.availableRepetitions)
+            .containsExactly(*Repetition.entries.toTypedArray())
+
+        viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.FROM))
+        viewModel.onEvent(UIEvent.DateSelected(LocalDate.now()))
+        viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
+        viewModel.onEvent(UIEvent.DateSelected(dateTomorrow))
+
+        assertThat(viewModel.uiState.value.availableRepetitions)
+            .containsExactly(Repetition.WEEKLY, Repetition.MONTHLY, Repetition.YEARLY)
+
+        viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
+        viewModel.onEvent(UIEvent.DateSelected(dateTwoWeeks))
+
+        assertThat(viewModel.uiState.value.availableRepetitions)
+            .containsExactly(Repetition.MONTHLY, Repetition.YEARLY)
+
+        viewModel.onEvent(UIEvent.DatePickerOpened(DateTimeMode.TO))
+        viewModel.onEvent(UIEvent.DateSelected(dateTwoMonths))
+
+        assertThat(viewModel.uiState.value.availableRepetitions)
+            .containsExactly(Repetition.YEARLY)
     }
 }

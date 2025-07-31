@@ -257,7 +257,7 @@ class CalendarViewModelTest {
 
                 runTest {
                     eventsRepository.insertEvent(event)
-                    viewModel.onEvent(UIEvent.DoneChanged(event, true))
+                    viewModel.onEvent(UIEvent.DoneChanged(event.toEventTasks(), true))
                     advanceUntilIdle()
 
                     eventsRepository.getEventTasksById(eventId).test {

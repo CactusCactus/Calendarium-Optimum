@@ -13,7 +13,7 @@
     <string name="delete">Delete</string>
     <string name="delete_dialog_title">Delete Event</string>
     <string name="delete_dialog_text">Are you sure you want to delete this event?</string>
-    <string name="event_list_empty_label">No events</string>
+    <string name="event_list_empty_label">Add a new event</string>
     <string name="edit">Edit</string>
     <string name="edit_event_screen_title">Edit Event</string>
     <string name="dont_ask_again_label">Don\'t ask again</string>

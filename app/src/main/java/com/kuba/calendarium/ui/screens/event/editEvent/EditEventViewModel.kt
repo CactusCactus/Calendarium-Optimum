@@ -22,6 +22,8 @@ class EditEventViewModel @Inject constructor(
     eventsRepository: EventsRepository,
     savedStateHandle: SavedStateHandle
 ) : ModifyEventViewModel(eventsRepository, savedStateHandle) {
+    override val focusTitleOnStart: Boolean = false
+
     private val eventId: Long = savedStateHandle.get<Long>(ARG_EVENT_ID) ?: -1
 
     init {
@@ -41,7 +43,8 @@ class EditEventViewModel @Inject constructor(
                             selectedDateEnd = et.event.dateEnd,
                             selectedTimeEnd = et.event.timeEnd,
                             taskList = et.tasks.map { it.toTaskInternal() }.toMutableStateList(),
-                            currentRepetition = et.event.repetition
+                            currentRepetition = et.event.repetition,
+                            isDone = et.event.done
                         )
                     }
 
@@ -66,7 +69,8 @@ class EditEventViewModel @Inject constructor(
                 time = _uiState.value.selectedTime,
                 dateEnd = _uiState.value.selectedDateEnd,
                 timeEnd = endTime,
-                repetition = _uiState.value.currentRepetition
+                repetition = _uiState.value.currentRepetition,
+                done = _uiState.value.isDone
             ),
             _uiState.value.taskList.mapIndexed { index, taskData ->
                 taskData.toTask(index)

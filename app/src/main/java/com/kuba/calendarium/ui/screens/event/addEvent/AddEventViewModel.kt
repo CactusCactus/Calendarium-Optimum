@@ -22,6 +22,11 @@ class AddEventViewModel @Inject constructor(
             && _uiState.value.selectedDateEnd == _uiState.value.selectedDate
         ) null else _uiState.value.selectedTimeEnd
 
+        // Nullify endDate if it's the same as date (and no time is set)
+        val endDate = if (_uiState.value.selectedDate == _uiState.value.selectedDateEnd
+            && endTime == null
+        ) null else _uiState.value.selectedDateEnd
+
         val tasks = _uiState.value.taskList.mapIndexed { index, taskData ->
             Task(title = taskData.title, position = index)
         }
@@ -32,7 +37,7 @@ class AddEventViewModel @Inject constructor(
                 description = _uiState.value.description,
                 date = _uiState.value.selectedDate,
                 time = _uiState.value.selectedTime,
-                dateEnd = _uiState.value.selectedDateEnd,
+                dateEnd = endDate,
                 timeEnd = endTime,
                 repetition = _uiState.value.currentRepetition
             ),

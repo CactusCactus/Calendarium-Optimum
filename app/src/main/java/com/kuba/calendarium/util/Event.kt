@@ -7,7 +7,8 @@ import java.time.LocalDate
 fun Event.isHappeningOnDate(selectedDate: LocalDate): Boolean = if (dateEnd == null) {
     date == selectedDate
 } else {
-    selectedDate.isAfter(date) && selectedDate.isBefore(dateEnd)
+    date == selectedDate || dateEnd == selectedDate ||
+            (selectedDate.isAfter(date) && selectedDate.isBefore(dateEnd))
 }
 
 fun Event.isRepeatingOnDate(selectedDate: LocalDate): Boolean {

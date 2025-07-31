@@ -92,6 +92,13 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
         Timber.d("Updated event: ${event.title} with id: ${event.id}")
     }
 
+    suspend fun updateEventTasksDoneStatus(eventTasks: EventTasks, done: Boolean) {
+        dao.update(eventTasks.event.copy(done = done))
+        eventTasks.tasks.forEach {
+            dao.updateTask(it.copy(done = done))
+        }
+    }
+
     suspend fun updateEventWithTasks(event: Event, tasks: List<Task>) =
         dao.updateEventWithTasks(event, tasks).also {
             Timber.d("Updated event: ${event.title} with id: ${event.id} and tasks: $tasks")
@@ -101,8 +108,14 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
         Timber.d("Deleted event: ${event.title} with id: ${event.id}")
     }
 
-    suspend fun updateTask(task: Task, done: Boolean) =
+    suspend fun updateTaskDoneStatus(parent: EventTasks, task: Task, done: Boolean) {
         dao.updateTask(task.copy(done = done)).also {
             Timber.d("Updated task: ${task.title} with id: ${task.id} to done: $done")
         }
+        val allDone = parent.tasks.filterNot { it == task }.all { it.done && done }
+
+        dao.update(parent.event.copy(done = allDone)).also {
+            Timber.d("Updated event: ${parent.event.title} with id: ${parent.event.id} to done: $done")
+        }
+    }
 }

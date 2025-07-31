@@ -15,14 +15,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
@@ -60,6 +63,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.internal.Repetition
@@ -73,12 +77,14 @@ import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
 import com.kuba.calendarium.ui.common.TimePickerModal
 import com.kuba.calendarium.ui.common.dateTimeRowPrefixLabelWidth
+import com.kuba.calendarium.ui.common.descriptionFieldMaxHeight
 import com.kuba.calendarium.ui.common.fabContentPadding
 import com.kuba.calendarium.ui.common.fabSize
 import com.kuba.calendarium.ui.common.outlineBorder
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
+import com.kuba.calendarium.ui.common.taskListEditionMaxHeight
 import com.kuba.calendarium.ui.common.textFieldClickable
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.util.standardDateFormat
@@ -128,7 +134,8 @@ fun ModifyEventScreen(
         }
     ) { innerPadding ->
         MainColumn(
-            viewModel.uiState.collectAsState().value,
+            uiState = viewModel.uiState.collectAsState().value,
+            focusTitleOnStart = viewModel.focusTitleOnStart,
             onEvent = viewModel::onEvent,
             modifier = Modifier.padding(innerPadding)
         )
@@ -165,20 +172,24 @@ fun ModifyEventScreen(
 @Composable
 private fun MainColumn(
     uiState: ModifyEventViewModel.UIState,
+    focusTitleOnStart: Boolean,
     onEvent: (UIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusRequester = remember { FocusRequester() }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(standardPadding)
+            .verticalScroll(rememberScrollState())
     ) {
-        StandardSpacer()
-
         OutlinedTextField(
             value = uiState.title,
             onValueChange = { onEvent(UIEvent.TitleChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             placeholder = { Text(stringResource(R.string.input_title_placeholder)) },
             maxLines = 1,
             isError = uiState.titleError != null,
@@ -190,8 +201,17 @@ private fun MainColumn(
                     )
                 }
             },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next,
+                capitalization = KeyboardCapitalization.Sentences
+            )
         )
+
+        LaunchedEffect(Unit) {
+            if (focusTitleOnStart) {
+                focusRequester.requestFocus()
+            }
+        }
 
         StandardHalfSpacer()
 
@@ -299,7 +319,7 @@ private fun DescriptionRow(
     val descriptionFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(description) {
-        if (description != null) {
+        if (description?.isEmpty() == true) {
             descriptionFocusRequester.requestFocus()
         }
     }
@@ -310,6 +330,7 @@ private fun DescriptionRow(
             onValueChange = { onDescriptionChanged(it) },
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = descriptionFieldMaxHeight)
                 .focusRequester(descriptionFocusRequester),
             placeholder = { Text(stringResource(R.string.input_description_placeholder)) },
             isError = descriptionError != null,
@@ -326,7 +347,10 @@ private fun DescriptionRow(
                     Icon(painterResource(R.drawable.ic_close_24), "Clear button")
                 }
             },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default)
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Default,
+                capitalization = KeyboardCapitalization.Sentences
+            )
         )
     } else {
         DataPlaceholder(
@@ -351,7 +375,7 @@ private fun TaskListRow(
     var previousTaskListSize by remember { mutableIntStateOf(taskList.size) }
 
     LaunchedEffect(taskList.size) {
-        if (taskList.size > previousTaskListSize && taskList.isNotEmpty()) {
+        if (taskList.size - previousTaskListSize == 1 && taskList.isNotEmpty()) {
             newTextFieldFocusRequester.requestFocus()
         }
         previousTaskListSize = taskList.size
@@ -371,6 +395,7 @@ private fun TaskListRow(
             state = lazyListState,
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = taskListEditionMaxHeight)
                 .outlineBorder()
                 .padding(standardPadding)
                 .animateContentSize(),
@@ -453,10 +478,11 @@ private fun TaskListRow(
                                 placeholder = {
                                     Text(stringResource(R.string.new_task_field_placeholder))
                                 },
-                                keyboardOptions = KeyboardOptions(
+                                keyboardOptions = KeyboardOptions.Default.copy(
                                     imeAction =
                                         if (index == taskList.lastIndex) ImeAction.Next
-                                        else ImeAction.Done
+                                        else ImeAction.Done,
+                                    capitalization = KeyboardCapitalization.Sentences
                                 ),
                                 keyboardActions = KeyboardActions(onNext = {
                                     onTaskAdded(TaskCreationData(title = ""))
