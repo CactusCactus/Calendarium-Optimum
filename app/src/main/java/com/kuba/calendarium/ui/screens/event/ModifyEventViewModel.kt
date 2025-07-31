@@ -28,6 +28,8 @@ abstract class ModifyEventViewModel(
     internal val eventsRepository: EventsRepository,
     protected val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+    open val focusTitleOnStart: Boolean = true
+
     protected val _uiState = initUIState()
 
     protected val _navEvent = Channel<NavEvent>()
@@ -37,12 +39,12 @@ abstract class ModifyEventViewModel(
     val navEvent = _navEvent.receiveAsFlow()
 
     companion object {
+
         const val MAX_TITLE_LENGTH = 100
 
         const val MAX_DESCRIPTION_LENGTH = 2000
 
         const val MAX_TASK_LENGTH = 80
-
         const val MAX_TASK_COUNT = 20
     }
 
@@ -318,6 +320,7 @@ abstract class ModifyEventViewModel(
         val currentDateTimeMode: DateTimeMode = DateTimeMode.FROM,
         val currentRepetition: Repetition? = null,
         val availableRepetitions: List<Repetition> = Repetition.entries,
+        val isDone: Boolean = false,
 
         // Validation
         val titleError: ValidationError? = null,

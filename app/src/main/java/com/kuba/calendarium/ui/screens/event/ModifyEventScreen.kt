@@ -134,7 +134,8 @@ fun ModifyEventScreen(
         }
     ) { innerPadding ->
         MainColumn(
-            viewModel.uiState.collectAsState().value,
+            uiState = viewModel.uiState.collectAsState().value,
+            focusTitleOnStart = viewModel.focusTitleOnStart,
             onEvent = viewModel::onEvent,
             modifier = Modifier.padding(innerPadding)
         )
@@ -171,9 +172,12 @@ fun ModifyEventScreen(
 @Composable
 private fun MainColumn(
     uiState: ModifyEventViewModel.UIState,
+    focusTitleOnStart: Boolean,
     onEvent: (UIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val focusRequester = remember { FocusRequester() }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -185,7 +189,9 @@ private fun MainColumn(
         OutlinedTextField(
             value = uiState.title,
             onValueChange = { onEvent(UIEvent.TitleChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             placeholder = { Text(stringResource(R.string.input_title_placeholder)) },
             maxLines = 1,
             isError = uiState.titleError != null,
@@ -202,6 +208,12 @@ private fun MainColumn(
                 capitalization = KeyboardCapitalization.Sentences
             )
         )
+
+        LaunchedEffect(Unit) {
+            if (focusTitleOnStart) {
+                focusRequester.requestFocus()
+            }
+        }
 
         StandardHalfSpacer()
 
@@ -309,7 +321,7 @@ private fun DescriptionRow(
     val descriptionFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(description) {
-        if (description != null) {
+        if (description?.isEmpty() == true) {
             descriptionFocusRequester.requestFocus()
         }
     }
@@ -365,7 +377,7 @@ private fun TaskListRow(
     var previousTaskListSize by remember { mutableIntStateOf(taskList.size) }
 
     LaunchedEffect(taskList.size) {
-        if (taskList.size > previousTaskListSize && taskList.isNotEmpty()) {
+        if (taskList.size - previousTaskListSize == 1 && taskList.isNotEmpty()) {
             newTextFieldFocusRequester.requestFocus()
         }
         previousTaskListSize = taskList.size
