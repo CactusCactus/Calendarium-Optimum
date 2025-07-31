@@ -42,7 +42,7 @@ class ModifyEventViewModelTest {
     fun `Done button clicked - Finish event sent`() = runTest {
         val date = LocalDate.of(1995, 2, 19)
 
-        coEvery { mockEventsRepository.insertEventWithTasks(any(), any()) } returns
+        coEvery { mockEventsRepository.insertEventDetailed(any(), any()) } returns
                 // Set date of the Event (other fields are not important in this case)
                 viewModel.onEvent(UIEvent.DateSelected(date))
 

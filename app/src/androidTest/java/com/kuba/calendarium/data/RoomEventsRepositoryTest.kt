@@ -8,7 +8,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
-import com.kuba.calendarium.data.model.EventTasks
+import com.kuba.calendarium.data.model.EventDetailed
 import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.data.model.Repetition
 import com.kuba.calendarium.data.repo.EventsRepository
@@ -74,7 +74,7 @@ class RoomEventsRepositoryTest {
     fun retrieveNonExistentEvent() = runTest {
         val nonExistentEventId = 2137L
 
-        val retrievedEvent = eventDao.getEventTasksById(nonExistentEventId).first()
+        val retrievedEvent = eventDao.getEventDetailedById(nonExistentEventId).first()
 
         assertThat(retrievedEvent).isNull()
     }
@@ -319,7 +319,7 @@ class RoomEventsRepositoryTest {
     }
 
     @Test
-    fun insertEventWithTasks() = runTest {
+    fun insertEventDetailed() = runTest {
         val eventId = "insertEventWithTasks".hashCode().toLong()
         val event = Event(
             id = eventId,
@@ -332,9 +332,9 @@ class RoomEventsRepositoryTest {
             Task(id = 1, title = "Test Task 1"), Task(id = 2, title = "Test Task 2")
         )
 
-        repository.insertEventWithTasks(event, taskList)
+        repository.insertEventDetailed(event, taskList)
 
-        repository.getEventTasksById(eventId).test {
+        repository.getEventDetailedById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent).isNotNull()
             assertThat(emittedEvent?.event).isEqualTo(event)
@@ -359,9 +359,9 @@ class RoomEventsRepositoryTest {
             Task(id = 1, title = "Test Task 1"), Task(id = 2, title = "Test Task 2")
         )
 
-        repository.insertEventWithTasks(event, taskList)
+        repository.insertEventDetailed(event, taskList)
 
-        repository.getEventTasksById(eventId).test {
+        repository.getEventDetailedById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent?.tasks).hasSize(taskList.size)
 
@@ -373,9 +373,9 @@ class RoomEventsRepositoryTest {
             set(0, taskList[0].copy(title = "Changed Task"))
         }
 
-        repository.updateEventWithTasks(event, newTaskList)
+        repository.updateEventDetailed(event, newTaskList)
 
-        repository.getEventTasksById(eventId).test {
+        repository.getEventDetailedById(eventId).test {
             val emittedEvent = awaitItem()
             assertThat(emittedEvent?.tasks).hasSize(newTaskList.size)
             assertThat(emittedEvent?.tasks?.firstOrNull()?.title).isEqualTo("Changed Task")
@@ -397,11 +397,11 @@ class RoomEventsRepositoryTest {
             Task(id = 1, title = "Test Task 1"), Task(id = 2, title = "Test Task 2")
         )
 
-        repository.insertEventWithTasks(event, taskList)
-        var fetchedEventTask: EventTasks? = null
+        repository.insertEventDetailed(event, taskList)
+        var fetchedEventTask: EventDetailed? = null
         var fetchedTasks = emptyList<Task>()
 
-        repository.getEventTasksById(eventId).test {
+        repository.getEventDetailedById(eventId).test {
             fetchedEventTask = awaitItem()
 
             fetchedEventTask?.tasks?.forEach {
@@ -416,7 +416,7 @@ class RoomEventsRepositoryTest {
             repository.updateTaskDoneStatus(eventTask, eventTask.tasks[1], true)
         }
 
-        repository.getEventTasksById(eventId).test {
+        repository.getEventDetailedById(eventId).test {
             val emittedEvent = awaitItem()
 
             emittedEvent?.tasks?.forEach {
@@ -442,7 +442,7 @@ class RoomEventsRepositoryTest {
         )
 
         repository.insertEvent(event)
-        repository.getEventTasksListForDate(dateInAWeek).test {
+        repository.getEventDetailedListForDate(dateInAWeek).test {
             val emittedEvents = awaitItem()
             assertThat(emittedEvents.map { it.event }).containsExactly(event)
 

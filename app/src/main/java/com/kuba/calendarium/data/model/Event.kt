@@ -22,17 +22,23 @@ data class Event(
     @ColumnInfo(name = "is_done") val done: Boolean = false,
     @ColumnInfo(name = "repetition") val repetition: Repetition? = null
 ) {
-    fun toEventTasks() = EventTasks(this, emptyList())
+    fun toEventTasks() = EventDetailed(this, emptyList(), emptyList())
 }
 
-data class EventTasks(
+data class EventDetailed(
     @Embedded val event: Event,
     @Relation(
         parentColumn = "event_id",
         entityColumn = "event_id_ref",
         entity = Task::class
     )
-    val tasks: List<Task>
+    val tasks: List<Task>,
+    @Relation(
+        parentColumn = "event_id",
+        entityColumn = "event_id_ref",
+        entity = Reminder::class
+    )
+    val reminders: List<Reminder>
 )
 
 class TimeConverters {

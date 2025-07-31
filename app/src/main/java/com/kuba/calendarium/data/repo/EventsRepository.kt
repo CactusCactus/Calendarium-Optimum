@@ -2,7 +2,8 @@ package com.kuba.calendarium.data.repo
 
 import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
-import com.kuba.calendarium.data.model.EventTasks
+import com.kuba.calendarium.data.model.EventDetailed
+import com.kuba.calendarium.data.model.Reminder
 import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.util.isHappeningOnDate
 import com.kuba.calendarium.util.isRepeatingOnDate
@@ -16,11 +17,11 @@ import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 class EventsRepository @Inject constructor(private val dao: EventDao) {
-    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>> {
-        val dateEvents = dao.getEventTasksListForDate(date).also {
+    fun getEventDetailedListForDate(date: LocalDate): Flow<List<EventDetailed>> {
+        val dateEvents = dao.getEventDetailedListForDate(date).also {
             Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
         }
-        val pastEvents = dao.getPastRepeatingEventTasksList(date).map { eventList ->
+        val pastEvents = dao.getPastRepeatingEventDetailedList(date).map { eventList ->
             eventList.filter { event -> event.event.isRepeatingOnDate(date) }
         }.also {
             Timber.d("Fetched Past Events flow for date: ${date.standardDateFormat()}")
@@ -36,7 +37,7 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
             Timber.d("Fetched Events flow for date: ${date.standardDateFormat()}")
         }
 
-    fun getEventTasksById(id: Long): Flow<EventTasks?> = dao.getEventTasksById(id).map {
+    fun getEventDetailedById(id: Long): Flow<EventDetailed?> = dao.getEventDetailedById(id).map {
         it?.copy(tasks = it.tasks.sortedBy { it.position })
     }.also {
         Timber.d("Fetched Event flow for id: $id")
@@ -83,32 +84,38 @@ class EventsRepository @Inject constructor(private val dao: EventDao) {
         Timber.d("Inserted event: ${event.title} with id: $it")
     }
 
-    suspend fun insertEventWithTasks(event: Event, tasks: List<Task>) =
-        dao.insertEventWithTasks(event, tasks).also {
-            Timber.d("Inserted event: ${event.title} with id: ${event.id} and tasks $tasks")
+    suspend fun insertEventDetailed(event: Event, tasks: List<Task>, reminders: List<Reminder>) =
+        dao.insertEventDetailed(event, tasks, reminders).also {
+            Timber.d(
+                "Inserted event: ${event.title} with id: ${event.id} and extras:\n" +
+                        "tasks: $tasks, \nreminders: $reminders"
+            )
         }
 
     suspend fun updateEvent(event: Event) = dao.update(event).also {
         Timber.d("Updated event: ${event.title} with id: ${event.id}")
     }
 
-    suspend fun updateEventTasksDoneStatus(eventTasks: EventTasks, done: Boolean) {
+    suspend fun updateEventDetailedDoneStatus(eventTasks: EventDetailed, done: Boolean) {
         dao.update(eventTasks.event.copy(done = done))
         eventTasks.tasks.forEach {
             dao.updateTask(it.copy(done = done))
         }
     }
 
-    suspend fun updateEventWithTasks(event: Event, tasks: List<Task>) =
-        dao.updateEventWithTasks(event, tasks).also {
-            Timber.d("Updated event: ${event.title} with id: ${event.id} and tasks: $tasks")
+    suspend fun updateEventDetailed(event: Event, tasks: List<Task>, reminders: List<Reminder>) =
+        dao.updateEventDetailed(event, tasks, reminders).also {
+            Timber.d(
+                "Updated event: ${event.title} with id: ${event.id} and and extras:\n" +
+                        "tasks: $tasks, \nreminders: $reminders"
+            )
         }
 
     suspend fun deleteEvent(event: Event) = dao.delete(event).also {
         Timber.d("Deleted event: ${event.title} with id: ${event.id}")
     }
 
-    suspend fun updateTaskDoneStatus(parent: EventTasks, task: Task, done: Boolean) {
+    suspend fun updateTaskDoneStatus(parent: EventDetailed, task: Task, done: Boolean) {
         dao.updateTask(task.copy(done = done)).also {
             Timber.d("Updated task: ${task.title} with id: ${task.id} to done: $done")
         }

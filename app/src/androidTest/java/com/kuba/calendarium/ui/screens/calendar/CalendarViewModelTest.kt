@@ -146,7 +146,7 @@ class CalendarViewModelTest {
                     viewModel.onEvent(UIEvent.ContextEventDelete(false))
                     advanceUntilIdle()
 
-                    eventsRepository.getEventTasksById(event.id).test {
+                    eventsRepository.getEventDetailedById(event.id).test {
                         val events = awaitItem()
                         assertThat(events).isNull()
 
@@ -187,7 +187,7 @@ class CalendarViewModelTest {
 
                     viewModel.onEvent(UIEvent.DeleteDialogDismiss)
 
-                    eventsRepository.getEventTasksById(event.id).test {
+                    eventsRepository.getEventDetailedById(event.id).test {
                         val events = awaitItem()
                         assertThat(events).isNotNull()
                         cancelAndConsumeRemainingEvents()
@@ -260,7 +260,7 @@ class CalendarViewModelTest {
                     viewModel.onEvent(UIEvent.DoneChanged(event.toEventTasks(), true))
                     advanceUntilIdle()
 
-                    eventsRepository.getEventTasksById(eventId).test {
+                    eventsRepository.getEventDetailedById(eventId).test {
                         val event = awaitItem()
 
                         assertThat(event?.event?.done).isTrue()

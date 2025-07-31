@@ -33,7 +33,7 @@ class EditEventViewModel @Inject constructor(
             viewModelScope.launch { _navEvent.send(NavEvent.Finish(getTodayMidnight())) }
         } else {
             viewModelScope.launch {
-                eventsRepository.getEventTasksById(eventId).filterNotNull().collect { et ->
+                eventsRepository.getEventDetailedById(eventId).filterNotNull().collect { et ->
                     _uiState.update {
                         _uiState.value.copy(
                             title = et.event.title,
@@ -60,8 +60,12 @@ class EditEventViewModel @Inject constructor(
             && _uiState.value.selectedDateEnd == _uiState.value.selectedDate
         ) null else _uiState.value.selectedTimeEnd
 
-        eventsRepository.updateEventWithTasks(
-            Event(
+        val tasks = _uiState.value.taskList.mapIndexed { index, taskData ->
+            taskData.toTask(index)
+        }
+
+        eventsRepository.updateEventDetailed(
+            event = Event(
                 id = eventId,
                 title = _uiState.value.title,
                 description = _uiState.value.description,
@@ -72,9 +76,8 @@ class EditEventViewModel @Inject constructor(
                 repetition = _uiState.value.currentRepetition,
                 done = _uiState.value.isDone
             ),
-            _uiState.value.taskList.mapIndexed { index, taskData ->
-                taskData.toTask(index)
-            }
+            tasks = tasks,
+            reminders = _uiState.value.reminders
         )
     }
 

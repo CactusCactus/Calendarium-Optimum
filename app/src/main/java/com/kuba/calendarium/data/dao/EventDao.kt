@@ -8,7 +8,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.kuba.calendarium.data.model.Event
-import com.kuba.calendarium.data.model.EventTasks
+import com.kuba.calendarium.data.model.EventDetailed
+import com.kuba.calendarium.data.model.Reminder
 import com.kuba.calendarium.data.model.Task
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -19,12 +20,16 @@ interface EventDao {
     suspend fun insert(event: Event): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTask(eventTask: Task): Long
+    suspend fun insert(eventTask: Task): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(reminder: Reminder): Long
 
     @Transaction
-    suspend fun insertEventWithTasks(event: Event, tasks: List<Task>) {
+    suspend fun insertEventDetailed(event: Event, tasks: List<Task>, reminders: List<Reminder>) {
         val eventId = insert(event)
-        tasks.forEach { task -> insertTask(task.copy(eventIdRef = eventId)) }
+        tasks.forEach { task -> insert(task.copy(eventIdRef = eventId)) }
+        reminders.forEach { reminder -> insert(reminder.copy(eventIdRef = eventId)) }
     }
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
@@ -34,10 +39,13 @@ interface EventDao {
     suspend fun updateTask(eventTask: Task)
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun updateEventWithTasks(event: Event, tasks: List<Task>) {
+    suspend fun updateEventDetailed(event: Event, tasks: List<Task>, reminders: List<Reminder>) {
         update(event)
         deleteTasksByEventId(event.id)
-        tasks.forEach { task -> insertTask(task.copy(eventIdRef = event.id)) }
+        tasks.forEach { task -> insert(task.copy(eventIdRef = event.id)) }
+
+        deleteRemindersByEventId(event.id)
+        reminders.forEach { reminder -> insert(reminder.copy(eventIdRef = event.id)) }
     }
 
     @Delete
@@ -46,20 +54,22 @@ interface EventDao {
     @Query("DELETE FROM task WHERE event_id_ref = :eventId")
     suspend fun deleteTasksByEventId(eventId: Long)
 
+    @Query("DELETE FROM reminder WHERE event_id_ref = :eventId")
+    suspend fun deleteRemindersByEventId(eventId: Long)
 
     @Transaction
     @Query(
         "SELECT * FROM event WHERE (date_end IS NOT NULL AND :date BETWEEN date AND date_end) " +
                 "OR :date == date ORDER BY is_done ASC, time ASC"
     )
-    fun getEventTasksListForDate(date: LocalDate): Flow<List<EventTasks>>
+    fun getEventDetailedListForDate(date: LocalDate): Flow<List<EventDetailed>>
 
     @Transaction
     @Query(
         "SELECT * FROM event WHERE repetition IS NOT NULL AND :date > date " +
                 "ORDER BY is_done ASC, time ASC"
     )
-    fun getPastRepeatingEventTasksList(date: LocalDate): Flow<List<EventTasks>>
+    fun getPastRepeatingEventDetailedList(date: LocalDate): Flow<List<EventDetailed>>
 
     @Query(
         "SELECT * FROM event WHERE (date_end IS NOT NULL AND :date BETWEEN date AND date_end) " +
@@ -93,7 +103,7 @@ interface EventDao {
 
     @Transaction
     @Query("SELECT * FROM event WHERE event_id = :id")
-    fun getEventTasksById(id: Long): Flow<EventTasks?>
+    fun getEventDetailedById(id: Long): Flow<EventDetailed?>
 
     @Query("SELECT * FROM event WHERE event_id = :id")
     fun getEventById(id: Long): Flow<Event?>

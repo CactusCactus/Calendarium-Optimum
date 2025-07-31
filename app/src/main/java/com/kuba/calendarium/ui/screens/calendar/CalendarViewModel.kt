@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kuba.calendarium.data.dataStore.UserPreferencesRepository
 import com.kuba.calendarium.data.model.Event
-import com.kuba.calendarium.data.model.EventTasks
+import com.kuba.calendarium.data.model.EventDetailed
 import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
 import com.kuba.calendarium.data.repo.EventsRepository
@@ -82,8 +82,8 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
-    fun getEventsForDate(date: LocalDate): Flow<List<EventTasks>> =
-        eventsRepository.getEventTasksListForDate(date).onEach {
+    fun getEventsForDate(date: LocalDate): Flow<List<EventDetailed>> =
+        eventsRepository.getEventDetailedListForDate(date).onEach {
             it.forEach {
                 Timber.d("Event: ${it.event.title}, Tasks: ${it.tasks.map { it.title }}")
             }
@@ -97,7 +97,7 @@ class CalendarViewModel @Inject constructor(
             is ContextEventDelete -> deleteEvent(event)
 
             is UIEvent.DoneChanged -> viewModelScope.launch {
-                eventsRepository.updateEventTasksDoneStatus(event.event, event.checked)
+                eventsRepository.updateEventDetailedDoneStatus(event.event, event.checked)
             }
 
             // Context menu events
@@ -215,12 +215,12 @@ class CalendarViewModel @Inject constructor(
     sealed class UIEvent {
         data class DateSelected(val date: LocalDate) : UIEvent()
         data class ContextMenuOpen(val event: Event) : UIEvent()
-        data class DoneChanged(val event: EventTasks, val checked: Boolean) : UIEvent()
+        data class DoneChanged(val event: EventDetailed, val checked: Boolean) : UIEvent()
         data class ContextEventDelete(val dontShowAgain: Boolean) : UIEvent()
         data class ContextMenuOptionSelected(val option: ContextMenuOption) : UIEvent()
         data class VisibleDatesChanged(val startDate: LocalDate, val endDate: LocalDate) : UIEvent()
         data class OnTaskDoneChanged(
-            val parent: EventTasks,
+            val parent: EventDetailed,
             val task: Task,
             val checked: Boolean
         ) : UIEvent()

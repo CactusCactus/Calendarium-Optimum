@@ -85,7 +85,7 @@ class EditEventViewModelTest {
 
                     advanceUntilIdle()
 
-                    viewModel.eventsRepository.getEventTasksById(testEventId).test {
+                    viewModel.eventsRepository.getEventDetailedById(testEventId).test {
                         val event = awaitItem()
 
                         assertThat(event).isNotNull()

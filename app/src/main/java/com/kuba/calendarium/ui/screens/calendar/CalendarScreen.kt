@@ -50,7 +50,7 @@ import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kuba.calendarium.R
-import com.kuba.calendarium.data.model.EventTasks
+import com.kuba.calendarium.data.model.EventDetailed
 import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.ui.common.AnimatedText
 import com.kuba.calendarium.ui.common.CheckboxNoPadding
@@ -260,7 +260,7 @@ private fun EventsList(
         if (events.isNotEmpty()) {
             itemsIndexed(
                 items = events,
-                key = { i: Int, et: EventTasks -> et.event.id }) { i: Int, et: EventTasks ->
+                key = { i: Int, et: EventDetailed -> et.event.id }) { i: Int, et: EventDetailed ->
 
                 AnimatedVisibility(i == firstDoneIndex) {
                     LineWithText(stringResource(R.string.done))
@@ -301,7 +301,7 @@ private fun EventsList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EventRow(
-    eventTasks: EventTasks,
+    eventTasks: EventDetailed,
     onLongClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
     onTaskDoneChanged: (Task, Boolean) -> Unit,
