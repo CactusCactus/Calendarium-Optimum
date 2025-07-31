@@ -3,10 +3,13 @@ package com.kuba.calendarium.ui.common
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Checkbox
@@ -18,6 +21,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
@@ -31,11 +35,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -216,11 +222,9 @@ fun OutlinedText(
 
 @Composable
 fun OutlinedNumberField(
-    value: Int,
-    onValueChange: (Int) -> Unit,
+    value: String,
+    onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    minValue: Int? = 0,
-    maxValue: Int? = null,
     enabled: Boolean = true,
     readOnly: Boolean = false,
     textStyle: TextStyle = LocalTextStyle.current,
@@ -233,9 +237,11 @@ fun OutlinedNumberField(
     supportingText: @Composable (() -> Unit)? = null,
     isError: Boolean = false,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default.copy(
+        keyboardType = KeyboardType.Number
+    ),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    singleLine: Boolean = false,
+    singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     minLines: Int = 1,
     interactionSource: MutableInteractionSource? = null,
@@ -246,27 +252,15 @@ fun OutlinedNumberField(
     OutlinedTextField(
         value = value.toString(),
         onValueChange = { newValue ->
-            // Allow empty string for clearing the field
-            if (newValue.isEmpty()) {
-                minValue?.let { onValueChange(it) }
-                return@OutlinedTextField
-            }
-
-            // Filter out non-digit characters
             val filteredValue = newValue.filter { it.isDigit() }
 
-            // Apply maxDigits limit if provided
             val finalValue = if (maxDigits != null && filteredValue.length > maxDigits) {
                 filteredValue.take(maxDigits)
-            } else if (minValue != null && filteredValue.toInt() < minValue) {
-                minValue.toString()
-            } else if (maxValue != null && filteredValue.toInt() > maxValue) {
-                maxValue.toString()
             } else {
                 filteredValue
             }
 
-            finalValue.toIntOrNull()?.let { onValueChange(it) }
+            onValueChange(finalValue)
         },
         modifier = modifier,
         enabled = enabled,
@@ -290,6 +284,39 @@ fun OutlinedNumberField(
         shape = shape,
         colors = colors
     )
+}
+
+@Composable
+fun <T> RadioButtonGroup(
+    options: List<T>,
+    selectedOption: T,
+    onOptionSelected: (T) -> Unit,
+    labelProvider: @Composable (T) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        options.forEach { option ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = (option == selectedOption),
+                        onClick = { onOptionSelected(option) },
+                        role = Role.RadioButton
+                    )
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = (option == selectedOption),
+                    onClick = null
+                )
+                StandardSpacer()
+
+                labelProvider(option)
+            }
+        }
+    }
 }
 
 

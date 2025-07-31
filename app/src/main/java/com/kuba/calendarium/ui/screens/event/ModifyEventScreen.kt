@@ -72,9 +72,11 @@ import com.kuba.calendarium.R
 import com.kuba.calendarium.data.model.Reminder
 import com.kuba.calendarium.data.model.Repetition
 import com.kuba.calendarium.data.model.internal.TaskCreationData
+import com.kuba.calendarium.ui.common.AddReminderDialog
 import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.DatePickerModal
 import com.kuba.calendarium.ui.common.OutlinedText
+import com.kuba.calendarium.ui.common.ReminderTimePicker
 import com.kuba.calendarium.ui.common.StandardDoubleSpacer
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuadrupleSpacer
@@ -172,6 +174,32 @@ fun ModifyEventScreen(
                 },
                 onDismissRequest = {
                     viewModel.onEvent(UIEvent.TimePickerDismissed)
+                }
+            )
+        }
+
+        if (viewModel.uiState.collectAsState().value.reminderDialogOpen) {
+            AddReminderDialog(
+                onDismissRequest = { viewModel.onEvent(UIEvent.OnReminderDialogDismiss) },
+                onCustomReminderClick = {
+                    viewModel.onEvent(UIEvent.AddCustomReminderRequest)
+                    viewModel.onEvent(UIEvent.OnReminderDialogDismiss)
+                },
+                onReminderPicked = {
+                    viewModel.onEvent(UIEvent.OnReminderAdded(it))
+                    viewModel.onEvent(UIEvent.OnReminderDialogDismiss)
+                }
+            )
+        }
+
+        if (viewModel.uiState.collectAsState().value.customReminderDialogOpen) {
+            ReminderTimePicker(
+                onReminderCreated = {
+                    viewModel.onEvent(UIEvent.OnReminderAdded(it))
+                    viewModel.onEvent(UIEvent.OnCustomReminderDialogDismiss)
+                },
+                onDismissRequest = {
+                    viewModel.onEvent(UIEvent.OnCustomReminderDialogDismiss)
                 }
             )
         }
@@ -296,7 +324,7 @@ private fun MainColumn(
 
         RemindersLayout(
             reminderList = uiState.reminders,
-            onAddReminder = { onEvent(UIEvent.AddReminder(it)) },
+            onAddReminderClick = { onEvent(UIEvent.AddReminderRequest) },
             onRemoveReminder = { onEvent(UIEvent.RemoveReminder(it)) })
 
 
@@ -383,11 +411,12 @@ private fun TaskListRow(
         val hapticFeedback = LocalHapticFeedback.current
         val lazyListState = rememberLazyListState()
 
-        val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-            // -1 to account for the header
-            onTaskOrderChanged(from.index - 1, to.index - 1)
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-        }
+        val reorderableLazyListState =
+            rememberReorderableLazyListState(lazyListState) { from, to ->
+                // -1 to account for the header
+                onTaskOrderChanged(from.index - 1, to.index - 1)
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+            }
 
         LazyColumn(
             state = lazyListState,
@@ -759,7 +788,7 @@ private fun SetRepeatingCheckbox(repeating: Boolean, onCheckedChange: (Boolean) 
 @Composable
 private fun RemindersLayout(
     reminderList: List<Reminder>,
-    onAddReminder: (Reminder) -> Unit,
+    onAddReminderClick: () -> Unit,
     onRemoveReminder: (Reminder) -> Unit
 ) {
     if (reminderList.isEmpty()) {
@@ -767,7 +796,7 @@ private fun RemindersLayout(
             text = stringResource(R.string.add_reminder_text),
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onAddReminder(Reminder.default) }
+                .clickable { onAddReminderClick() }
         )
     }
 
@@ -795,7 +824,7 @@ private fun RemindersLayout(
                 AddReminderRow(
                     enabled = reminderList.size < ModifyEventViewModel.MAX_REMINDER_COUNT,
                     onClick = {
-                        // Show reminder dialog
+                        onAddReminderClick()
                     })
             }
         }
@@ -817,7 +846,10 @@ private fun ReminderRow(reminder: Reminder, onRemoveReminder: (Reminder) -> Unit
             stringResource(
                 R.string.reminder_row_label,
                 reminder.value,
-                reminder.unit.toReminderString(LocalContext.current)
+                reminder.unit.toReminderString(
+                    quantity = reminder.value.toInt(),
+                    context = LocalContext.current
+                )
             )
         )
 

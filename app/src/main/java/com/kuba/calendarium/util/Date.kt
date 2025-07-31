@@ -53,11 +53,22 @@ fun getMonthNames(textStyle: TextStyle = TextStyle.SHORT) = Month.entries.map { 
     month.getDisplayName(textStyle, Locale.getDefault())
 }
 
-fun ChronoUnit.toReminderString(context: Context) = when (this) {
-    ChronoUnit.MINUTES -> context.getString(R.string.reminder_unit_minutes)
-    ChronoUnit.HOURS -> context.getString(R.string.reminder_unit_hours)
-    ChronoUnit.DAYS -> context.getString(R.string.reminder_unit_days)
-    ChronoUnit.WEEKS -> context.getString(R.string.reminder_unit_weeks)
-    ChronoUnit.MONTHS -> context.getString(R.string.reminder_unit_months)
-    else -> throw NotImplementedError()
-}
+fun ChronoUnit.toReminderString(quantity: Int, context: Context) =
+    context.resources.getQuantityString(
+        when (this) {
+            ChronoUnit.MINUTES -> R.plurals.reminder_unit_minutes
+            ChronoUnit.HOURS -> R.plurals.reminder_unit_hours
+            ChronoUnit.DAYS -> R.plurals.reminder_unit_days
+            ChronoUnit.WEEKS -> R.plurals.reminder_unit_weeks
+            ChronoUnit.MONTHS -> R.plurals.reminder_unit_months
+            else -> throw NotImplementedError()
+        }, quantity
+    )
+
+fun getReminderChronoUnits() = listOf(
+    ChronoUnit.MINUTES,
+    ChronoUnit.HOURS,
+    ChronoUnit.DAYS,
+    ChronoUnit.WEEKS,
+    ChronoUnit.MONTHS
+)

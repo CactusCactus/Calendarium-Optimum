@@ -98,6 +98,7 @@ abstract class ModifyEventViewModel(
                 _uiState.value.copy(timePickerOpen = false)
             }
 
+            // Task events
             is UIEvent.AddTask -> addTask(event)
             is UIEvent.UpdateTask -> updateTask(event)
             is UIEvent.RemoveTask -> removeTask(event)
@@ -106,12 +107,27 @@ abstract class ModifyEventViewModel(
                 _uiState.value.copy(currentRepetition = event.repetition)
             }
 
-            is UIEvent.AddReminder -> _uiState.update {
+            // Reminder events
+            is UIEvent.OnReminderAdded -> _uiState.update {
                 it.copy(reminders = it.reminders.apply { add(event.reminder) })
             }
 
             is UIEvent.RemoveReminder -> _uiState.update {
                 it.copy(reminders = it.reminders.apply { remove(event.reminder) })
+            }
+
+            UIEvent.AddReminderRequest -> _uiState.update { it.copy(reminderDialogOpen = true) }
+
+            UIEvent.OnReminderDialogDismiss -> _uiState.update {
+                it.copy(reminderDialogOpen = false)
+            }
+
+            UIEvent.AddCustomReminderRequest -> _uiState.update {
+                it.copy(customReminderDialogOpen = true)
+            }
+
+            UIEvent.OnCustomReminderDialogDismiss -> _uiState.update {
+                it.copy(customReminderDialogOpen = false)
             }
         }
     }
@@ -334,7 +350,9 @@ abstract class ModifyEventViewModel(
         val currentRepetition: Repetition? = null,
         val availableRepetitions: List<Repetition> = Repetition.entries,
         val isDone: Boolean = false,
-        val reminders: SnapshotStateList<Reminder> = mutableStateListOf(),
+        val reminders: SnapshotStateList<Reminder> = mutableStateListOf(Reminder.default),
+        val reminderDialogOpen: Boolean = false,
+        val customReminderDialogOpen: Boolean = false,
 
         // Validation
         val titleError: ValidationError? = null,
@@ -356,12 +374,16 @@ abstract class ModifyEventViewModel(
         data class RemoveTask(val index: Int) : UIEvent()
         data class ReorderTask(val fromIndex: Int, val toIndex: Int) : UIEvent()
         data class RepetitionChanged(val repetition: Repetition?) : UIEvent()
-        data class AddReminder(val reminder: Reminder) : UIEvent()
         data class RemoveReminder(val reminder: Reminder) : UIEvent()
+        data class OnReminderAdded(val reminder: Reminder) : UIEvent()
         object ClearTime : UIEvent()
         object DoneClicked : UIEvent()
         object DatePickerDismissed : UIEvent()
         object TimePickerDismissed : UIEvent()
+        object AddReminderRequest : UIEvent()
+        object AddCustomReminderRequest : UIEvent()
+        object OnReminderDialogDismiss : UIEvent()
+        object OnCustomReminderDialogDismiss : UIEvent()
     }
 
     sealed class NavEvent {

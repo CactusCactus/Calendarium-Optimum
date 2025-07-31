@@ -47,19 +47,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.Dialog
 import com.kuba.calendarium.R
+import com.kuba.calendarium.data.model.Reminder
 import com.kuba.calendarium.data.model.internal.ContextMenuOption
+import com.kuba.calendarium.util.DEFAULT_REMINDER_OPTIONS
 import com.kuba.calendarium.util.MONTH_PICKER_ROWS
 import com.kuba.calendarium.util.getMonthNames
+import com.kuba.calendarium.util.getReminderChronoUnits
 import com.kuba.calendarium.util.toLocalDate
 import com.kuba.calendarium.util.toMillis
+import com.kuba.calendarium.util.toReminderString
 import timber.log.Timber
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 
 private const val MONTH_BUTTON_ASPECT_RATIO = 1.5f
 
@@ -250,8 +256,13 @@ fun ContextMenuBottomSheet(
             )
 
             LazyColumn {
-                items(ContextMenuOption.entries.toTypedArray()) {
-                    JourneyContextMenuRow(it, Modifier.clickable { onOptionClick.invoke(it) })
+                items(ContextMenuOption.entries.toTypedArray()) { option ->
+                    JourneyContextMenuRow(
+                        option,
+                        Modifier
+                            .clickable { onOptionClick.invoke(option) }
+                            .padding(standardPadding)
+                    )
                 }
             }
 
@@ -265,7 +276,8 @@ fun JourneyContextMenuRow(option: ContextMenuOption, modifier: Modifier = Modifi
     StandardListRow(
         label = stringResource(option.label),
         icon = option.icon,
-        iconTint = option.overrideTint,
+        iconTint = if (option.tintRed) MaterialTheme.colorScheme.error
+        else LocalContentColor.current,
         modifier = modifier,
     )
 }
@@ -306,5 +318,154 @@ fun ConfirmDialog(
             }
         },
         modifier = modifier
+    )
+}
+
+@Composable
+fun AddReminderDialog(
+    onReminderPicked: (Reminder) -> Unit,
+    onCustomReminderClick: () -> Unit,
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(modifier = modifier) {
+            LazyColumn {
+                item {
+                    TextPrimaryTitle(
+                        stringResource(R.string.add_reminder_dialog_title),
+                        modifier = Modifier.padding(standardPadding)
+                    )
+                }
+                items(DEFAULT_REMINDER_OPTIONS) { reminder ->
+                    ReminderRow(
+                        reminder = reminder,
+                        onReminderPicked = onReminderPicked,
+                        modifier = Modifier.padding(standardPadding)
+                    )
+                }
+
+                item {
+                    StandardListRow(
+                        label = stringResource(R.string.add_reminder_dialog_add_label),
+                        icon = R.drawable.ic_add_24,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clickable(onClick = onCustomReminderClick)
+                            .padding(standardPadding)
+                    )
+                }
+            }
+
+            TextButton(
+                onClick = onDismissRequest,
+                modifier = Modifier
+                    .padding(standardPadding)
+                    .align(Alignment.End)
+            ) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    }
+}
+
+@Composable
+fun ReminderTimePicker(
+    modifier: Modifier = Modifier,
+    onReminderCreated: (Reminder) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    var reminderValue by remember { mutableStateOf("1") }
+    var reminderUnit by remember { mutableStateOf(ChronoUnit.HOURS) }
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(modifier = modifier) {
+            TextPrimaryTitle(
+                stringResource(R.string.add_reminder_dialog_title),
+                modifier = Modifier.padding(standardPadding)
+            )
+
+            OutlinedNumberField(
+                value = reminderValue,
+                onValueChange = { reminderValue = it },
+                maxLines = 1,
+                maxDigits = 2,
+                placeholder = {
+                    TextSecondaryBody(
+                        stringResource(R.string.reminder_time_picker_value_placeholder)
+                    )
+                },
+                modifier = Modifier
+                    .padding(standardPadding)
+                    .width(IntrinsicSize.Min)
+            )
+
+            RadioButtonGroup(
+                options = getReminderChronoUnits(),
+                selectedOption = reminderUnit,
+                onOptionSelected = { reminderUnit = it },
+                modifier = Modifier.padding(standardPadding),
+                labelProvider = { unit ->
+                    Text(
+                        unit.toReminderString(
+                            quantity = reminderValue.toIntOrNull() ?: 1,
+                            context = LocalContext.current
+                        )
+                            .replaceFirstChar { it.uppercase() })
+                }
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(standardPadding)
+            ) {
+                val reminderValueLong = reminderValue.toLongOrNull()
+
+                TextButton(
+                    enabled = reminderValueLong != null,
+                    onClick = {
+                        onReminderCreated(
+                            Reminder(
+                                value = reminderValueLong?.toLong() ?: 0,
+                                unit = reminderUnit
+                            )
+                        )
+                    },
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
+
+                TextButton(
+                    onClick = onDismissRequest,
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReminderRow(
+    reminder: Reminder,
+    onReminderPicked: (Reminder) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    StandardListRow(
+        label = stringResource(
+            R.string.reminder_row_label,
+            reminder.value,
+            reminder.unit.toReminderString(
+                quantity = reminder.value.toInt(),
+                context = LocalContext.current
+            )
+        ),
+        icon = R.drawable.ic_notifications_active_24,
+        iconTint = MaterialTheme.colorScheme.secondary,
+        modifier = Modifier
+            .clickable { onReminderPicked(reminder) }
+            .then(modifier),
     )
 }
