@@ -19,6 +19,8 @@ val fabSize = 56.dp
 val fabContentPadding = 4.dp
 
 // Icons
+val tinyIconSize = 12.dp
+
 val standardIconSize = 28.dp
 
 // Misc

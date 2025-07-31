@@ -5,6 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
+import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @Entity(
@@ -26,6 +27,9 @@ data class Reminder(
     companion object {
         val default = Reminder(value = 1, unit = ChronoUnit.HOURS)
     }
+
+    fun getReminderTime(eventTime: LocalDateTime): LocalDateTime =
+        eventTime.minus(value, unit)
 }
 
 class ChronoUnitConverter {

@@ -1,5 +1,6 @@
 package com.kuba.calendarium.ui.screens.calendar
 
+import android.text.format.DateUtils
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -67,6 +68,7 @@ import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
 import com.kuba.calendarium.ui.common.taskListMaxHeight
+import com.kuba.calendarium.ui.common.tinyIconSize
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.CalendarDisplayMode
 import com.kuba.calendarium.ui.screens.calendar.CalendarViewModel.UIEvent
 import com.kuba.calendarium.util.CALENDAR_MAX_OFFSET_YEARS
@@ -76,8 +78,10 @@ import com.kuba.calendarium.util.titleDateFormat
 import com.kuba.calendarium.util.toLocalizedString
 import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.YearMonth
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -269,7 +273,7 @@ private fun EventsList(
                 StandardHalfSpacer()
 
                 EventRow(
-                    eventTasks = et,
+                    eventDetailed = et,
                     onLongClick = {
                         viewModel.onEvent(UIEvent.ContextMenuOpen(et.event))
                     },
@@ -301,14 +305,14 @@ private fun EventsList(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EventRow(
-    eventTasks: EventDetailed,
+    eventDetailed: EventDetailed,
     onLongClick: () -> Unit,
     onCheckedChange: (Boolean) -> Unit,
     onTaskDoneChanged: (Task, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val event = eventTasks.event
-    val tasks = eventTasks.tasks
+    val event = eventDetailed.event
+    val tasks = eventDetailed.tasks
 
     Card(
         modifier = modifier.combinedClickable(
@@ -317,11 +321,11 @@ private fun EventRow(
         )
     ) {
         Box {
-            Column(modifier = Modifier.padding(standardPadding)) {
-                if (event.repetition != null) {
-                    TextLabel(event.repetition.toLocalizedString(LocalContext.current))
-                    StandardQuarterSpacer()
-                }
+            Column(
+                modifier = Modifier.padding(standardPadding),
+                verticalArrangement = Arrangement.spacedBy(standardHalfPadding)
+            ) {
+                EventExtrasRow(eventDetailed)
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CheckboxNoPadding(
@@ -372,6 +376,66 @@ private fun EventRow(
                         .background(MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun EventExtrasRow(eventDetailed: EventDetailed) {
+    val event = eventDetailed.event
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val localTime = LocalDateTime.of(event.date, event.time)
+
+        val nextReminder = eventDetailed.reminders.filter {
+            localTime.minus(it.value, it.unit) > LocalDateTime.now()
+        }.minByOrNull {
+            it.value * it.unit.duration.seconds
+        }
+
+        if (nextReminder != null) {
+            Icon(
+                painter = painterResource(R.drawable.ic_notifications_active_24),
+                contentDescription = "Reminder icon",
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(tinyIconSize)
+            )
+
+
+            val reminderTime = nextReminder.getReminderTime(
+                localTime
+            )
+
+            val zoneOffset = ZoneId.systemDefault().rules.getOffset(reminderTime)
+
+            val relativeTime = DateUtils.getRelativeDateTimeString(
+                LocalContext.current,
+                reminderTime.toInstant(zoneOffset).toEpochMilli(),
+                DateUtils.MINUTE_IN_MILLIS,
+                DateUtils.WEEK_IN_MILLIS,
+                0,
+            )
+
+            StandardQuarterSpacer()
+
+            TextLabel(relativeTime.toString())
+
+            StandardHalfSpacer()
+        }
+
+        if (event.repetition != null) {
+            Icon(
+                painter = painterResource(R.drawable.ic_repeat_24),
+                contentDescription = "Reminder icon",
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.size(tinyIconSize)
+            )
+
+            StandardQuarterSpacer()
+
+            TextLabel(event.repetition.toLocalizedString(LocalContext.current))
         }
     }
 }

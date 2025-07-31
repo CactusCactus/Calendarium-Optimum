@@ -64,6 +64,9 @@ class EditEventViewModel @Inject constructor(
             taskData.toTask(index)
         }
 
+        val reminders = if (_uiState.value.selectedTime != null) _uiState.value.reminders
+        else emptyList()
+
         eventsRepository.updateEventDetailed(
             event = Event(
                 id = eventId,
@@ -77,7 +80,7 @@ class EditEventViewModel @Inject constructor(
                 done = _uiState.value.isDone
             ),
             tasks = tasks,
-            reminders = _uiState.value.reminders
+            reminders = reminders
         )
     }
 

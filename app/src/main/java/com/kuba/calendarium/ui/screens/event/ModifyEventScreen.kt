@@ -239,7 +239,7 @@ private fun MainColumn(
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(
-                imeAction = ImeAction.Next,
+                imeAction = ImeAction.Done,
                 capitalization = KeyboardCapitalization.Sentences
             )
         )
@@ -312,6 +312,18 @@ private fun MainColumn(
             }
         )
 
+
+        AnimatedVisibility(uiState.selectedTime != null) {
+            Column {
+                StandardSpacer()
+
+                RemindersLayout(
+                    reminderList = uiState.reminders,
+                    onAddReminderClick = { onEvent(UIEvent.AddReminderRequest) },
+                    onRemoveReminder = { onEvent(UIEvent.RemoveReminder(it)) })
+            }
+        }
+
         StandardSpacer()
 
         RepetitionLayout(
@@ -319,14 +331,6 @@ private fun MainColumn(
             availableRepetitions = uiState.availableRepetitions,
             onRepetitionChanged = { onEvent(UIEvent.RepetitionChanged(it)) }
         )
-
-        StandardSpacer()
-
-        RemindersLayout(
-            reminderList = uiState.reminders,
-            onAddReminderClick = { onEvent(UIEvent.AddReminderRequest) },
-            onRemoveReminder = { onEvent(UIEvent.RemoveReminder(it)) })
-
 
         StandardQuadrupleSpacer()
     }

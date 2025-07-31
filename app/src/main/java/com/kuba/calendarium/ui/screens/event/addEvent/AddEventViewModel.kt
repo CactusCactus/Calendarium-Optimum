@@ -31,6 +31,9 @@ class AddEventViewModel @Inject constructor(
             Task(title = taskData.title, position = index)
         }
 
+        val reminders = if (_uiState.value.selectedTime != null) _uiState.value.reminders
+        else emptyList()
+
         eventsRepository.insertEventDetailed(
             event = Event(
                 title = _uiState.value.title,
@@ -42,7 +45,7 @@ class AddEventViewModel @Inject constructor(
                 repetition = _uiState.value.currentRepetition
             ),
             tasks = tasks,
-            reminders = uiState.value.reminders
+            reminders = reminders
         )
     }
 
