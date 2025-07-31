@@ -9,7 +9,7 @@ import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.Task
 import com.kuba.calendarium.data.model.TimeConverters
-import com.kuba.calendarium.data.model.internal.RepetitionConverter
+import com.kuba.calendarium.data.model.RepetitionConverter
 
 @Database(entities = [Event::class, Task::class], version = 2, exportSchema = false)
 @TypeConverters(TimeConverters::class, RepetitionConverter::class)

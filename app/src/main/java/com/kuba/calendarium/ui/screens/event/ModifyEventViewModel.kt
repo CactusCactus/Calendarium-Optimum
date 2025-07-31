@@ -6,7 +6,8 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kuba.calendarium.data.model.internal.Repetition
+import com.kuba.calendarium.data.model.Reminder
+import com.kuba.calendarium.data.model.Repetition
 import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.NavEvent.Finish
@@ -45,13 +46,17 @@ abstract class ModifyEventViewModel(
         const val MAX_DESCRIPTION_LENGTH = 2000
 
         const val MAX_TASK_LENGTH = 80
+
         const val MAX_TASK_COUNT = 20
+
+        const val MAX_REMINDER_COUNT = 10
     }
 
     protected abstract suspend fun databaseWriteOperation()
 
     protected abstract fun initUIState(): MutableStateFlow<UIState>
 
+    @Suppress("CyclomaticComplexMethod")
     fun onEvent(event: UIEvent) {
         when (event) {
             is UIEvent.DescriptionChanged -> {
@@ -99,6 +104,14 @@ abstract class ModifyEventViewModel(
             is UIEvent.ReorderTask -> reorderTask(event)
             is UIEvent.RepetitionChanged -> _uiState.update {
                 _uiState.value.copy(currentRepetition = event.repetition)
+            }
+
+            is UIEvent.AddReminder -> _uiState.update {
+                it.copy(reminders = it.reminders.apply { add(event.reminder) })
+            }
+
+            is UIEvent.RemoveReminder -> _uiState.update {
+                it.copy(reminders = it.reminders.apply { remove(event.reminder) })
             }
         }
     }
@@ -321,6 +334,7 @@ abstract class ModifyEventViewModel(
         val currentRepetition: Repetition? = null,
         val availableRepetitions: List<Repetition> = Repetition.entries,
         val isDone: Boolean = false,
+        val reminders: SnapshotStateList<Reminder> = mutableStateListOf(),
 
         // Validation
         val titleError: ValidationError? = null,
@@ -342,6 +356,8 @@ abstract class ModifyEventViewModel(
         data class RemoveTask(val index: Int) : UIEvent()
         data class ReorderTask(val fromIndex: Int, val toIndex: Int) : UIEvent()
         data class RepetitionChanged(val repetition: Repetition?) : UIEvent()
+        data class AddReminder(val reminder: Reminder) : UIEvent()
+        data class RemoveReminder(val reminder: Reminder) : UIEvent()
         object ClearTime : UIEvent()
         object DoneClicked : UIEvent()
         object DatePickerDismissed : UIEvent()

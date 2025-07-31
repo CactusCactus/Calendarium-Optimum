@@ -30,3 +30,4 @@ val taskListEditionMaxHeight = 428.dp
 
 val descriptionFieldMaxHeight = 428.dp
 
+val remindersListMaxHeight = 428.dp

@@ -1,4 +1,4 @@
-package com.kuba.calendarium.data.model.internal
+package com.kuba.calendarium.data.model
 
 import androidx.room.TypeConverter
 

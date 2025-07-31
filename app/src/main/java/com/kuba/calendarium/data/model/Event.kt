@@ -6,7 +6,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import androidx.room.TypeConverter
-import com.kuba.calendarium.data.model.internal.Repetition
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter

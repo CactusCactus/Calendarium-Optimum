@@ -3,7 +3,7 @@ package com.kuba.calendarium.ui.screens.event
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import com.kuba.calendarium.data.model.internal.Repetition
+import com.kuba.calendarium.data.model.Repetition
 import com.kuba.calendarium.data.repo.EventsRepository
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.ui.screens.event.addEvent.AddEventViewModel

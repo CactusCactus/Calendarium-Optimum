@@ -2,7 +2,7 @@ package com.kuba.calendarium.util
 
 import android.content.Context
 import com.kuba.calendarium.R
-import com.kuba.calendarium.data.model.internal.Repetition
+import com.kuba.calendarium.data.model.Repetition
 import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel
 
 fun ModifyEventViewModel.ValidationError.toLocalizedString(context: Context): String = when (this) {

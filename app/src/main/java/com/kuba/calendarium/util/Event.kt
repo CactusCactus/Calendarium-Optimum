@@ -1,7 +1,7 @@
 package com.kuba.calendarium.util
 
 import com.kuba.calendarium.data.model.Event
-import com.kuba.calendarium.data.model.internal.Repetition
+import com.kuba.calendarium.data.model.Repetition
 import java.time.LocalDate
 
 fun Event.isHappeningOnDate(selectedDate: LocalDate): Boolean = if (dateEnd == null) {

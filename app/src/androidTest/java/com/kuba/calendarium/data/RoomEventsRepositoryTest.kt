@@ -10,7 +10,7 @@ import com.kuba.calendarium.data.dao.EventDao
 import com.kuba.calendarium.data.model.Event
 import com.kuba.calendarium.data.model.EventTasks
 import com.kuba.calendarium.data.model.Task
-import com.kuba.calendarium.data.model.internal.Repetition
+import com.kuba.calendarium.data.model.Repetition
 import com.kuba.calendarium.data.repo.EventsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

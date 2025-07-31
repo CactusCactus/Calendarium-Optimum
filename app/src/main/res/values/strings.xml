@@ -37,4 +37,12 @@
     <string name="repetition_weekly">Weekly</string>
     <string name="repetition_monthly">Monthly</string>
     <string name="repetition_yearly">Yearly</string>
+    <string name="add_reminder_text">Add reminder</string>
+    <string name="reminder_unit_minutes">minutes</string>
+    <string name="reminder_unit_hours">hours</string>
+    <string name="reminder_unit_days">days</string>
+    <string name="reminder_unit_weeks">weeks</string>
+    <string name="reminder_unit_months">months</string>
+    <string name="reminder_row_label">%1$s %2$s before</string>
+    <string name="reminder_list_header_label">Reminders</string>
 </resources>

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -66,7 +67,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.kuba.calendarium.R
-import com.kuba.calendarium.data.model.internal.Repetition
+import com.kuba.calendarium.data.model.Reminder
+import com.kuba.calendarium.data.model.Repetition
 import com.kuba.calendarium.data.model.internal.TaskCreationData
 import com.kuba.calendarium.ui.common.CheckboxNoPadding
 import com.kuba.calendarium.ui.common.DatePickerModal
@@ -75,12 +77,14 @@ import com.kuba.calendarium.ui.common.StandardDoubleSpacer
 import com.kuba.calendarium.ui.common.StandardHalfSpacer
 import com.kuba.calendarium.ui.common.StandardQuarterSpacer
 import com.kuba.calendarium.ui.common.StandardSpacer
+import com.kuba.calendarium.ui.common.TextPrimaryTitle
 import com.kuba.calendarium.ui.common.TimePickerModal
 import com.kuba.calendarium.ui.common.dateTimeRowPrefixLabelWidth
 import com.kuba.calendarium.ui.common.descriptionFieldMaxHeight
 import com.kuba.calendarium.ui.common.fabContentPadding
 import com.kuba.calendarium.ui.common.fabSize
 import com.kuba.calendarium.ui.common.outlineBorder
+import com.kuba.calendarium.ui.common.remindersListMaxHeight
 import com.kuba.calendarium.ui.common.standardHalfPadding
 import com.kuba.calendarium.ui.common.standardIconSize
 import com.kuba.calendarium.ui.common.standardPadding
@@ -90,6 +94,7 @@ import com.kuba.calendarium.ui.screens.event.ModifyEventViewModel.UIEvent
 import com.kuba.calendarium.util.standardDateFormat
 import com.kuba.calendarium.util.standardTimeFormat
 import com.kuba.calendarium.util.toLocalizedString
+import com.kuba.calendarium.util.toReminderString
 import kotlinx.coroutines.flow.collectLatest
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -277,38 +282,18 @@ private fun MainColumn(
 
         StandardSpacer()
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .outlineBorder()
-        ) {
-            SetRepeatingCheckbox(
-                repeating = uiState.currentRepetition != null,
-                onCheckedChange = {
-                    if (it) {
-                        onEvent(UIEvent.RepetitionChanged(Repetition.DAILY))
-                    } else {
-                        onEvent(UIEvent.RepetitionChanged(null))
-                    }
-                }
-            )
+        RepetitionLayout(
+            currentRepetition = uiState.currentRepetition,
+            availableRepetitions = uiState.availableRepetitions,
+            onRepetitionChanged = { onEvent(UIEvent.RepetitionChanged(it)) }
+        )
 
-            AnimatedVisibility(
-                visible = uiState.currentRepetition != null,
-                modifier = Modifier.padding(all = standardPadding)
-            ) {
-                uiState.currentRepetition?.let {
-                    RepetitionModeRow(
-                        availableRepetitions = uiState.availableRepetitions,
-                        pickedRepetition = it,
-                        onRepetitionChanged = { repetition ->
-                            onEvent(UIEvent.RepetitionChanged(repetition))
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        }
+        StandardSpacer()
+
+        RemindersLayout(
+            reminderList = uiState.reminders,
+            onAddReminder = { onEvent(UIEvent.AddReminder(it)) },
+            onRemoveReminder = { onEvent(UIEvent.RemoveReminder(it)) })
     }
 }
 
@@ -404,10 +389,7 @@ private fun TaskListRow(
             verticalArrangement = Arrangement.spacedBy(standardHalfPadding)
         ) {
             item {
-                Text(
-                    text = stringResource(R.string.task_list_header_label),
-                    style = MaterialTheme.typography.titleLarge
-                )
+                TextPrimaryTitle(text = stringResource(R.string.task_list_header_label))
             }
 
             itemsIndexed(taskList, key = { _, task -> task.id }) { index, task ->
@@ -535,10 +517,7 @@ private fun DateTimeHeaderRow(
     onSetTimeCheckedChanged: (Boolean) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = stringResource(R.string.add_event_date_label),
-            style = MaterialTheme.typography.titleMedium
-        )
+        TextPrimaryTitle(text = stringResource(R.string.add_event_date_label))
 
         Spacer(
             modifier = Modifier
@@ -631,46 +610,6 @@ private fun SetEndDatePlaceholder(onClick: () -> Unit) {
 }
 
 @Composable
-private fun RepetitionModeRow(
-    availableRepetitions: List<Repetition>,
-    pickedRepetition: Repetition,
-    onRepetitionChanged: (Repetition) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier) {
-        availableRepetitions.forEachIndexed { index, repetition ->
-            SegmentedButton(
-                onClick = { onRepetitionChanged(repetition) },
-                selected = repetition == pickedRepetition,
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = availableRepetitions.size
-                ),
-                label = { Text(repetition.toLocalizedString(LocalContext.current)) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun SetRepeatingCheckbox(repeating: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!repeating) }
-            .padding(standardPadding)
-    ) {
-        CheckboxNoPadding(
-            checked = repeating,
-            onCheckedChange = onCheckedChange
-        )
-        StandardHalfSpacer()
-        Text(stringResource(R.string.set_event_repeating_text))
-    }
-}
-
-@Composable
 private fun DateTimeRow(
     selectedDate: LocalDate,
     selectedTime: LocalTime?,
@@ -723,6 +662,176 @@ private fun DateTimeRow(
             StandardSpacer()
             labelEnd()
         }
+    }
+}
+
+@Composable
+private fun RepetitionLayout(
+    currentRepetition: Repetition?,
+    availableRepetitions: List<Repetition>,
+    onRepetitionChanged: (Repetition?) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .outlineBorder()
+    ) {
+        SetRepeatingCheckbox(
+            repeating = currentRepetition != null,
+            onCheckedChange = {
+                if (it) {
+                    onRepetitionChanged(Repetition.DAILY)
+                } else {
+                    onRepetitionChanged(null)
+                }
+            }
+        )
+
+        AnimatedVisibility(
+            visible = currentRepetition != null,
+            modifier = Modifier.padding(all = standardPadding)
+        ) {
+            currentRepetition?.let {
+                RepetitionModeRow(
+                    availableRepetitions = availableRepetitions,
+                    pickedRepetition = it,
+                    onRepetitionChanged = onRepetitionChanged,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RepetitionModeRow(
+    availableRepetitions: List<Repetition>,
+    pickedRepetition: Repetition,
+    onRepetitionChanged: (Repetition) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+        availableRepetitions.forEachIndexed { index, repetition ->
+            SegmentedButton(
+                onClick = { onRepetitionChanged(repetition) },
+                selected = repetition == pickedRepetition,
+                shape = SegmentedButtonDefaults.itemShape(
+                    index = index,
+                    count = availableRepetitions.size
+                ),
+                label = { Text(repetition.toLocalizedString(LocalContext.current)) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun SetRepeatingCheckbox(repeating: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!repeating) }
+            .padding(standardPadding)
+    ) {
+        CheckboxNoPadding(
+            checked = repeating,
+            onCheckedChange = onCheckedChange
+        )
+        StandardHalfSpacer()
+        Text(stringResource(R.string.set_event_repeating_text))
+    }
+}
+
+@Composable
+private fun RemindersLayout(
+    reminderList: List<Reminder>,
+    onAddReminder: (Reminder) -> Unit,
+    onRemoveReminder: (Reminder) -> Unit
+) {
+    if (reminderList.isEmpty()) {
+        DataPlaceholder(
+            text = stringResource(R.string.add_reminder_text),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onAddReminder(Reminder.default) }
+        )
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .heightIn(max = remindersListMaxHeight)
+                .outlineBorder()
+                .padding(standardPadding)
+                .animateContentSize()
+        ) {
+            item {
+                TextPrimaryTitle(text = stringResource(R.string.reminder_list_header_label))
+            }
+
+            items(reminderList) { reminder ->
+                ReminderRow(reminder, onRemoveReminder = onRemoveReminder)
+            }
+
+            item {
+                AddReminderRow(
+                    enabled = reminderList.size < ModifyEventViewModel.MAX_REMINDER_COUNT,
+                    onClick = {
+                        // Show reminder dialog
+                    })
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReminderRow(reminder: Reminder, onRemoveReminder: (Reminder) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(R.drawable.ic_notifications_active_24),
+            contentDescription = "Notification icon",
+            tint = MaterialTheme.colorScheme.primary
+        )
+
+        StandardHalfSpacer()
+
+        Text(
+            stringResource(
+                R.string.reminder_row_label,
+                reminder.value,
+                reminder.unit.toReminderString(LocalContext.current)
+            )
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(onClick = { onRemoveReminder(reminder) }) {
+            Icon(
+                painter = painterResource(R.drawable.ic_close_24),
+                contentDescription = "Remove reminder"
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddReminderRow(enabled: Boolean, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clickable(enabled = enabled, onClick = onClick)
+            .fillMaxWidth()
+            .padding(horizontal = standardPadding, vertical = standardHalfPadding)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_add_24),
+            contentDescription = "Add reminder icon",
+            tint = MaterialTheme.colorScheme.primary
+        )
+        StandardQuarterSpacer()
+        Text(
+            text = stringResource(R.string.add_reminder_text),
+            color = LocalContentColor.current.copy(alpha = 0.7f)
+        )
     }
 }
 
